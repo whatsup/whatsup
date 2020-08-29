@@ -1,0 +1,39 @@
+{
+    "name": "@fract/core",
+    "description": "Fractal is a pattern for building asynchronous applications",
+    "version": "0.1.3",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fract/core.git"
+    },
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "typings": "dist/index.d.ts",
+    "scripts": {
+        "start": "rollup -c -w",
+        "build": "rollup -c",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "test:uncache": "jest --clearCache",
+        "prepublishOnly": "npm run build"
+    },
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^13.0.0",
+        "@rollup/plugin-node-resolve": "^8.1.0",
+        "@types/jest": "^26.0.4",
+        "husky": "^4.2.5",
+        "jest": "^26.1.0",
+        "prettier": "^2.0.5",
+        "rollup": "^2.21.0",
+        "rollup-plugin-delete": "^2.0.0",
+        "rollup-plugin-typescript2": "^0.27.1",
+        "ts-jest": "^26.1.1",
+        "typescript": "^3.9.6"
+    },
+    "files": [
+        "dist",
+        "src"
+    ]
+}
