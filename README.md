@@ -1,4 +1,12 @@
-## A fractal is an idea
+# Welcome to Fractal
+
+![Travis (.org) branch](https://img.shields.io/travis/fract/core?style=flat-square)
+![Codecov](https://img.shields.io/codecov/c/github/fract/core?style=flat-square)
+![npm bundle size (scoped)](https://img.shields.io/bundlephobia/min/@fract/core?style=flat-square)
+![GitHub top language](https://img.shields.io/github/languages/top/fract/core?style=flat-square)
+![NPM](https://img.shields.io/npm/l/@fract/core?style=flat-square)
+
+## Idea
 
 The idea is to divide the application not horizontally into models, views, controllers, etc., but deeper into a fractal-tree structure, where each node is an independent complete application. The result of the work of each such application is a flow of information reflecting its internal state.
 
