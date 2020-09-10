@@ -119,7 +119,9 @@ nextFrame.data // > 'User Barry'
 
 ## Temporary projections
 
-The fractal has the ability to display temporary projection while the main projection is being calculated. The helper is intended for this - `tmp`. This functionality allows you to organize a simple system for displaying loaders.
+A very useful mechanism. It allows you to organize the background execution of work while the superior fractal is content with a temporary result. Temporary projections are created using the `tmp(data)` function, and returned as normal using `yield`.
+
+One use case is for organizing loaders.
 
 ```ts
 import { fractal, tmp, live } from '@fract/core'
@@ -127,7 +129,7 @@ import { fractal, tmp, live } from '@fract/core'
 const User = fractal(async function* () {
     yield tmp('Loading...')
 
-    const data = await loadUserDataFromServer()
+    const data = await loadUserDataFromServer() // do something for a long time
 
     yield `User ${data.name}`
 })
@@ -142,6 +144,39 @@ const nextFrame = await frame.next
 
 nextFrame.data // 'User John'
 ```
+
+Here the `User` fractal is "slow", before giving its projection it needs to go to the server. And someone from above is waiting for his projection at this time. So, in order not to keep itself waiting, `User` gives the time projection `'Loading ...'` and continues to generate the main one, which it will give as soon as it is ready, i.e. the generator code after `yield tmp(...)` continues to execute, but in the background.
+
+This is how you can make a fractal timer
+
+```ts
+import { fractal, tmp } from '@fract/core'
+
+const Timer = fractal(async function* () {
+    let i = 0
+
+    while (true) {
+        yield tmp(i++)
+        await new Promise((r) => setTimeout(r, 1000))
+    }
+})
+
+const App = fractal(async function* () {
+    while (true) {
+        console.log(yield* Timer)
+        yield
+    }
+})
+
+live(App)
+
+//> 0
+//> 1
+//> 2
+//> ...
+```
+
+Here, the `Timer` fractal gives the current value of the variable `i` as its time projection and continues calculating the next one, during which it increments `i`, waits for the end of the 1 second delay and the cycle repeats.
 
 ## Delegation
 
@@ -259,57 +294,66 @@ Again, delegation will happen, since a fraction is a regular fractal and a `yiel
 
 Factors allow you to define the conditions available for child fractals to work.
 
-```ts
-import { fractal, factor, exec } from '@fract/core'
+One of the options for using factors is to indicate the mode of operation, depending on which the fractal generates a projection of a certain type. Let's say we need to build an application that can display information on the screen, simultaneously save its state to local storage, and restore from the last saved state when the page is refreshed.
 
-enum Mode {
-    Data,
-    String,
+```ts
+const APP_STORE = 'APP'
+
+ interface AppData {
+     name: string
+ }
+
+function newApp({ name = 'Hello world' } as AppData) {
+    const Name = fraction(name)
+
+    return fractal(async function* App() {
+        while (true) {
+            switch (yield* MODE) {
+                case 'asString':
+                    yield `App ${yield* Name}`
+                    continue
+                case 'asData':
+                    yield { name: yield* Name } as AppData
+                    continue
+            }
+        }
+    })
 }
 
-const MODE = factor<Mode>()
+const Dispatcher = fractal(async function* () {
+    // we take the saved state from localStorage
+    const data = JSON.parse(localStorage.getItem(APP_STORE) || '{}') as AppData
 
-const User = fractal(async function* () {
-    const mode = yield* MODE // extract MODE value
+    // create a fractal of our application
+    const App = newApp(data)
 
-    while (true) {
-        switch (mode) {
-            case Mode.Data:
-                yield { name: 'John' }
-                continue
-            case Mode.String:
-                yield 'Name - John'
-                continue
-        }
-    }
-})
+    // create a fractal with a predefined operating mode 'asString'
+    const AsString = fractal(async function* () {
+        yield* MODE('asString')
+        while (true) yield yield* App
+    })
 
-const AsData = fractal(async function* () {
-    yield* MODE(Mode.Data) // define factor for child fractals
-
-    while (true) {
-        yield User
-    }
-})
-
-const AsString = fractal(async function* () {
-    yield* MODE(Mode.String) // define factor for child fractals
+    // create a fractal with a predefined operating mode 'asData'
+    const AsData = fractal(async function* () {
+        yield* MODE('asData')
+        while (true) yield yield* App
+    })
 
     while (true) {
-        yield User
+        const asString = yield* AsString // we will display this on the screen
+        const asData = yield* AsData     // and save this to the storage
+        // output to the console
+        console.log(asString)
+        // save to localStorage
+        localStorage.setItem(APP_STORE, JSON.stringify(asData))
+        yield
     }
 })
-
-/*...*/
-
-const dataFrame = await exec(AsData)
-
-dataFrame.data // {name: 'John'}
-
-const strFrame = await exec(AsString)
-
-strFrame.data // 'Name - John'
 ```
+
+What happens here: the same `App` fractal generates its projections in different ways depending on the `MODE` factor, knowing this we connect it to the `AsString` and `AsData` fractals, which in turn connect to the `Dispatcher`. As a result, we get two different projections belonging to the same fractal - one in text form, the other in data form.
+
+![](https://hsto.org/webt/tu/pa/wi/tupawikvb5r-6qgvysb4b0oyxi0.jpeg)
 
 ## Asynchrony & code splitting
 
@@ -335,3 +379,5 @@ export const App = fractal(async function* () {
 ```
 
 No hidden magic, special downloaders and other things, everything is solved by native means, with IntelliSense saved in the editor.
+
+![](https://hsto.org/webt/kw/29/cl/kw29cl0notoc0aduloiyoxyb4a4.jpeg)
