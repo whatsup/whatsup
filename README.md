@@ -1,3 +1,9 @@
+## A fractal is an idea
+
+The idea is to divide the application not horizontally into models, views, controllers, etc., but deeper into a fractal-tree structure, where each node is an independent complete application. The result of the work of each such application is a flow of information reflecting its internal state.
+
+![](https://hsto.org/webt/ba/up/tu/bauptuc3l-nsm_yarxuike58puk.jpeg)
+
 ## Install
 
 ```bash
@@ -8,10 +14,7 @@ npm i @fract/core
 import { fractal, fraction } from '@fract/core'
 ```
 
-## What is it?
-
-Fractal is a pattern for building asynchronous applications.
-It has two key components.
+## Two key components
 
 #### `fractal<T>(generator: AsyncGenerator<T>): Fractal<T>`
 
@@ -42,6 +45,8 @@ Name.use('Barry')
 ## Lifecycle
 
 Inside the generator, the keyword `yield` defines, and `yield*` retrieves the current projection of the fractal, in other words, if we present everything in the form of a tree, where fractals are nodes and the flow of information is directed to the root, then `yield*` is to raise from the bottom, and `yield` send up.
+
+![](https://hsto.org/webt/pv/tm/gz/pvtmgzvnerzt4sns6nuha-fmkgy.jpeg)
 
 The life cycle consists of three steps:
 
@@ -140,7 +145,7 @@ nextFrame.data // 'User John'
 
 ## Delegation
 
-A fractal can delegate the calculation of its projection to another fractal, for this it must return the fractal as its projection.
+A useful mechanism thanks to which a fractal can delegate work on its projection to another fractal. All that is needed for this is to return the performer as his projection.
 
 ```ts
 import { fractal, live } from '@fract/core'
@@ -165,6 +170,90 @@ const frame = await live(Guest)
 
 frame.data // 'User John'
 ```
+
+Let's say we have a `newEditor` factory that creates a fractal responsible for editing a user profile. We also have a `Manager` fractal that switches the edited profile depending on the `ProfileId` fraction.
+
+```ts
+function newEditor(id) {
+    return fractal(async function* () {
+        const { name } = await loadUserInfo(id)
+        const Name = fraction(name)
+
+        while (true) {
+            yield <input placeholder="Input name" value={yield* Name} onChange={(e) => Name.use(e.target.value)} />
+        }
+    })
+}
+
+const ProfileId = fraction(1)
+
+const Manager = fractal(async function* () {
+    while (true) {
+        const id = yield* ProfileId
+        const Editor = newEditor(id)
+        yield Editor // <-- delegating the work to the Editor fractal
+    }
+})
+
+const App = fractal(async function* () {
+    while (true) {
+        yield yield* Manager
+    }
+})
+```
+
+The fractal tree will reassemble the projections from the inside-out every time, when somewhere in its depth during editing, changes occur, in this example, in the Name fraction. Rebuilding will inevitably restart the while (true) loops at all levels up to the root of the `App`, except for the `Manager` fractal. The latter delegates the work on its projection to the `Editor` fractal, and is, as it were, pushed out of the regeneration chain.
+
+![](https://hsto.org/webt/6x/kh/o6/6xkho6gu0j-hiqzk9objvttdt5k.jpeg)
+
+Only the `ProfileId` faction can affect the `Manager`. As soon as it changes, `Manager` will start a rebuild cycle, in which it will create a new `Editor` fractal and delegate further work to it again.
+
+Without the delegation mechanism, we would have to manually determine what has changed - the `ProfileId` fraction or something else deep in the fractal, because we do not need to create a new `Editor` if the id of the edited profile has not changed. Such code would look rather verbose and not very pretty.
+
+```ts
+const ProfileId = fraction(1)
+
+const Manager = fractal(async function* () {
+    let lastProfileId
+    let Editor
+
+    while (true) {
+        const id = yield* ProfileId
+
+        if (id !== lastProfileId) {
+            lastProfileId = id
+            Editor = newEditor(id)
+        }
+
+        yield yield* Editor
+    }
+})
+```
+
+In the following example, you can see what happens if a fractal is passed to the fraction as a new projection.
+
+```ts
+const BarryName = fractal(async function* () {
+    while (true) yield 'Barry'
+})
+
+const Name = fraction('John')
+
+const App = fractal(async function* () {
+    while (true) {
+        console.log(yield* Name)
+        yield
+    }
+})
+
+live(App)
+
+//> 'John'
+Name.use(BarryName)
+//> 'Barry'
+```
+
+Again, delegation will happen, since a fraction is a regular fractal and a `yield BarryName` occurs inside its generator.
 
 ## Factors
 
