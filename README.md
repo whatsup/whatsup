@@ -2,7 +2,7 @@
 
 The idea is to divide the application not horizontally into models, views, controllers, etc., but deeper into a fractal-tree structure, where each node is an independent complete application. The result of the work of each such application is a flow of information reflecting its internal state.
 
-![](https://hsto.org/webt/ba/up/tu/bauptuc3l-nsm_yarxuike58puk.jpeg)
+![](https://hsto.org/webt/zw/yu/4c/zwyu4cb736of4iyuvslgzcplgxg.jpeg)
 
 ## Install
 
