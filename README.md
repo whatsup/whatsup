@@ -381,3 +381,10 @@ export const App = fractal(async function* () {
 ```
 
 No hidden magic, special downloaders and other things, everything is solved by native means, with IntelliSense saved in the editor.
+
+## Examples
+
+-   [Todos](https://fract.github.io/todos) - fractal-like realization of TodoMVC, [source](https://github.com/fract/fract.github.io/tree/master/src/todos)
+-   [Loadable](https://fract.github.io/loadable) - an example showing the work of time projections, in the [source](https://github.com/fract/fract.github.io/tree/master/src/loadable) you can see how using `yield tmp(...)` the display of loaders is organized while loading in the background, I specifically added small delays there in order to slow down the processes
+-   [Factors](https://fract.github.io/factors) - work in different conditions. One and the same fractal, depending on the factor set in the context, gives three different projections, and also maintains their relevance. Try editing the name and age, [source](https://github.com/fract/fract.github.io/tree/master/src/factors)
+-   [Antistress](https://fract.github.io/antistress) - just a toy, click the balls, paint them in different colors and get cool pictures. In fact, this is a fractal that shows a circle inside itself, or three of the same fractals inscribed in the perimeter of the circle. Click - paint, long click - crush, long click in the center of the crushed circle - return to its original state. If you crush the circles to a sufficiently deep level, you can see the [Sierpinski triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle), [source](https://github.com/fract/fract.github.io/tree/master/src/antistress)
