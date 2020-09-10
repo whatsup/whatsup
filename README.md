@@ -357,6 +357,8 @@ What happens here: the same `App` fractal generates its projections in different
 
 ## Asynchrony & code splitting
 
+![](https://hsto.org/webt/kw/29/cl/kw29cl0notoc0aduloiyoxyb4a4.jpeg)
+
 Under the hood, all the work of the fractal occurs asynchronously, however, inside the generator this asynchrony is quite simple to control using the usual `await`. Dependencies can be imported directly from the generator body, which allows collectors, such as webpack, to easily break the code into small chunks
 
 ```ts
@@ -379,5 +381,3 @@ export const App = fractal(async function* () {
 ```
 
 No hidden magic, special downloaders and other things, everything is solved by native means, with IntelliSense saved in the editor.
-
-![](https://hsto.org/webt/kw/29/cl/kw29cl0notoc0aduloiyoxyb4a4.jpeg)
