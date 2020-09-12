@@ -1,11 +1,14 @@
 ![](https://habrastorage.org/webt/ij/tx/ze/ijtxzegfm3saswa0e9qs5djsusw.png)
 
 <div align="center">
-<img src="https://img.shields.io/travis/fract/core?style=flat-square" alt="travis" />
-<img src="https://img.shields.io/codecov/c/github/fract/core?style=flat-square" alt="codecov" />
-<img src="https://img.shields.io/bundlephobia/min/@fract/core?style=flat-square" alt="size" />
-<img src="https://img.shields.io/github/languages/top/fract/core?style=flat-square" alt="language" />
-<img src="https://img.shields.io/npm/l/@fract/core?style=flat-square" alt="npm" /> 
+<img src="https://img.shields.io/travis/fract/core" alt="travis" />
+<img src="https://img.shields.io/codecov/c/github/fract/core" alt="codecov" />
+<img src="https://img.shields.io/bundlephobia/min/@fract/core" alt="size" />
+<img src="https://img.shields.io/github/languages/top/fract/core" alt="language" />
+<img src="https://img.shields.io/npm/l/@fract/core" alt="npm" /> 
+<a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore">
+<img src="https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore" alt="tweet">
+</a> 
 </div>
  
 ## Idea
