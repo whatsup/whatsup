@@ -1,4 +1,4 @@
-![](https://habrastorage.org/webt/ij/tx/ze/ijtxzegfm3saswa0e9qs5djsusw.png)
+![](https://habrastorage.org/webt/be/j4/hv/bej4hv3g2qxp8vgwoex-2knhcoo.png)
 
 <div align="center">
 <img src="https://img.shields.io/travis/fract/core" alt="travis" />
