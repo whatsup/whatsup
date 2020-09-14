@@ -1,4 +1,4 @@
-import { fractal, Fractal } from './fractal'
+import { fractal, Fractal, FractalOptions } from './fractal'
 import { tmp } from './helpers'
 import { Projection } from './typings'
 
@@ -10,9 +10,7 @@ export interface Fraction<T> extends Fractal<T> {
     use(data: Projection<T>): void
 }
 
-export interface FractionOptions {
-    name?: string
-}
+export interface FractionOptions extends FractalOptions {}
 
 export function fraction<T>(current: Projection<T>, params: FractionOptions = {}): Fraction<T> {
     let use: (data: Projection<T>) => void
