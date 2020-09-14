@@ -17,14 +17,14 @@ export interface FractalOptions {
     name?: string
 }
 
-export function fractal<T>(generator: () => AsyncGenerator<Bubble<T>, T>, params: FractalOptions = {}): Fractal<T> {
+export function fractal<T>(generator: () => AsyncGenerator<Bubble<T>, T>, options: FractalOptions = {}): Fractal<T> {
     if (generator.length > 0) {
         throw new Error(
             'Using args in generator not implemented, maybe we will discuss it in issues https://github.com/fract/core/issues'
         )
     }
 
-    const { name = generator.name || 'Fractal' } = params
+    const { name = generator.name || 'Fractal' } = options
     const CONTEXTS = new WeakMap<Context<any>, Context<T>>()
 
     function mrFractal() {

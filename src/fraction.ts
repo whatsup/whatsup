@@ -12,24 +12,21 @@ export interface Fraction<T> extends Fractal<T> {
 
 export interface FractionOptions extends FractalOptions {}
 
-export function fraction<T>(current: Projection<T>, params: FractionOptions = {}): Fraction<T> {
+export function fraction<T>(current: Projection<T>, options: FractionOptions = {}): Fraction<T> {
     let use: (data: Projection<T>) => void
     let next = function promise(): Promise<T | Fractal<T>> {
         return new Promise<T | Fractal<T>>((r) => (use = (v) => ((next = promise()), r(v))))
     }.call(void 0)
 
     return Object.defineProperties(
-        fractal(
-            async function* Fraction() {
-                let data = current
+        fractal(async function* Fraction() {
+            let data = current
 
-                while (true) {
-                    yield tmp(data)
-                    data = next
-                }
-            },
-            { ...params }
-        ),
+            while (true) {
+                yield tmp(data)
+                data = next
+            }
+        }, options),
         {
             use: {
                 value(data: Projection<T>) {
