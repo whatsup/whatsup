@@ -1,7 +1,7 @@
 {
     "name": "@fract/core",
     "description": "Fractal is a pattern for building asynchronous applications",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
