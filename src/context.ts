@@ -15,9 +15,9 @@ export interface ContextOptions {
 export function createContext<T>(
     root: null | Context<T>,
     generator: () => AsyncIterator<Bubble<T>, T>,
-    params: ContextOptions
+    options: ContextOptions
 ): Context<T> {
-    const { name } = params
+    const { name } = options
 
     return Object.create(root, {
         name: {
