@@ -303,6 +303,31 @@ Name.use(BarryName)
 
 Again, delegation will happen, since a fraction is a regular fractal and a `yield BarryName` occurs inside its generator.
 
+### How to delegation disable
+
+There are situations when a fractal should return another fractal as it is, without using delegation. There is a corresponding option for this.
+
+```ts
+const Target = fractal(async function* () {
+    /*...*/
+})
+const NoDelegation = fractal(
+    async function* () {
+        while (true) yield Target
+    },
+    { delegation: false }
+)
+
+const App = fractal(async function* () {
+    while (true) {
+        ;(yield* NoDelegation) === Target // true
+        yield
+    }
+})
+
+live(App)
+```
+
 ## Factors
 
 Factors allow you to define the conditions available for child fractals to work.
