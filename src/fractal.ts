@@ -15,6 +15,7 @@ export interface Fractal<T> {
 
 export interface FractalOptions {
     name?: string
+    delegation?: boolean
 }
 
 export function fractal<T>(generator: () => AsyncGenerator<Bubble<T>, T>, options: FractalOptions = {}): Fractal<T> {
@@ -24,7 +25,7 @@ export function fractal<T>(generator: () => AsyncGenerator<Bubble<T>, T>, option
         )
     }
 
-    const { name = generator.name || 'Fractal' } = options
+    const { name = generator.name || 'Fractal', delegation } = options
     const CONTEXTS = new WeakMap<Context<any>, Context<T>>()
 
     function mrFractal() {
@@ -40,7 +41,7 @@ export function fractal<T>(generator: () => AsyncGenerator<Bubble<T>, T>, option
                 const builder: Builder<T> = yield BuilderQuery
 
                 if (!CONTEXTS.has(parent)) {
-                    const ctx = createContext(parent, generator, { name })
+                    const ctx = createContext(parent, generator, { name, delegation })
                     CONTEXTS.set(parent, ctx)
                 }
 

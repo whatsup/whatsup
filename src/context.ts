@@ -6,10 +6,12 @@ export interface Context<T> {
     readonly name: string
     readonly generator: () => AsyncIterator<Bubble<T>, T>
     readonly stack: AsyncIterator<Bubble<T>, T>[]
+    readonly delegation: boolean
 }
 
 export interface ContextOptions {
     name: string
+    delegation?: boolean
 }
 
 export function createContext<T>(
@@ -17,7 +19,7 @@ export function createContext<T>(
     generator: () => AsyncIterator<Bubble<T>, T>,
     options: ContextOptions
 ): Context<T> {
-    const { name } = options
+    const { name, delegation = true } = options
 
     return Object.create(root, {
         name: {
@@ -28,6 +30,9 @@ export function createContext<T>(
         },
         stack: {
             value: [],
+        },
+        delegation: {
+            value: delegation,
         },
     })
 }

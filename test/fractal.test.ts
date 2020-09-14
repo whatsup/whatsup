@@ -28,7 +28,7 @@ describe('Fractal', () => {
         const generator = async function* () {
             while (true) yield yield* Frac
         }
-        const context = createContext(null, generator, { name: 'Root' })
+        const context = createContext(null, generator, { name: 'Root', delegation: true })
         const iterator = Frac[Symbol.asyncIterator]()
 
         it('yield loop live: need Context', async () => {
@@ -177,7 +177,7 @@ describe('Fractal', () => {
         })
     })
 
-    describe('convert nested fractal to capture generator', () => {
+    describe('convert nested fractal to capture generator (delegation option by default is true)', () => {
         const Nested = fractal(async function* _Frac() {
             while (true) yield null
         })
@@ -198,6 +198,33 @@ describe('Fractal', () => {
             const result = await iterator.next(executing)
             const frame = (result.value as unknown) as Frame<any>
             expect(isAsyncGenerator(frame.data)).toBeTruthy()
+        })
+    })
+
+    describe('return Fractal as is when delegation option is false', () => {
+        const Nested = fractal(async function* _Frac() {
+            while (true) yield null
+        })
+        const Frac = fractal(
+            async function* _Frac() {
+                while (true) yield Nested
+            },
+            { delegation: false }
+        )
+        const generator = async function* () {
+            while (true) yield yield* Frac
+        }
+        const context = createContext(null, generator, { name: 'Root' })
+        const iterator = Frac[Symbol.asyncIterator]()
+
+        // skip check ContextQuery
+        iterator.next()
+        iterator.next(context)
+
+        it(`return Frame with Fractal`, async () => {
+            const result = await iterator.next(executing)
+            const frame = (result.value as unknown) as Frame<any>
+            expect(frame.data).toBe(Nested)
         })
     })
 })

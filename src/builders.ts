@@ -14,7 +14,7 @@ interface BuildResult<T> {
 }
 
 async function build<T>(ctx: Context<T>, builder: Builder<T>): Promise<BuildResult<T>> {
-    const { stack, generator } = ctx
+    const { stack, generator, delegation } = ctx
     const racers = [] as Promise<any>[]
 
     if (!stack.length) {
@@ -64,7 +64,7 @@ async function build<T>(ctx: Context<T>, builder: Builder<T>): Promise<BuildResu
                 racers.push(Promise.resolve())
                 return prepare(await value.data)
             }
-            if (isFractal(value)) {
+            if (delegation && isFractal(value)) {
                 return contextCapture(value, ctx)
             }
             return value
