@@ -254,7 +254,7 @@ The fractal tree will reassemble the projections from the inside-out every time,
 
 ![](https://hsto.org/webt/6x/kh/o6/6xkho6gu0j-hiqzk9objvttdt5k.jpeg)
 
-Only the `ProfileId` faction can affect the `Manager`. As soon as it changes, `Manager` will start a rebuild cycle, in which it will create a new `Editor` fractal and delegate further work to it again.
+Only the `ProfileId` fraction can affect the `Manager`. As soon as it changes, `Manager` will start a rebuild cycle, in which it will create a new `Editor` fractal and delegate further work to it again.
 
 Without the delegation mechanism, we would have to manually determine what has changed - the `ProfileId` fraction or something else deep in the fractal, because we do not need to create a new `Editor` if the id of the edited profile has not changed. Such code would look rather verbose and not very pretty.
 
