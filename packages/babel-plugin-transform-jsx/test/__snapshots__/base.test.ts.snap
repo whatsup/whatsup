@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform types Should transform User 1`] = `
+"import { component as _component } from \\"@fract/jsx\\";
+
+_component(User, \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
+`;
+
+exports[`transform types Should transform div 1`] = `
+"import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
+`;
+
+exports[`transform types Should transform fragment 1`] = `
+"import { component as _component } from \\"@fract/jsx\\";
+
+_component(Fragment, \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
+`;
+
+exports[`transform types Should transform svg 1`] = `
+"import { svg as _svg } from \\"@fract/jsx\\";
+
+_svg(\\"svg\\", \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
+`;

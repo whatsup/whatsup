@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform children Should transform children spread 1`] = `
+"import { html as _html2 } from \\"@fract/jsx\\";
+import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, [_html2(\\"span\\", \\"UniqueId\\", undefined, undefined, [\\"foo\\"]), ...other]);"
+`;
+
+exports[`transform children Should transform children with expressions 1`] = `
+"import { html as _html3 } from \\"@fract/jsx\\";
+import { html as _html2 } from \\"@fract/jsx\\";
+import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, [_html2(\\"span\\", \\"UniqueId\\", undefined, undefined, [\\"foo\\"]), [\`one\`, \`two\`].map(i => _html3(\\"span\\", \\"UniqueId\\", undefined, undefined, [i]))]);"
+`;
+
+exports[`transform children Should transform children with primitives 1`] = `
+"import { html as _html3 } from \\"@fract/jsx\\";
+import { html as _html2 } from \\"@fract/jsx\\";
+import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, [_html2(\\"span\\", \\"UniqueId\\", undefined, undefined, [\\"foo\\"]), \\"bar\\", _html3(\\"i\\", \\"UniqueId\\", undefined, undefined, [\\"baz\\"])]);"
+`;
+
+exports[`transform children Should transform many children 1`] = `
+"import { html as _html3 } from \\"@fract/jsx\\";
+import { html as _html2 } from \\"@fract/jsx\\";
+import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"ul\\", \\"UniqueId\\", undefined, undefined, [_html2(\\"li\\", \\"UniqueId\\", undefined, undefined, undefined), _html3(\\"li\\", \\"UniqueId\\", undefined, undefined, undefined)]);"
+`;
+
+exports[`transform children Should transform once child 1`] = `
+"import { html as _html2 } from \\"@fract/jsx\\";
+import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, [_html2(\\"span\\", \\"UniqueId\\", undefined, undefined, undefined)]);"
+`;
+
+exports[`transform children Should transform without children 1`] = `
+"import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined);"
+`;
