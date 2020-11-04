@@ -155,9 +155,9 @@ function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpres
 
     for (const child of children) {
         if (isJSXText(child)) {
-            const value = child.value.replace(/\n\s+/g, ' ')
+            const value = child.value.replace(/\s+/g, ' ').trim()
 
-            if (value !== ' ') {
+            if (value !== '') {
                 members.push(stringLiteral(value))
             }
 
