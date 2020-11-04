@@ -1,7 +1,7 @@
 {
     "name": "@fract/babel-plugin-transform-jsx",
     "description": "Babel plugin for transform jsx to fractal mutator factories",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
