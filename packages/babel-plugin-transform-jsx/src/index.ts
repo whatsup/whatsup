@@ -33,7 +33,7 @@ import {
     SpreadElement,
     ObjectProperty,
 } from '@babel/types'
-import { SVG_TAG_NAMES, JSX_LIBRARY_NAME, JSX_LIBRARY_FACTORIES, IS_TESTING } from './constants'
+import { SVG_TAG_REGEX, JSX_LIBRARY_NAME, JSX_LIBRARY_FACTORIES, IS_TESTING } from './constants'
 
 const VOID = identifier('undefined')
 
@@ -193,5 +193,5 @@ function isComponent(name: string) {
 }
 
 function isSVG(name: string) {
-    return SVG_TAG_NAMES.some((tagName) => name === tagName)
+    return SVG_TAG_REGEX.test(name)
 }
