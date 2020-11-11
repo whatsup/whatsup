@@ -1,32 +1,28 @@
-import { ContextQuery } from './queries'
+import { Tree } from './fork'
 
-export interface Factor<T> {
-    (value?: T): AsyncGenerator<any, void, any>
-    is(value: T): AsyncGenerator<any, boolean, any>
-    [Symbol.asyncIterator](): AsyncGenerator<any, T, any>
-}
+export class Factor<T> {
+    private trees = new WeakMap<Tree<any>, T>()
 
-export function factor<T>(defaultValue?: T): Factor<T> {
-    const sym = Symbol('Factor')
+    constructor(readonly defaultValue?: T) {}
 
-    async function* mrFactor(value?: T) {
-        const ctx = yield ContextQuery
-        ctx[sym] = value
+    get(tree: Tree<any>) {
+        let { context } = tree
+
+        while (context) {
+            if (this.trees.has(context)) {
+                return this.trees.get(context)
+            }
+            context = context.context
+        }
+
+        return this.defaultValue
     }
 
-    return Object.defineProperties(mrFactor, {
-        is: {
-            async *value(value: T) {
-                return (yield* this) === value
-            },
-        },
-        [Symbol.asyncIterator]: {
-            async *value() {
-                const ctx = yield ContextQuery
-                const parent = Object.getPrototypeOf(ctx)
-                const value = parent[sym]
-                return value === undefined ? defaultValue : value
-            },
-        },
-    })
+    set(tree: Tree<any>, value: T) {
+        this.trees.set(tree, value)
+    }
+}
+
+export function factor<T>(defaultValue?: T) {
+    return new Factor(defaultValue)
 }

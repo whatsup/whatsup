@@ -1,24 +1,100 @@
-import { createContext } from './context'
-import { livening, executing, Builder } from './builders'
-import { Fractal, isFractal } from './fractal'
-import { Frame, LiveFrame } from './frame'
-import { Bubble } from './typings'
+import { fractal } from './fractal'
+import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
+import { Fork } from './fork'
 
-async function run<T>(target: Fractal<T> | (() => AsyncGenerator<Bubble<T>, T>), builder: Builder<T>) {
-    const generator = isFractal(target)
-        ? async function* () {
-              while (true) yield yield* target
-          }
-        : target
-    const ctx = createContext<T>(null, generator, { name: 'Runner' })
-
-    return builder(ctx)
+interface Frame<T> {
+    data: T
+    next: Promise<Frame<T>>
 }
 
-export async function live<T>(target: Fractal<T> | (() => AsyncGenerator<Bubble<T>, T>)) {
-    return run(target, livening) as Promise<LiveFrame<T>>
+class StreamFork<T> extends Fork<T> {
+    private resolveNextFrame!: (data: T) => void
+    private frame!: Promise<Frame<T>>
+
+    constructor(emitter: Emitter<T>, consumer: Fork | null = null, context: Fork | null = null) {
+        super(emitter, consumer, context)
+        this.createFramePromise()
+    }
+
+    destroy() {
+        super.destroy()
+        this.createFramePromise()
+    }
+
+    protected setData(data: T) {
+        super.setData(data)
+        this.resolveNextFrame(data)
+    }
+
+    private createFramePromise() {
+        return (this.frame = new Promise((r) => {
+            this.resolveNextFrame = (data: T) => {
+                r({ data, next: this.createFramePromise() })
+            }
+        }))
+    }
+
+    async *stream() {
+        try {
+            this.live()
+
+            let { frame } = this
+
+            while (true) {
+                const { data, next } = await frame
+                yield data
+                frame = next
+            }
+        } finally {
+            this.destroy()
+        }
+    }
 }
 
-export async function exec<T>(target: Fractal<T> | (() => AsyncGenerator<Bubble<T>, T>)) {
-    return run(target, executing) as Promise<Frame<T>>
+class RootEmitter<T> extends Emitter<T> {
+    constructor(readonly target: Emitter<T>, options?: EmitterOptions) {
+        super(options)
+    }
+
+    async *collector() {
+        while (true) {
+            yield yield* this.target
+        }
+    }
+}
+
+function normalizeSource<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
+    if (source instanceof Emitter) {
+        return source
+    }
+    return fractal(source)
+}
+
+export function stream<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
+    const emitter = normalizeSource(source)
+    return new StreamFork(emitter).stream()
+}
+
+export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
+    const emitter = normalizeSource(source)
+    const root = new RootEmitter(emitter)
+    const fork = new Fork(root)
+
+    fork.live()
+
+    return () => fork.destroy()
+}
+
+export async function exec<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
+    const emitter = normalizeSource(source)
+    const root = new RootEmitter(emitter)
+    const fork = new Fork(root)
+
+    await fork.live()
+
+    const result = fork.getData()
+
+    fork.destroy()
+
+    return result as T
 }
