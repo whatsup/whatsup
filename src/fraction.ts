@@ -1,5 +1,5 @@
 import { Emitter, EmitterOptions } from './emitter'
-import { Fork, Tree } from './fork'
+import { Fork, Scope } from './fork'
 
 export interface FractionOptions extends EmitterOptions {}
 
@@ -12,15 +12,15 @@ export class Fraction<T> extends Emitter<T> {
         this.data = value
     }
 
-    async *collector(tree: Tree<T>) {
-        this.forks.add(tree['fork'])
+    async *collector(scope: Scope<T>) {
+        this.forks.add(scope['fork'])
 
         try {
             while (true) {
                 yield this.data
             }
         } finally {
-            this.forks.delete(tree['fork'])
+            this.forks.delete(scope['fork'])
         }
     }
 

@@ -1,6 +1,6 @@
 import { Emitter } from './emitter'
 import { Fraction, FractionOptions } from './fraction'
-import { Tree } from './fork'
+import { Scope } from './fork'
 
 export interface ListOptions extends FractionOptions {}
 
@@ -9,10 +9,10 @@ export class List<T> extends Fraction<T[]> {
         return this.get()
     }
 
-    async *collector(tree: Tree<T[]>) {
+    async *collector(scope: Scope<T[]>) {
         const { delegation } = this
 
-        for await (const items of super.collector(tree)) {
+        for await (const items of super.collector(scope)) {
             const result = [] as T[]
 
             for (const item of items) {

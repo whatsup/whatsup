@@ -1,5 +1,5 @@
 import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
-import { Tree } from './fork'
+import { Scope } from './fork'
 
 export interface FractalOptions extends EmitterOptions {}
 
@@ -11,8 +11,8 @@ export class Fractal<T> extends Emitter<T> {
         this.generator = generator
     }
 
-    async *collector(tree: Tree<T>) {
-        return yield* this.generator(tree)
+    async *collector(scope: Scope<T>) {
+        return yield* this.generator(scope)
     }
 }
 

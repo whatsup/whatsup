@@ -1,16 +1,16 @@
-import { Tree } from './fork'
+import { Scope } from './fork'
 
 export class Factor<T> {
-    private trees = new WeakMap<Tree<any>, T>()
+    private scopes = new WeakMap<Scope<any>, T>()
 
     constructor(readonly defaultValue?: T) {}
 
-    get(tree: Tree<any>) {
-        let { context } = tree
+    get(scope: Scope<any>) {
+        let { context } = scope
 
         while (context) {
-            if (this.trees.has(context)) {
-                return this.trees.get(context)
+            if (this.scopes.has(context)) {
+                return this.scopes.get(context)
             }
             context = context.context
         }
@@ -18,8 +18,8 @@ export class Factor<T> {
         return this.defaultValue
     }
 
-    set(tree: Tree<any>, value: T) {
-        this.trees.set(tree, value)
+    set(scope: Scope<any>, value: T) {
+        this.scopes.set(scope, value)
     }
 }
 

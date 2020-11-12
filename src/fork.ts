@@ -6,20 +6,20 @@ import { Temporary } from './temporary'
 
 const DESTROYER = Symbol('Destroy symbol')
 
-export class Tree<T> {
+export class Scope<T> {
     constructor(private readonly fork: Fork<T>) {
         this.fork = fork
     }
 
-    get consumer(): Tree<any> | null {
+    get consumer(): Scope<any> | null {
         const { consumer } = this.fork
-        return consumer && consumer.tree
+        return consumer && consumer.scope
     }
 
-    get context(): Tree<any> | null {
+    get context(): Scope<any> | null {
         const { consumer, context } = this.fork
         const fork = context || consumer
-        return fork && fork.tree
+        return fork && fork.scope
     }
 
     get<T>(factor: Factor<T>): T | undefined {
@@ -35,7 +35,7 @@ export class Fork<T = any> {
     readonly emitter: Emitter<T>
     readonly consumer: Fork | null
     readonly context: Fork | null
-    readonly tree: Tree<T> = new Tree(this)
+    readonly scope: Scope<T> = new Scope(this)
     private readonly stack = [] as EmitIterator<T>[]
     private readonly forks = new WeakMap<Emitable<any>, Fork>()
     private readonly contextBounds = new WeakMap<Emitter<any>, ContextBound<T>>()
@@ -129,7 +129,7 @@ export class Fork<T = any> {
     }
 
     private async build() {
-        const { aliveId, stack, dependencies, emitter, tree } = this
+        const { aliveId, stack, dependencies, emitter, scope } = this
 
         this.beforeBuild()
 
@@ -139,7 +139,7 @@ export class Fork<T = any> {
             temporary = false
 
             if (!stack.length) {
-                stack.push(emitter.collector(tree))
+                stack.push(emitter.collector(scope))
             }
 
             let input: any
