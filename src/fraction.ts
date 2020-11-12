@@ -37,6 +37,6 @@ export class Fraction<T> extends Emitter<T> {
     }
 }
 
-export function fraction<T>(value: T) {
-    return new Fraction(value)
+export function fraction<T>(value: T, options?: FractionOptions) {
+    return new Fraction(value, options)
 }

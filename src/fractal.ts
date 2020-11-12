@@ -16,6 +16,6 @@ export class Fractal<T> extends Emitter<T> {
     }
 }
 
-export function fractal<T>(generator: EmitGeneratorFunc<T>) {
-    return new Fractal(generator)
+export function fractal<T>(generator: EmitGeneratorFunc<T>, options?: FractalOptions) {
+    return new Fractal(generator, options)
 }
