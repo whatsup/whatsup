@@ -1,54 +1,29 @@
+import { Context } from './context'
 import { Emitable, EmitIterator, Emitter } from './emitter'
-import { Factor } from './factor'
 import { Mutator } from './mutator'
 import { ConsumerQuery } from './query'
 import { Temporary } from './temporary'
 
 const DESTROYER = Symbol('Destroy symbol')
 
-export class Scope<T> {
-    constructor(private readonly fork: Fork<T>) {
-        this.fork = fork
-    }
-
-    get consumer(): Scope<any> | null {
-        const { consumer } = this.fork
-        return consumer && consumer.scope
-    }
-
-    get context(): Scope<any> | null {
-        const { consumer, context } = this.fork
-        const fork = context || consumer
-        return fork && fork.scope
-    }
-
-    get<T>(factor: Factor<T>): T | undefined {
-        return factor.get(this)
-    }
-
-    set<T>(factor: Factor<T>, value: T) {
-        factor.set(this, value)
-    }
-}
-
 export class Fork<T = any> {
     readonly emitter: Emitter<T>
     readonly consumer: Fork | null
-    readonly context: Fork | null
-    readonly scope: Scope<T> = new Scope(this)
+    readonly delegator: Fork | null
+    readonly context: Context = new Context(this)
     private readonly stack = [] as EmitIterator<T>[]
     private readonly forks = new WeakMap<Emitable<any>, Fork>()
-    private readonly contextBounds = new WeakMap<Emitter<any>, ContextBound<T>>()
+    private readonly delegations = new WeakMap<Emitter<any>, Delegation<T>>()
     private readonly dependencies = new Dependencies()
-    private data!: T | ContextBound<T>
+    private data!: T | Delegation<T>
     private revision = 0
     private aliveId = 0
     private building = false
 
-    constructor(emitter: Emitter<T>, consumer: Fork | null = null, context: Fork | null = null) {
+    constructor(emitter: Emitter<T>, consumer: Fork | null = null, delegator: Fork | null = null) {
         this.emitter = emitter
         this.consumer = consumer
-        this.context = context
+        this.delegator = delegator
     }
 
     async live() {
@@ -118,7 +93,7 @@ export class Fork<T = any> {
         return this.data
     }
 
-    protected setData(data: T | ContextBound<T>) {
+    protected setData(data: T | Delegation<T>) {
         this.data = data
     }
 
@@ -129,7 +104,7 @@ export class Fork<T = any> {
     }
 
     private async build() {
-        const { aliveId, stack, dependencies, emitter, scope } = this
+        const { aliveId, stack, dependencies, emitter, context } = this
 
         this.beforeBuild()
 
@@ -139,7 +114,7 @@ export class Fork<T = any> {
             temporary = false
 
             if (!stack.length) {
-                stack.push(emitter.collector(scope))
+                stack.push(emitter.collector(context))
             }
 
             let input: any
@@ -166,7 +141,7 @@ export class Fork<T = any> {
                 if (value instanceof Fork) {
                     const data = value.getData()
 
-                    if (data instanceof ContextBound) {
+                    if (data instanceof Delegation) {
                         stack.push(data.iterator())
                         input = void 0
                     } else {
@@ -217,21 +192,21 @@ export class Fork<T = any> {
         if (source instanceof Emitter) {
             return new Fork<U>(source, this)
         }
-        if (source instanceof ContextBound) {
-            const { emitter, context } = source
-            return new Fork<U>(emitter, this, context)
+        if (source instanceof Delegation) {
+            const { emitter, delegator } = source
+            return new Fork<U>(emitter, this, delegator)
         }
         throw 'Unknown fork source'
     }
 
-    private getContextBound(emitter: Emitter<T>) {
-        if (!this.contextBounds.has(emitter)) {
-            this.contextBounds.set(emitter, new ContextBound(emitter, this))
+    private getDelegation(emitter: Emitter<T>) {
+        if (!this.delegations.has(emitter)) {
+            this.delegations.set(emitter, new Delegation(emitter, this))
         }
-        return this.contextBounds.get(emitter)!
+        return this.delegations.get(emitter)!
     }
 
-    private async prepareNewData(value: T | Temporary<T>): Promise<T | ContextBound<T>> {
+    private async prepareNewData(value: T | Temporary<T>): Promise<T | Delegation<T>> {
         if (value instanceof Temporary) {
             return this.prepareNewData(await value.data)
         }
@@ -241,15 +216,15 @@ export class Fork<T = any> {
         }
 
         if (this.emitter.delegation && value instanceof Emitter) {
-            return this.getContextBound(value)
+            return this.getDelegation(value)
         }
 
         return value
     }
 }
 
-class ContextBound<T> extends Emitable<T> {
-    constructor(readonly emitter: Emitter<T>, readonly context: Fork<T>) {
+class Delegation<T> extends Emitable<T> {
+    constructor(readonly emitter: Emitter<T>, readonly delegator: Fork<T>) {
         super()
     }
 

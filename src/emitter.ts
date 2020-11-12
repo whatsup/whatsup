@@ -1,11 +1,12 @@
-import { Fork, Scope } from './fork'
+import { Fork } from './fork'
+import { Context } from './context'
 import { ConsumerQuery } from './query'
 import { Temporary } from './temporary'
 
 export type Bubble<T> = T | Temporary<T> | Fork<any> | ConsumerQuery
 export type EmitIterator<T> = AsyncIterator<Bubble<T>, T, any>
 export type EmitGenerator<T> = AsyncGenerator<Bubble<T>, any, any>
-export type EmitGeneratorFunc<T> = (context?: Scope<T>) => EmitGenerator<T>
+export type EmitGeneratorFunc<T> = (context?: Context) => EmitGenerator<T>
 
 const CONSUMER_QUERY = new ConsumerQuery()
 
@@ -22,7 +23,7 @@ export interface EmitterOptions {
 
 export abstract class Emitter<T> extends Emitable<T> {
     readonly delegation: boolean
-    abstract collector(context?: Scope<T>): EmitGenerator<T>
+    abstract collector(context?: Context): EmitGenerator<T>
 
     constructor(options: EmitterOptions = {}) {
         super()

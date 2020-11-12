@@ -1,25 +1,25 @@
-import { Scope } from './fork'
+import { Context } from './context'
 
 export class Factor<T> {
-    private scopes = new WeakMap<Scope<any>, T>()
+    private contexts = new WeakMap<Context, T>()
 
     constructor(readonly defaultValue?: T) {}
 
-    get(scope: Scope<any>) {
-        let { context } = scope
+    get(context: Context) {
+        let source = context.parent
 
-        while (context) {
-            if (this.scopes.has(context)) {
-                return this.scopes.get(context)
+        while (source) {
+            if (this.contexts.has(source)) {
+                return this.contexts.get(source)
             }
-            context = context.context
+            source = source.parent
         }
 
         return this.defaultValue
     }
 
-    set(scope: Scope<any>, value: T) {
-        this.scopes.set(scope, value)
+    set(scope: Context, value: T) {
+        this.contexts.set(scope, value)
     }
 }
 

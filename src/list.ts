@@ -1,6 +1,6 @@
 import { Emitter } from './emitter'
 import { Fraction, FractionOptions } from './fraction'
-import { Scope } from './fork'
+import { Context } from './context'
 
 export interface ListOptions extends FractionOptions {}
 
@@ -9,10 +9,10 @@ export class List<T> extends Fraction<T[]> {
         return this.get()
     }
 
-    async *collector(scope: Scope<T[]>) {
+    async *collector(context: Context) {
         const { delegation } = this
 
-        for await (const items of super.collector(scope)) {
+        for await (const items of super.collector(context)) {
             const result = [] as T[]
 
             for (const item of items) {
