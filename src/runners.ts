@@ -85,16 +85,16 @@ export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
     return () => fork.destroy()
 }
 
-export async function exec<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
-    const emitter = normalizeSource(source)
-    const root = new RootEmitter(emitter)
-    const fork = new Fork(root)
+// export async function exec<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
+//     const emitter = normalizeSource(source)
+//     const root = new RootEmitter(emitter)
+//     const fork = new Fork(root)
 
-    await fork.live()
+//     await fork.live()
 
-    const result = fork.getData()
+//     const result = fork.getData()
 
-    fork.destroy()
+//     fork.destroy()
 
-    return result as T
-}
+//     return result as T
+// }
