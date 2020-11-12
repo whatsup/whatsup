@@ -5,7 +5,7 @@ export interface FractionOptions extends EmitterOptions {}
 
 export class Fraction<T> extends Emitter<T> {
     private contexts = new Set<Context>()
-    private data: T
+    protected data: T
 
     constructor(value: T, options: FractionOptions = {}) {
         super(options)
