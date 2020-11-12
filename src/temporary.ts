@@ -1,5 +1,9 @@
 export class Temporary<T> {
-    constructor(readonly data: T | Promise<T>) {}
+    readonly data: T | Promise<T>
+
+    constructor(data: T | Promise<T>) {
+        this.data = data
+    }
 }
 
 export function tmp<T>(data: T | Promise<T>) {

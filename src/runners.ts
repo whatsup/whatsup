@@ -52,8 +52,11 @@ class StreamFork<T> extends Fork<T> {
 }
 
 class RootEmitter<T> extends Emitter<T> {
-    constructor(readonly target: Emitter<T>, options?: EmitterOptions) {
+    readonly target: Emitter<T>
+
+    constructor(target: Emitter<T>, options?: EmitterOptions) {
         super(options)
+        this.target = target
     }
 
     async *collector() {
@@ -85,17 +88,3 @@ export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
 
     return () => fork.destroy()
 }
-
-// export async function exec<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
-//     const emitter = normalizeSource(source)
-//     const root = new RootEmitter(emitter)
-//     const fork = new Fork(root)
-
-//     await fork.live()
-
-//     const result = fork.getData()
-
-//     fork.destroy()
-
-//     return result as T
-// }

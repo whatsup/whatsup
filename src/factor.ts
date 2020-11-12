@@ -1,9 +1,12 @@
 import { Context } from './context'
 
 export class Factor<T> {
+    readonly defaultValue?: T
     private contexts = new WeakMap<Context, T>()
 
-    constructor(readonly defaultValue?: T) {}
+    constructor(defaultValue?: T) {
+        this.defaultValue = defaultValue
+    }
 
     get(context: Context) {
         let source = context.parent
