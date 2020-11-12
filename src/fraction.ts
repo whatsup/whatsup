@@ -1,11 +1,10 @@
 import { Emitter, EmitterOptions } from './emitter'
-import { Fork } from './fork'
 import { Context } from './context'
 
 export interface FractionOptions extends EmitterOptions {}
 
 export class Fraction<T> extends Emitter<T> {
-    private forks = new Set<Fork>()
+    private contexts = new Set<Context>()
     private data: T
 
     constructor(value: T, options: FractionOptions = {}) {
@@ -14,22 +13,22 @@ export class Fraction<T> extends Emitter<T> {
     }
 
     async *collector(context: Context) {
-        this.forks.add(context['fork'])
+        this.contexts.add(context)
 
         try {
             while (true) {
                 yield this.data
             }
         } finally {
-            this.forks.delete(context['fork'])
+            this.contexts.delete(context)
         }
     }
 
     use(value: T) {
         this.data = value
 
-        for (const fork of this.forks) {
-            fork.update()
+        for (const context of this.contexts) {
+            context.update()
         }
     }
 
