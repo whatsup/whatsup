@@ -5,10 +5,6 @@ import { Context } from './context'
 export interface ListOptions extends FractionOptions {}
 
 export class List<T> extends Fraction<T[]> {
-    get items() {
-        return this.get()
-    }
-
     async *collector(context: Context) {
         const { delegation } = this
 
@@ -28,42 +24,42 @@ export class List<T> extends Fraction<T[]> {
     }
 
     push(...items: T[]): number {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         const result = newItems.push(...items)
         this.set(newItems)
         return result
     }
 
     unshift(...items: T[]): number {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         const result = newItems.unshift(...items)
         this.set(newItems)
         return result
     }
 
     pop(): T | undefined {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         const result = newItems.pop()
         this.set(newItems)
         return result
     }
 
     shift(): T | undefined {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         const result = newItems.shift()
         this.set(newItems)
         return result
     }
 
     sort(compareFn?: (a: T, b: T) => number): this {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         newItems.sort(compareFn)
         this.set(newItems)
         return this
     }
 
     reverse(): this {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         newItems.reverse()
         this.set(newItems)
         return this
@@ -71,14 +67,14 @@ export class List<T> extends Fraction<T[]> {
 
     splice(start: number, deleteCount?: number): this
     splice(start: number, deleteCount: number, ...items: T[]): this {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         newItems.splice(start, deleteCount, ...items)
         this.set(newItems)
         return this
     }
 
     delete(item: T) {
-        const index = this.items.indexOf(item)
+        const index = this.data.indexOf(item)
 
         if (index !== -1) {
             this.deleteAt(index)
@@ -86,7 +82,7 @@ export class List<T> extends Fraction<T[]> {
     }
 
     deleteAt(index: number) {
-        const newItems = this.items.slice()
+        const newItems = this.data.slice()
         newItems.splice(index, 1)
         this.set(newItems)
     }
