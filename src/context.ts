@@ -21,4 +21,8 @@ export class Context {
     set<T>(factor: Factor<T>, value: T) {
         factor.set(this, value)
     }
+
+    update() {
+        this.fork.update()
+    }
 }
