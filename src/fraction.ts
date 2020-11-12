@@ -32,6 +32,10 @@ export class Fraction<T> extends Emitter<T> {
         }
     }
 
+    get() {
+        return this.data
+    }
+
     set(value: T) {
         this.use(value)
     }
