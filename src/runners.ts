@@ -7,7 +7,7 @@ interface Frame<T> {
     next: Promise<Frame<T>>
 }
 
-class StreamFork<T> extends Atom<T> {
+class Stream<T> extends Atom<T> {
     private resolveNextFrame!: (data: T) => void
     private frame!: Promise<Frame<T>>
 
@@ -76,7 +76,7 @@ function normalizeSource<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
 export function stream<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
     const emitter = normalizeSource(source)
     const root = new RootEmitter(emitter)
-    return new StreamFork(root).stream()
+    return new Stream(root).stream()
 }
 
 export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
