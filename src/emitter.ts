@@ -1,9 +1,9 @@
-import { Fork } from './fork'
+import { Atom } from './atom'
 import { Context } from './context'
 import { ConsumerQuery } from './query'
 import { Temporary } from './temporary'
 
-export type Bubble<T> = T | Temporary<T> | Fork<any> | ConsumerQuery
+export type Bubble<T> = T | Temporary<T> | Atom<any> | ConsumerQuery
 export type EmitIterator<T> = AsyncIterator<Bubble<T>, T, any>
 export type EmitGenerator<T> = AsyncGenerator<Bubble<T>, any, any>
 export type EmitGeneratorFunc<T> = (context?: Context) => EmitGenerator<T>
@@ -13,7 +13,7 @@ const CONSUMER_QUERY = new ConsumerQuery()
 export abstract class Emitable<T> {
     async *[Symbol.asyncIterator](): AsyncGenerator<any, T, any> {
         const consumer = yield* CONSUMER_QUERY
-        return yield* consumer.getFork(this)
+        return yield* consumer.getSubatom(this)
     }
 }
 

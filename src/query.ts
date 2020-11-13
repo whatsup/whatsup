@@ -1,4 +1,4 @@
-import { Fork } from './fork';
+import { Atom } from './atom'
 
 export class Query<T> {
     async *[Symbol.asyncIterator](): AsyncGenerator<this, T, T> {
@@ -6,4 +6,4 @@ export class Query<T> {
     }
 }
 
-export class ConsumerQuery extends Query<Fork> {}
+export class ConsumerQuery extends Query<Atom> {}

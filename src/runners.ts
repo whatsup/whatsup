@@ -1,17 +1,17 @@
 import { fractal } from './fractal'
 import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
-import { Fork } from './fork'
+import { Atom } from './atom'
 
 interface Frame<T> {
     data: T
     next: Promise<Frame<T>>
 }
 
-class StreamFork<T> extends Fork<T> {
+class StreamFork<T> extends Atom<T> {
     private resolveNextFrame!: (data: T) => void
     private frame!: Promise<Frame<T>>
 
-    constructor(emitter: Emitter<T>, consumer: Fork | null = null, context: Fork | null = null) {
+    constructor(emitter: Emitter<T>, consumer: Atom | null = null, context: Atom | null = null) {
         super(emitter, consumer, context)
         this.createFramePromise()
     }
@@ -36,7 +36,7 @@ class StreamFork<T> extends Fork<T> {
 
     async *stream() {
         try {
-            this.live()
+            this.activate()
 
             let { frame } = this
 
@@ -82,9 +82,9 @@ export function stream<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
 export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
     const emitter = normalizeSource(source)
     const root = new RootEmitter(emitter)
-    const fork = new Fork(root)
+    const atom = new Atom(root)
 
-    fork.live()
+    atom.activate()
 
-    return () => fork.destroy()
+    return () => atom.destroy()
 }

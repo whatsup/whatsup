@@ -1,16 +1,16 @@
 import { Factor } from './factor'
-import { Fork } from './fork'
+import { Atom } from './atom'
 
 export class Context {
-    private readonly fork: Fork
+    private readonly atom: Atom
 
-    constructor(fork: Fork) {
-        this.fork = fork
+    constructor(atom: Atom) {
+        this.atom = atom
     }
 
     /** @internal */
     get parent(): Context | null {
-        const { consumer, delegator } = this.fork
+        const { consumer, delegator } = this.atom
         return delegator?.context || consumer?.context || null
     }
 
@@ -23,6 +23,6 @@ export class Context {
     }
 
     update() {
-        this.fork.update()
+        this.atom.update()
     }
 }

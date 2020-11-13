@@ -6,35 +6,35 @@ import { Temporary } from './temporary'
 
 const DESTROYER = Symbol('Destroy symbol')
 
-export class Fork<T = any> {
+export class Atom<T = any> {
     readonly emitter: Emitter<T>
-    readonly consumer: Fork | null
-    readonly delegator: Fork | null
+    readonly consumer: Atom | null
+    readonly delegator: Atom | null
     readonly context: Context = new Context(this)
     private readonly stack = [] as EmitIterator<T>[]
-    private readonly forks = new WeakMap<Emitable<any>, Fork>()
+    private readonly subatoms = new WeakMap<Emitable<any>, Atom>()
     private readonly delegations = new WeakMap<Emitter<any>, Delegation<T>>()
     private readonly dependencies = new Dependencies()
     private data!: T | Delegation<T>
     private revision = 0
-    private aliveId = 0
+    private activityId = 0
     private building = false
 
-    constructor(emitter: Emitter<T>, consumer: Fork | null = null, delegator: Fork | null = null) {
+    constructor(emitter: Emitter<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
         this.emitter = emitter
         this.consumer = consumer
         this.delegator = delegator
     }
 
-    async live() {
-        if (!this.aliveId) {
-            this.aliveId = Math.random()
+    async activate() {
+        if (!this.activityId) {
+            this.activityId = Math.random()
             await this.build()
         }
     }
 
     async *[Symbol.asyncIterator]() {
-        await this.live()
+        await this.activate()
         return yield this
     }
 
@@ -42,7 +42,7 @@ export class Fork<T = any> {
         return this.rebuild()
     }
 
-    async rebuild(initiator?: Fork) {
+    async rebuild(initiator?: Atom) {
         if (this.building) {
             if (initiator) {
                 this.dependencies.addUnsynchronized(initiator)
@@ -66,7 +66,7 @@ export class Fork<T = any> {
     }
 
     destroy() {
-        this.aliveId = 0
+        this.activityId = 0
         this.building = false
         this.revision = 0
         this.data = (void 0 as unknown) as T
@@ -77,12 +77,12 @@ export class Fork<T = any> {
         }
     }
 
-    getFork<U>(key: Emitable<U>) {
-        if (!this.forks.has(key)) {
-            const fork = this.fork(key)
-            this.forks.set(key, fork)
+    getSubatom<U>(key: Emitable<U>) {
+        if (!this.subatoms.has(key)) {
+            const atom = this.createSubatom(key)
+            this.subatoms.set(key, atom)
         }
-        return this.forks.get(key)!
+        return this.subatoms.get(key)!
     }
 
     getRevision() {
@@ -97,14 +97,14 @@ export class Fork<T = any> {
         this.data = data
     }
 
-    private destroyControl(aliveId: number) {
-        if (this.aliveId !== aliveId) {
+    private activityThreadControl(activityId: number) {
+        if (this.activityId !== activityId) {
             throw DESTROYER
         }
     }
 
     private async build() {
-        const { aliveId, stack, dependencies, emitter, context } = this
+        const { activityId, stack, dependencies, emitter, context } = this
 
         this.beforeBuild()
 
@@ -124,7 +124,7 @@ export class Fork<T = any> {
                 const iterator = stack[lastIndex]
                 const { done, value } = await iterator.next(input)
 
-                this.destroyControl(aliveId)
+                this.activityThreadControl(activityId)
 
                 if (done) {
                     stack.pop()
@@ -138,7 +138,7 @@ export class Fork<T = any> {
                     input = this
                     continue
                 }
-                if (value instanceof Fork) {
+                if (value instanceof Atom) {
                     const data = value.getData()
 
                     if (data instanceof Delegation) {
@@ -157,7 +157,7 @@ export class Fork<T = any> {
 
                 const newData = await this.prepareNewData(value)
 
-                this.destroyControl(aliveId)
+                this.activityThreadControl(activityId)
 
                 if (!dependencies.synchronize()) {
                     continue main
@@ -188,15 +188,15 @@ export class Fork<T = any> {
         this.building = false
     }
 
-    private fork<U>(source: Emitable<U>): Fork<U> {
+    private createSubatom<U>(source: Emitable<U>): Atom<U> {
         if (source instanceof Emitter) {
-            return new Fork<U>(source, this)
+            return new Atom<U>(source, this)
         }
         if (source instanceof Delegation) {
             const { emitter, delegator } = source
-            return new Fork<U>(emitter, this, delegator)
+            return new Atom<U>(emitter, this, delegator)
         }
-        throw 'Unknown fork source'
+        throw 'Unknown atom source'
     }
 
     private getDelegation(emitter: Emitter<T>) {
@@ -224,7 +224,7 @@ export class Fork<T = any> {
 }
 
 class Delegation<T> extends Emitable<T> {
-    constructor(readonly emitter: Emitter<T>, readonly delegator: Fork<T>) {
+    constructor(readonly emitter: Emitter<T>, readonly delegator: Atom<T>) {
         super()
     }
 
@@ -234,17 +234,17 @@ class Delegation<T> extends Emitable<T> {
 }
 
 class Dependencies {
-    private current = new Map<Fork, number>()
-    private fusty = new Map<Fork, number>()
-    private unsynchronized = new Set<Fork>()
+    private current = new Map<Atom, number>()
+    private fusty = new Map<Atom, number>()
+    private unsynchronized = new Set<Atom>()
 
-    add(fork: Fork) {
-        const revision = fork.getRevision()
-        this.current.set(fork, revision)
+    add(atom: Atom) {
+        const revision = atom.getRevision()
+        this.current.set(atom, revision)
     }
 
-    addUnsynchronized(fork: Fork) {
-        this.unsynchronized.add(fork)
+    addUnsynchronized(atom: Atom) {
+        this.unsynchronized.add(atom)
     }
 
     clearCurrent() {
@@ -258,23 +258,23 @@ class Dependencies {
     }
 
     destroy() {
-        this.current.forEach((_, fork) => fork.destroy())
+        this.current.forEach((_, atom) => atom.destroy())
         this.current.clear()
     }
 
     destroyUnused() {
-        this.fusty.forEach((_, fork) => !this.current.has(fork) && fork.destroy())
+        this.fusty.forEach((_, atom) => !this.current.has(atom) && atom.destroy())
         this.fusty.clear()
     }
 
     synchronize() {
-        for (const fork of this.unsynchronized) {
-            this.unsynchronized.delete(fork)
+        for (const atom of this.unsynchronized) {
+            this.unsynchronized.delete(atom)
 
-            if (this.current.has(fork)) {
-                const revision = this.current.get(fork)
+            if (this.current.has(atom)) {
+                const revision = this.current.get(atom)
 
-                if (fork.getRevision() !== revision) {
+                if (atom.getRevision() !== revision) {
                     this.clearCurrent()
                     return false
                 }

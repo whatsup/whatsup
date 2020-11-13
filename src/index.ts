@@ -1,5 +1,5 @@
 export { Emitter, EmitterOptions } from './emitter'
-export { Fork } from './fork'
+export { Atom } from './atom'
 export { fractal, Fractal, FractalOptions } from './fractal'
 export { fraction, Fraction, FractionOptions } from './fraction'
 export { list, List, ListOptions } from './list'
