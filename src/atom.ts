@@ -229,7 +229,7 @@ class Delegation<T> extends Emitable<T> {
         super()
     }
 
-    iterator() {
-        return this[Symbol.asyncIterator]()
+    async *iterator() {
+        return yield* this
     }
 }
