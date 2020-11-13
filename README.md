@@ -1,8 +1,8 @@
 ![](https://habrastorage.org/webt/be/j4/hv/bej4hv3g2qxp8vgwoex-2knhcoo.png)
 
 <div align="center">
-<img src="https://img.shields.io/travis/fract/core" alt="travis" />
-<img src="https://img.shields.io/codecov/c/github/fract/core" alt="codecov" />
+<img src="https://img.shields.io/travis/fract/core/master" alt="travis" />
+<img src="https://img.shields.io/codecov/c/github/fract/core/master" alt="codecov" />
 <img src="https://img.shields.io/bundlephobia/min/@fract/core" alt="size" />
 <img src="https://img.shields.io/github/languages/top/fract/core" alt="language" />
 <img src="https://img.shields.io/npm/l/@fract/core" alt="npm" /> 
