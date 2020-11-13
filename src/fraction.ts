@@ -5,9 +5,9 @@ export interface FractionOptions extends EmitterOptions {}
 
 export class Fraction<T> extends Emitter<T> {
     private contexts = new Set<Context>()
-    protected data: T | Promise<T>
+    protected data: T
 
-    constructor(value: T | Promise<T>, options: FractionOptions = {}) {
+    constructor(value: T, options: FractionOptions = {}) {
         super(options)
         this.data = value
     }
@@ -28,7 +28,7 @@ export class Fraction<T> extends Emitter<T> {
         return this.data
     }
 
-    set(value: T | Promise<T>) {
+    set(value: T) {
         this.data = value
 
         for (const context of this.contexts) {
@@ -37,6 +37,6 @@ export class Fraction<T> extends Emitter<T> {
     }
 }
 
-export function fraction<T>(value: T | Promise<T>, options?: FractionOptions) {
+export function fraction<T>(value: T, options?: FractionOptions) {
     return new Fraction(value, options)
 }
