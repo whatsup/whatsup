@@ -44,6 +44,9 @@ export class Atom<T = any> {
     }
 
     async rebuild(initiator?: Atom) {
+        if (!this.activityId) {
+            throw 'Atom is not active'
+        }
         if (this.building) {
             if (initiator) {
                 this.dependencies.addUnsynchronized(initiator)
