@@ -47,7 +47,7 @@ export class List<T> extends Fraction<T[]> {
         const newItems = this.data.slice()
 
         for (const item of items) {
-            const index = this.data.indexOf(item)
+            const index = newItems.indexOf(item)
             newItems.splice(index, 1)
         }
 
