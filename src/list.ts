@@ -23,54 +23,41 @@ export class List<T> extends Fraction<T[]> {
         }
     }
 
-    push(...items: T[]): number {
-        const newItems = this.data.slice()
-        const result = newItems.push(...items)
-        this.set(newItems)
-        return result
-    }
-
-    pop(): T | undefined {
-        const newItems = this.data.slice()
-        const result = newItems.pop()
-        this.set(newItems)
-        return result
-    }
-
-    unshift(...items: T[]): number {
-        const newItems = this.data.slice()
-        const result = newItems.unshift(...items)
-        this.set(newItems)
-        return result
-    }
-
-    shift(): T | undefined {
-        const newItems = this.data.slice()
-        const result = newItems.shift()
-        this.set(newItems)
-        return result
-    }
-
     splice(start: number, deleteCount?: number): this
-    splice(start: number, deleteCount: number, ...items: T[]): this {
+    splice(start: number, deleteCount: number, ...items: T[]): this
+    splice(start: number, ...other: any[]): this {
         const newItems = this.data.slice()
-        newItems.splice(start, deleteCount, ...items)
+        newItems.splice(start, ...other)
         this.set(newItems)
         return this
     }
 
-    delete(item: T): this {
-        const index = this.data.indexOf(item)
+    insert(...items: T[]): this {
+        const newItems = this.data.slice()
+        newItems.push(...items)
+        this.set(newItems)
+        return this
+    }
 
-        if (index !== -1) {
-            this.deleteAt(index)
+    insertAt(index: number, ...items: T[]): this {
+        return this.splice(index, 0, ...items)
+    }
+
+    delete(...items: T[]): this {
+        const newItems = this.data.slice()
+
+        for (const item of items) {
+            const index = this.data.indexOf(item)
+            newItems.splice(index, 1)
         }
 
+        this.set(newItems)
+
         return this
     }
 
-    deleteAt(index: number): this {
-        return this.splice(index, 1)
+    deleteAt(index: number, deleteCount = 1): this {
+        return this.splice(index, deleteCount)
     }
 
     sort(compareFn?: (a: T, b: T) => number): this {
