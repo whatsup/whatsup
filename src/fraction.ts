@@ -35,10 +35,6 @@ export class Fraction<T> extends Emitter<T> {
             context.update()
         }
     }
-
-    use(value: T) {
-        this.set(value)
-    }
 }
 
 export function fraction<T>(value: T, options?: FractionOptions) {
