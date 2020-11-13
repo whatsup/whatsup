@@ -23,6 +23,6 @@ export class Context {
     }
 
     update() {
-        this.atom.update()
+        return this.atom.update()
     }
 }
