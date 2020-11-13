@@ -1,6 +1,6 @@
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
-import { live } from '../src'
+import { stream } from '../src/runners'
 
 describe('Execution order', () => {
     const delay = (time: number) => new Promise((r) => setTimeout(r, time))
@@ -26,17 +26,14 @@ describe('Execution order', () => {
             }
         })
         const Hub = fraction(1)
+        const st = await stream(App)
 
-        let frame = await live(App)
-
-        expect(frame.data).toBe(1)
+        expect((await st.next()).value).toBe(1)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3]))
 
-        Hub.use(2)
+        Hub.set(2)
 
-        frame = await frame.next
-
-        expect(frame.data).toBe(2)
+        expect((await st.next()).value).toBe(2)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 2, 1]))
     })
 
@@ -63,26 +60,22 @@ describe('Execution order', () => {
             }
         })
 
-        let frame = await live(App)
+        const st = stream(App)
 
-        expect(frame.data).toBe('1:2')
+        expect((await st.next()).value).toBe('1:2')
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3]))
 
-        Trigger1.use(
-            new Promise<number>((r) => setTimeout(() => r(11), 600))
+        Trigger1.set(
+            new Promise<number>((r) => setTimeout(() => r(11), 600)) as any
         )
-        Trigger2.use(
-            new Promise<number>((r) => setTimeout(() => r(22), 300))
+        Trigger2.set(
+            new Promise<number>((r) => setTimeout(() => r(22), 300)) as any
         )
 
-        frame = await frame.next
-
-        expect(frame.data).toBe('1:22')
+        expect((await st.next()).value).toBe('1:22')
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 1]))
 
-        frame = await frame.next
-
-        expect(frame.data).toBe('11:22')
+        expect((await st.next()).value).toBe('11:22')
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 1, 2, 1]))
     })
 
@@ -111,18 +104,21 @@ describe('Execution order', () => {
             }
         })
 
-        let frame = await live(Top)
+        const st = stream(Top)
+
+        await st.next()
 
         expect(mock).lastCalledWith(1)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3]))
 
-        Trigger2.use(2)
-        frame = await frame.next
+        Trigger2.set(2)
+
+        await st.next()
 
         expect(mock).lastCalledWith(2)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 1]))
 
-        Trigger1.use(2)
+        Trigger1.set(2)
         await delay(100)
 
         expect(mock).lastCalledWith(2)

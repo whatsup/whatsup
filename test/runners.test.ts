@@ -1,98 +1,49 @@
 import { fractal } from '../src/fractal'
-import { fraction } from '../src/fraction'
-import { exec, live } from '../src/runners'
-import { Frame, LiveFrame } from '../src/frame'
+import { live, stream } from '../src/runners'
 
 describe('Runners', () => {
-    it('exec runner', async () => {
-        const Name = fraction('John')
-        const Age = fraction(33)
-        const Balance = fraction(60)
+    const delay = (time: number) => new Promise((r) => setTimeout(r, time))
 
-        const Wallet = fractal(async function* () {
-            while (true) {
-                yield `Wallet ${yield* Balance}`
-            }
-        })
-
+    it(`live should return destroyer`, async () => {
+        const mock = jest.fn()
         const User = fractal(async function* () {
-            while (true) {
-                yield `User ${yield* Name} ${yield* Age} ${yield* Wallet}`
+            try {
+                while (true) {
+                    yield ''
+                }
+            } finally {
+                mock()
             }
         })
 
-        const frame = await exec(User)
+        const destroy = live(User)
 
-        expect(frame).toStrictEqual(new Frame('User John 33 Wallet 60'))
+        await delay(50)
+
+        destroy()
+
+        await delay(50)
+
+        expect(mock).toBeCalledTimes(1)
     })
 
-    it('live runner', async () => {
-        const Name = fraction('John')
-        const Age = fraction(33)
-        const Balance = fraction(60)
+    it(`should take async iterator`, async () => {
+        const mock = jest.fn()
 
-        const Wallet = fractal(async function* () {
-            while (true) {
-                yield `Wallet ${yield* Balance}`
+        const st = stream(async function* () {
+            try {
+                yield 'hello'
+            } finally {
+                mock()
             }
         })
 
-        const User = fractal(async function* () {
-            while (true) {
-                yield `User ${yield* Name} ${yield* Age} ${yield* Wallet}`
-            }
-        })
+        expect((await st.next()).value).toBe('hello')
 
-        const frame = await live(User)
+        st.return()
 
-        expect(frame).toStrictEqual(new LiveFrame('User John 33 Wallet 60', new Promise(() => {})))
-    })
+        await delay(50)
 
-    it('exec runner when target is generator', async () => {
-        const Name = fraction('John')
-        const Age = fraction(33)
-        const Balance = fraction(60)
-
-        const Wallet = fractal(async function* () {
-            while (true) {
-                yield `Wallet ${yield* Balance}`
-            }
-        })
-
-        const User = fractal(async function* () {
-            while (true) {
-                yield `User ${yield* Name} ${yield* Age} ${yield* Wallet}`
-            }
-        })
-
-        const frame = await exec(async function* () {
-            while (true) yield yield* User
-        })
-
-        expect(frame).toStrictEqual(new Frame('User John 33 Wallet 60'))
-    })
-
-    it('live runner when target is generator', async () => {
-        const Name = fraction('John')
-        const Age = fraction(33)
-        const Balance = fraction(60)
-
-        const Wallet = fractal(async function* () {
-            while (true) {
-                yield `Wallet ${yield* Balance}`
-            }
-        })
-
-        const User = fractal(async function* () {
-            while (true) {
-                yield `User ${yield* Name} ${yield* Age} ${yield* Wallet}`
-            }
-        })
-
-        const frame = await live(async function* () {
-            while (true) yield yield* User
-        })
-
-        expect(frame).toStrictEqual(new LiveFrame('User John 33 Wallet 60', new Promise(() => {})))
+        expect(mock).toBeCalledTimes(1)
     })
 })
