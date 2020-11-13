@@ -1,9 +1,14 @@
 import { Atom } from './atom'
 
 export class Dependencies {
+    private readonly atom: Atom
+    private readonly unsynchronized = new Set<Atom>()
     private current = new Map<Atom, number>()
     private fusty = new Map<Atom, number>()
-    private unsynchronized = new Set<Atom>()
+
+    constructor(atom: Atom) {
+        this.atom = atom
+    }
 
     add(atom: Atom) {
         const revision = atom.getRevision()
@@ -45,6 +50,9 @@ export class Dependencies {
                     this.clearCurrent()
                     return false
                 }
+            }
+            if (atom === this.atom) {
+                return false
             }
         }
         return true

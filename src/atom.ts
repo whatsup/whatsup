@@ -15,7 +15,7 @@ export class Atom<T = any> {
     private readonly stack = [] as EmitIterator<T>[]
     private readonly subatoms = new WeakMap<Emitable<any>, Atom>()
     private readonly delegations = new WeakMap<Emitter<any>, Delegation<T>>()
-    private readonly dependencies = new Dependencies()
+    private readonly dependencies = new Dependencies(this)
     private data!: T | Delegation<T>
     private revision = 0
     private activityId = 0
@@ -39,18 +39,16 @@ export class Atom<T = any> {
         return yield this
     }
 
-    update() {
-        return this.rebuild()
+    update(): Promise<void> {
+        return this.rebuild(this)
     }
 
-    async rebuild(initiator?: Atom) {
+    async rebuild(initiator: Atom) {
         if (!this.activityId) {
-            throw 'Atom is not active'
+            throw new Error('Atom is not active')
         }
         if (this.building) {
-            if (initiator) {
-                this.dependencies.addUnsynchronized(initiator)
-            }
+            this.dependencies.addUnsynchronized(initiator)
             return
         }
 
