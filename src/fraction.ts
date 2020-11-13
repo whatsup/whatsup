@@ -24,7 +24,11 @@ export class Fraction<T> extends Emitter<T> {
         }
     }
 
-    use(value: T) {
+    get() {
+        return this.data
+    }
+
+    set(value: T) {
         this.data = value
 
         for (const context of this.contexts) {
@@ -32,12 +36,8 @@ export class Fraction<T> extends Emitter<T> {
         }
     }
 
-    get() {
-        return this.data
-    }
-
-    set(value: T) {
-        this.use(value)
+    use(value: T) {
+        this.set(value)
     }
 }
 
