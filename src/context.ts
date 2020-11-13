@@ -1,5 +1,5 @@
-import { Factor } from './factor'
 import { Atom } from './atom'
+import { Factor } from './factor'
 
 export class Context {
     private readonly atom: Atom

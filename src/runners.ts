@@ -1,6 +1,6 @@
-import { fractal } from './fractal'
 import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
 import { Atom } from './atom'
+import { fractal } from './fractal'
 
 interface Frame<T> {
     data: T

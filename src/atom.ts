@@ -1,8 +1,8 @@
+import { Emitable, EmitIterator, Emitter } from './emitter'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { Emitable, EmitIterator, Emitter } from './emitter'
-import { Mutator } from './mutator'
 import { ConsumerQuery } from './query'
+import { Mutator } from './mutator'
 import { Temporary } from './temporary'
 
 const DESTROYER = Symbol('Destroy symbol')

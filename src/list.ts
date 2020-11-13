@@ -1,6 +1,6 @@
 import { Emitter } from './emitter'
-import { Fraction, FractionOptions } from './fraction'
 import { Context } from './context'
+import { Fraction, FractionOptions } from './fraction'
 
 export interface ListOptions extends FractionOptions {}
 
@@ -30,16 +30,16 @@ export class List<T> extends Fraction<T[]> {
         return result
     }
 
-    unshift(...items: T[]): number {
+    pop(): T | undefined {
         const newItems = this.data.slice()
-        const result = newItems.unshift(...items)
+        const result = newItems.pop()
         this.set(newItems)
         return result
     }
 
-    pop(): T | undefined {
+    unshift(...items: T[]): number {
         const newItems = this.data.slice()
-        const result = newItems.pop()
+        const result = newItems.unshift(...items)
         this.set(newItems)
         return result
     }
@@ -49,6 +49,28 @@ export class List<T> extends Fraction<T[]> {
         const result = newItems.shift()
         this.set(newItems)
         return result
+    }
+
+    splice(start: number, deleteCount?: number): this
+    splice(start: number, deleteCount: number, ...items: T[]): this {
+        const newItems = this.data.slice()
+        newItems.splice(start, deleteCount, ...items)
+        this.set(newItems)
+        return this
+    }
+
+    delete(item: T): this {
+        const index = this.data.indexOf(item)
+
+        if (index !== -1) {
+            this.deleteAt(index)
+        }
+
+        return this
+    }
+
+    deleteAt(index: number): this {
+        return this.splice(index, 1)
     }
 
     sort(compareFn?: (a: T, b: T) => number): this {
@@ -63,28 +85,6 @@ export class List<T> extends Fraction<T[]> {
         newItems.reverse()
         this.set(newItems)
         return this
-    }
-
-    splice(start: number, deleteCount?: number): this
-    splice(start: number, deleteCount: number, ...items: T[]): this {
-        const newItems = this.data.slice()
-        newItems.splice(start, deleteCount, ...items)
-        this.set(newItems)
-        return this
-    }
-
-    delete(item: T) {
-        const index = this.data.indexOf(item)
-
-        if (index !== -1) {
-            this.deleteAt(index)
-        }
-    }
-
-    deleteAt(index: number) {
-        const newItems = this.data.slice()
-        newItems.splice(index, 1)
-        this.set(newItems)
     }
 }
 
