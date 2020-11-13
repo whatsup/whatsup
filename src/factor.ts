@@ -21,8 +21,8 @@ export class Factor<T> {
         return this.defaultValue
     }
 
-    set(scope: Context, value: T) {
-        this.contexts.set(scope, value)
+    set(context: Context, value: T) {
+        this.contexts.set(context, value)
     }
 }
 
