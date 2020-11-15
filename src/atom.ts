@@ -15,11 +15,14 @@ export class Atom<T = any> {
     private readonly stack = [] as EmitIterator<T>[]
     private readonly subatoms = new WeakMap<Emitable<any>, Atom>()
     private readonly delegations = new WeakMap<Emitter<any>, Delegation<T>>()
-    private readonly dependencies = new Dependencies(this)
-    private data!: T | Delegation<T>
-    private revision = 0
+    private readonly dependencies: Dependencies = new Dependencies(this)
     private activityId = 0
-    private building = false
+    private builded = false
+    private revision = 0
+    private nextBuildStarter?: () => void
+    protected error?: unknown
+    protected data?: T | Delegation<T>
+    protected nextData?: Promise<T | Delegation<T>>
 
     constructor(emitter: Emitter<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
         this.emitter = emitter
@@ -43,35 +46,26 @@ export class Atom<T = any> {
         return this.rebuild(this)
     }
 
+    /** @internal */
     async rebuild(initiator: Atom) {
         if (!this.activityId) {
             throw new Error('Atom is not active')
         }
-        if (this.building) {
+        if (this.nextBuildStarter) {
+            this.nextBuildStarter()
+            this.nextBuildStarter = undefined
+        } else {
             this.dependencies.addUnsynchronized(initiator)
-            return
-        }
-
-        const oldData = this.data
-
-        try {
-            await this.build()
-
-            if (this.consumer && this.data !== oldData) {
-                this.consumer.rebuild(this)
-            }
-        } catch (e) {
-            if (e !== DESTROYER) {
-                throw e
-            }
         }
     }
 
     destroy() {
         this.activityId = 0
-        this.building = false
+        this.builded = false
         this.revision = 0
-        this.data = (void 0 as unknown) as T
+        this.data = undefined
+        this.nextData = undefined
+        this.nextBuildStarter = undefined
         this.dependencies.destroy()
 
         while (this.stack.length) {
@@ -95,26 +89,12 @@ export class Atom<T = any> {
         return this.data
     }
 
-    protected setData(data: T | Delegation<T>) {
-        this.data = data
-    }
-
-    private activityThreadControl(activityId: number) {
-        if (this.activityId !== activityId) {
-            throw DESTROYER
-        }
-    }
-
-    private async build() {
+    private async build(): Promise<T | Delegation<T>> {
         const { activityId, stack, dependencies, emitter, context } = this
 
-        this.beforeBuild()
-
-        let temporary: boolean
+        dependencies.swap()
 
         main: while (true) {
-            temporary = false
-
             if (!stack.length) {
                 stack.push(emitter.collector(context))
             }
@@ -124,70 +104,91 @@ export class Atom<T = any> {
             while (true) {
                 const lastIndex = stack.length - 1
                 const iterator = stack[lastIndex]
-                const { done, value } = await iterator.next(input)
 
-                this.activityThreadControl(activityId)
+                try {
+                    const { done, value } = await iterator.next(input)
 
-                if (done) {
-                    stack.pop()
+                    if (this.activityId !== activityId) {
+                        throw DESTROYER
+                    }
+                    if (done) {
+                        stack.pop()
 
-                    if (stack.length) {
-                        input = value
+                        if (stack.length) {
+                            input = value
+                            continue
+                        }
+                    }
+                    if (value instanceof ConsumerQuery) {
+                        input = this
                         continue
                     }
-                }
-                if (value instanceof ConsumerQuery) {
-                    input = this
-                    continue
-                }
-                if (value instanceof Atom) {
-                    const data = value.getData()
+                    if (value instanceof Atom) {
+                        const data = value.getData()
 
-                    if (data instanceof Delegation) {
-                        stack.push(data.iterator())
-                        input = void 0
-                    } else {
-                        input = data as T
+                        if (data instanceof Delegation) {
+                            stack.push(data.iterator())
+                            input = undefined
+                        } else {
+                            input = data as T
+                        }
+
+                        dependencies.add(value)
+                        continue
+                    }
+                    if (!dependencies.synchronize()) {
+                        dependencies.reswap()
+                        continue main
                     }
 
-                    dependencies.add(value)
-                    continue
-                }
-                if (value instanceof Temporary) {
-                    temporary = true
-                }
+                    await this.updateData(value)
 
-                const newData = await this.prepareNewData(value)
-
-                this.activityThreadControl(activityId)
-
-                if (!dependencies.synchronize()) {
-                    continue main
+                    dependencies.destroyUnused()
+                } catch (e) {
+                    if (e !== DESTROYER) {
+                        throw e
+                    }
                 }
 
-                this.setData(newData)
-
-                break
+                return this.data!
             }
-            break
-        }
-
-        this.afterBuild()
-
-        if (temporary) {
-            this.update()
         }
     }
 
-    private beforeBuild() {
-        this.building = true
-        this.dependencies.swap()
-    }
+    private async updateData(value: T | Temporary<T>) {
+        const temporary = value instanceof Temporary
+        const data = this.prepareNewData(temporary ? await (value as Temporary<T>).data : (value as T))
+        const nextData = this.createNextDataStarter(temporary).then(() => this.build())
 
-    private afterBuild() {
-        this.dependencies.destroyUnused()
+        if (this.builded) {
+            if (this.consumer && data !== this.data) {
+                this.consumer.rebuild(this)
+            }
+        } else {
+            this.builded = true
+        }
+
+        this.data = data
+        this.nextData = nextData
         this.revision++
-        this.building = false
+    }
+
+    private prepareNewData(value: T): T | Delegation<T> {
+        if (value instanceof Mutator) {
+            return value.mutate(this.data) as T
+        }
+        if (this.emitter.delegation && value instanceof Emitter) {
+            return this.getDelegation(value)
+        }
+
+        return value
+    }
+
+    private createNextDataStarter(temporary: boolean): Promise<void> {
+        if (temporary) {
+            return Promise.resolve()
+        }
+        return new Promise((r) => (this.nextBuildStarter = r))
     }
 
     private createSubatom<U>(source: Emitable<U>): Atom<U> {
@@ -206,22 +207,6 @@ export class Atom<T = any> {
             this.delegations.set(emitter, new Delegation(emitter, this))
         }
         return this.delegations.get(emitter)!
-    }
-
-    private async prepareNewData(value: T | Temporary<T>): Promise<T | Delegation<T>> {
-        if (value instanceof Temporary) {
-            return this.prepareNewData(await value.data)
-        }
-
-        if (value instanceof Mutator) {
-            return value.mutate(this.data) as T
-        }
-
-        if (this.emitter.delegation && value instanceof Emitter) {
-            return this.getDelegation(value)
-        }
-
-        return value
     }
 }
 

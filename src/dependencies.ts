@@ -13,20 +13,22 @@ export class Dependencies {
     add(atom: Atom) {
         const revision = atom.getRevision()
         this.current.set(atom, revision)
+        this.fusty.delete(atom)
     }
 
     addUnsynchronized(atom: Atom) {
         this.unsynchronized.add(atom)
     }
 
-    clearCurrent() {
-        this.current.clear()
-    }
-
     swap() {
-        const { current, fusty: fusty } = this
+        const { current, fusty } = this
         this.current = fusty
         this.fusty = current
+    }
+
+    reswap() {
+        this.current.forEach((revision, atom) => this.fusty.set(atom, revision))
+        this.current.clear()
     }
 
     destroy() {
@@ -35,7 +37,7 @@ export class Dependencies {
     }
 
     destroyUnused() {
-        this.fusty.forEach((_, atom) => !this.current.has(atom) && atom.destroy())
+        this.fusty.forEach((_, atom) => atom.destroy())
         this.fusty.clear()
     }
 
@@ -47,7 +49,6 @@ export class Dependencies {
                 const revision = this.current.get(atom)
 
                 if (atom.getRevision() !== revision) {
-                    this.clearCurrent()
                     return false
                 }
             }
