@@ -39,6 +39,13 @@ export class Atom<T = any> {
 
     async *[Symbol.asyncIterator]() {
         await this.activate()
+
+        if (this.hasError()) {
+            const e = yield this
+
+            throw e
+        }
+
         return yield this
     }
 
@@ -60,6 +67,7 @@ export class Atom<T = any> {
     }
 
     destroy() {
+        this.error = undefined
         this.activityId = 0
         this.builded = false
         this.revision = 0
@@ -87,6 +95,14 @@ export class Atom<T = any> {
 
     getData() {
         return this.data
+    }
+
+    hasError() {
+        return !!this.error
+    }
+
+    getError() {
+        return this.error
     }
 
     private async build(): Promise<T | Delegation<T>> {
@@ -124,13 +140,17 @@ export class Atom<T = any> {
                         continue
                     }
                     if (value instanceof Atom) {
-                        const data = value.getData()
-
-                        if (data instanceof Delegation) {
-                            stack.push(data.iterator())
-                            input = undefined
+                        if (value.hasError()) {
+                            input = value.getError()
                         } else {
-                            input = data as T
+                            const data = value.getData()
+
+                            if (data instanceof Delegation) {
+                                stack.push(data.iterator())
+                                input = undefined
+                            } else {
+                                input = data as T
+                            }
                         }
 
                         dependencies.add(value)
@@ -146,13 +166,33 @@ export class Atom<T = any> {
                     dependencies.destroyUnused()
                 } catch (e) {
                     if (e !== DESTROYER) {
-                        throw e
+                        this.stack.pop()
+                        this.updateError(e)
                     }
+
+                    dependencies.destroyUnused()
                 }
 
                 return this.data!
             }
         }
+    }
+
+    private updateError(error: any) {
+        const nextData = this.createNextDataStarter(false).then(() => this.build())
+
+        if (this.builded) {
+            if (this.consumer && error !== this.error) {
+                this.consumer.rebuild(this)
+            }
+        } else {
+            this.builded = true
+        }
+
+        this.error = error
+        this.data = undefined
+        this.nextData = nextData
+        this.revision++
     }
 
     private async updateData(value: T | Temporary<T>) {
@@ -168,6 +208,7 @@ export class Atom<T = any> {
             this.builded = true
         }
 
+        this.error = undefined
         this.data = data
         this.nextData = nextData
         this.revision++
