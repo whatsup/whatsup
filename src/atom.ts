@@ -66,21 +66,8 @@ export class Atom<T = any> {
         }
     }
 
-    update(): Promise<void> {
-        return this.rebuild(this)
-    }
-
-    /** @internal */
-    async rebuild(initiator: Atom) {
-        if (!this.activityId) {
-            throw new Error('Atom is not active')
-        }
-        if (this.nextBuildStarter) {
-            this.nextBuildStarter()
-            this.nextBuildStarter = undefined
-        } else {
-            this.dependencies.addUnsynchronized(initiator)
-        }
+    update() {
+        this.rebuild(this)
     }
 
     destroy() {
@@ -112,6 +99,18 @@ export class Atom<T = any> {
 
     getData() {
         return this.data
+    }
+
+    private rebuild(initiator: Atom) {
+        if (!this.activityId) {
+            throw new Error('Atom is not active')
+        }
+        if (this.nextBuildStarter) {
+            this.nextBuildStarter()
+            this.nextBuildStarter = undefined
+        } else {
+            this.dependencies.addUnsynchronized(initiator)
+        }
     }
 
     private async build() {

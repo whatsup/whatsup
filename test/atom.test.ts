@@ -62,7 +62,7 @@ describe('Atom', () => {
     })
 
     it('should call callCheck when rebuild called', async () => {
-        await atom.rebuild(atom)
+        await atom.update()
 
         expect(callCheck).toBeCalledTimes(3)
     })
