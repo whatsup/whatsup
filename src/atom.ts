@@ -17,10 +17,10 @@ export class Atom<T = any> {
     private readonly delegations = new WeakMap<Emitter<any>, Delegation<T>>()
     private readonly dependencies: Dependencies = new Dependencies(this)
     private activityId = 0
-    private builded = false
     private revision = 0
     private data?: T | Delegation<T> | Error
     private dataIsError?: boolean
+    private initialBuild = true
     private nextBuildPromise?: Promise<void>
     private nextBuildStarter?: () => void
 
@@ -72,7 +72,7 @@ export class Atom<T = any> {
 
     destroy() {
         this.activityId = 0
-        this.builded = false
+        this.initialBuild = true
         this.revision = 0
         this.data = undefined
         this.dataIsError = undefined
@@ -185,16 +185,14 @@ export class Atom<T = any> {
 
                 dependencies.destroyUnused()
 
-                if (this.builded) {
-                    if (this.consumer && (data !== this.data || dataIsError !== this.dataIsError)) {
-                        this.consumer.rebuild(this)
-                    }
-                } else {
-                    this.builded = true
+                if (this.initialBuild) {
+                    this.initialBuild = false
+                } else if (this.consumer && (data !== this.data || dataIsError !== this.dataIsError)) {
+                    this.consumer.rebuild(this)
                 }
 
-                this.dataIsError = dataIsError
                 this.data = data
+                this.dataIsError = dataIsError
                 this.nextBuildPromise = this.createNextBuildStarter(temporary).then(() => this.build())
                 this.revision++
 
