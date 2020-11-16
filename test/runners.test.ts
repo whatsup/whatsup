@@ -1,4 +1,5 @@
 import { fractal } from '../src/fractal'
+import { fraction } from '../src/fraction'
 import { live, stream } from '../src/runners'
 
 describe('Runners', () => {
@@ -45,5 +46,28 @@ describe('Runners', () => {
         await delay(50)
 
         expect(mock).toBeCalledTimes(1)
+    })
+
+    it(`should throw error when emitter has error`, async () => {
+        const Trigger = fraction(true)
+
+        const st = stream(async function* () {
+            while (true) {
+                if (yield* Trigger) {
+                    yield 'Good'
+                } else {
+                    throw 'Bad'
+                }
+            }
+        })
+
+        try {
+            for await (const data of st) {
+                expect(data).toBe('Good')
+                Trigger.set(false)
+            }
+        } catch (e) {
+            expect(e).toBe('Bad')
+        }
     })
 })

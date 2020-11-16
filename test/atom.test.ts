@@ -23,7 +23,7 @@ describe('Atom', () => {
     const atom = new Atom(emitter)
 
     it('should throw error when update call before activate', async () => {
-        expect(atom.update()).rejects.toThrow()
+        expect(() => atom.update()).toThrow()
     })
 
     it('should activate & calculate data', async () => {
