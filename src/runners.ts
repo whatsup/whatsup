@@ -2,21 +2,6 @@ import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
 import { Atom } from './atom'
 import { fractal } from './fractal'
 
-class Stream<T> extends Atom<T> {
-    async *stream() {
-        try {
-            await this.activate()
-
-            while (true) {
-                yield this.data
-                await this.nextBuildPromise
-            }
-        } finally {
-            this.destroy()
-        }
-    }
-}
-
 class RootEmitter<T> extends Emitter<T> {
     readonly target: Emitter<T>
 
@@ -42,7 +27,9 @@ function normalizeSource<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
 export function stream<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
     const emitter = normalizeSource(source)
     const root = new RootEmitter(emitter)
-    return new Stream(root).stream()
+    const atom = new Atom(root)
+
+    return atom.stream()
 }
 
 export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {

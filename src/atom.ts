@@ -19,10 +19,10 @@ export class Atom<T = any> {
     private activityId = 0
     private builded = false
     private revision = 0
+    private data?: T | Delegation<T> | Error
+    private dataIsError?: boolean
+    private nextBuildPromise?: Promise<void>
     private nextBuildStarter?: () => void
-    protected data?: T | Delegation<T>
-    protected dataIsError?: boolean
-    protected nextBuildPromise?: Promise<void>
 
     constructor(emitter: Emitter<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
         this.emitter = emitter
@@ -47,6 +47,23 @@ export class Atom<T = any> {
         }
 
         return result
+    }
+
+    async *stream() {
+        try {
+            await this.activate()
+
+            while (true) {
+                if (this.dataIsError) {
+                    throw this.data
+                }
+
+                yield this.data
+                await this.nextBuildPromise
+            }
+        } finally {
+            this.destroy()
+        }
     }
 
     update(): Promise<void> {
@@ -107,6 +124,9 @@ export class Atom<T = any> {
                 stack.push(emitter.collector(context))
             }
 
+            let data: T | Delegation<T> | Error
+            let dataIsError: boolean
+            let temporary: boolean
             let input: any
 
             while (true) {
@@ -149,38 +169,39 @@ export class Atom<T = any> {
                         continue main
                     }
 
-                    await this.updateData(value, false)
+                    temporary = value instanceof Temporary
+                    data = this.prepareNewData(temporary ? await (value as Temporary<T>).data : (value as T))
+                    dataIsError = false
                 } catch (error) {
-                    if (error !== DESTROYER) {
-                        this.stack.pop()
-                        await this.updateData(error, true)
+                    if (error === DESTROYER) {
+                        return
                     }
+
+                    this.stack.pop()
+
+                    temporary = false
+                    data = error
+                    dataIsError = true
                 }
 
                 dependencies.destroyUnused()
 
+                if (this.builded) {
+                    if (this.consumer && (data !== this.data || dataIsError !== this.dataIsError)) {
+                        this.consumer.rebuild(this)
+                    }
+                } else {
+                    this.builded = true
+                }
+
+                this.dataIsError = dataIsError
+                this.data = data
+                this.nextBuildPromise = this.createNextBuildStarter(temporary).then(() => this.build())
+                this.revision++
+
                 return
             }
         }
-    }
-
-    private async updateData(value: T | Temporary<T>, dataIsError: boolean) {
-        const temporary = value instanceof Temporary
-        const data = this.prepareNewData(temporary ? await (value as Temporary<T>).data : (value as T))
-        const newxtBuildPromise = this.createNextBuildStarter(temporary).then(() => this.build())
-
-        if (this.builded) {
-            if (this.consumer && (data !== this.data || dataIsError !== this.dataIsError)) {
-                this.consumer.rebuild(this)
-            }
-        } else {
-            this.builded = true
-        }
-
-        this.dataIsError = dataIsError
-        this.data = data
-        this.nextBuildPromise = newxtBuildPromise
-        this.revision++
     }
 
     private prepareNewData(value: T): T | Delegation<T> {
