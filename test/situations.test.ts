@@ -267,40 +267,4 @@ describe('Situations', () => {
             expect(mock3).lastCalledWith('world')
         })
     })
-
-    // describe('error catching', () => {
-    //     const mock = jest.fn()
-    //     const Toggle = fraction(false)
-    //     const One = fractal(async function* () {
-    //         while (true) {
-    //             if (yield* Toggle) {
-    //                 throw 'Error'
-    //             }
-    //             yield 'Hello'
-    //         }
-    //     })
-    //     const Two = fractal(async function* () {
-    //         try {
-    //             while (true) {
-    //                 yield mock(yield* One)
-    //             }
-    //         } catch (e) {
-    //             mock(e)
-    //         }
-    //     })
-
-    //     it(`should call mock with "Hello"`, async () => {
-    //         live(Two)
-    //         await delay(100)
-    //         expect(mock).toBeCalledTimes(1)
-    //         expect(mock).lastCalledWith('Hello')
-    //     })
-
-    //     it(`should catch error`, async () => {
-    //         Toggle.set(true)
-    //         await delay(100)
-    //         expect(mock).toBeCalledTimes(2)
-    //         expect(mock).lastCalledWith('Error')
-    //     })
-    // })
 })
