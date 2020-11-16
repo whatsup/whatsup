@@ -4,7 +4,8 @@ import { Event, EventCtor, EventListener } from './event'
 
 export class Context {
     private readonly atom: Atom
-    private eventListeners!: Map<EventCtor, Set<EventListener>>
+    private factors!: WeakMap<Factor<any>, any>
+    private eventListeners!: WeakMap<EventCtor, Set<EventListener>>
 
     constructor(atom: Atom) {
         this.atom = atom
@@ -21,16 +22,29 @@ export class Context {
     }
 
     get<T>(factor: Factor<T>): T | undefined {
-        return factor.get(this)
+        if (this.factors && this.factors.has(factor)) {
+            return this.factors.get(factor)
+        }
+
+        const { parent } = this
+
+        if (parent) {
+            return parent.get(factor)
+        }
+
+        return factor.defaultValue
     }
 
     set<T>(factor: Factor<T>, value: T) {
-        factor.set(this, value)
+        if (!this.factors) {
+            this.factors = new WeakMap()
+        }
+        this.factors.set(factor, value)
     }
 
     on<T extends Event>(ctor: EventCtor<T>, listener: EventListener<T>) {
         if (!this.eventListeners) {
-            this.eventListeners = new Map()
+            this.eventListeners = new WeakMap()
         }
         if (!this.eventListeners.has(ctor)) {
             this.eventListeners.set(ctor, new Set())
