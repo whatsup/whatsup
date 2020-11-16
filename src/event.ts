@@ -19,7 +19,7 @@ export abstract class Event {
     }
 
     isPropagationStopped() {
-        return this.propagation === Propagation.Stopped
+        return this.propagation === Propagation.Stopped || this.isPropagationImmediateStopped()
     }
 
     isPropagationImmediateStopped() {

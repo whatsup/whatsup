@@ -21,15 +21,19 @@ export class Context {
         return delegator?.context || consumer?.context || null
     }
 
-    get<T>(factor: Factor<T>): T | undefined {
+    extract<T>(factor: Factor<T>): T | undefined {
         if (this.factors && this.factors.has(factor)) {
             return this.factors.get(factor)
         }
 
+        return
+    }
+
+    get<T>(factor: Factor<T>): T | undefined {
         const { parent } = this
 
         if (parent) {
-            return parent.get(factor)
+            return parent.extract(factor) || parent.get(factor)
         }
 
         return factor.defaultValue
@@ -57,12 +61,12 @@ export class Context {
 
     off<T extends Event>(ctor: EventCtor<T>, listener?: EventListener<T>) {
         if (this.eventListeners) {
-            if (listener) {
-                if (this.eventListeners.has(ctor)) {
+            if (this.eventListeners.has(ctor)) {
+                if (listener) {
                     this.eventListeners.get(ctor)!.delete(listener)
+                } else {
+                    this.eventListeners.delete(ctor)
                 }
-            } else {
-                this.eventListeners.delete(ctor)
             }
         }
     }
@@ -77,7 +81,7 @@ export class Context {
                 listener(event)
 
                 if (event.isPropagationImmediateStopped()) {
-                    return
+                    break
                 }
             }
         }
