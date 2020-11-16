@@ -7,11 +7,9 @@ class Stream<T> extends Atom<T> {
         try {
             await this.activate()
 
-            let { data } = this
-
             while (true) {
-                yield data
-                data = await this.nextData
+                yield this.data
+                await this.nextBuildPromise
             }
         } finally {
             this.destroy()
