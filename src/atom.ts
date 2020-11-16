@@ -170,7 +170,7 @@ export class Atom<T = any> {
                     }
 
                     temporary = value instanceof Temporary
-                    data = this.prepareNewData(temporary ? await (value as Temporary<T>).data : (value as T))
+                    data = this.prepareNewData(temporary ? (value as Temporary<T>).data : (value as T))
                     dataIsError = false
                 } catch (error) {
                     if (error === DESTROYER) {
