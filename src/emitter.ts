@@ -6,7 +6,7 @@ import { Temporary } from './temporary'
 export type Bubble<T> = T | Temporary<T> | Atom<any> | ConsumerQuery
 export type EmitIterator<T> = AsyncIterator<Bubble<T>, T, any>
 export type EmitGenerator<T> = AsyncGenerator<Bubble<T>, any, any>
-export type EmitGeneratorFunc<T> = (context?: Context) => EmitGenerator<T>
+export type EmitGeneratorFunc<T> = ((context: Context) => EmitGenerator<T>) | (() => EmitGenerator<T>)
 
 const CONSUMER_QUERY = new ConsumerQuery()
 
