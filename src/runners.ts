@@ -32,12 +32,12 @@ export function stream<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
     return atom.stream()
 }
 
-export function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
+export async function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
     const emitter = normalizeSource(source)
     const root = new RootEmitter(emitter)
     const atom = new Atom(root)
 
-    atom.activate()
+    await atom.activate()
 
     return () => atom.destroy()
 }

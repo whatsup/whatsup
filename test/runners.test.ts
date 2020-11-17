@@ -17,9 +17,7 @@ describe('Runners', () => {
             }
         })
 
-        const destroy = live(User)
-
-        await delay(50)
+        const destroy = await live(User)
 
         destroy()
 
