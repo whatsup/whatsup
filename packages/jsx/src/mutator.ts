@@ -236,6 +236,8 @@ function mutateProp<T extends ElementProps, K extends keyof T & string>(
     oldValue: T[K] | undefined
 ) {
     switch (true) {
+        case isChildrenProp(prop):
+            break
         case isEventListener(prop):
             mutateEventListener(node, prop, value, oldValue)
             break
@@ -340,6 +342,10 @@ function isEventCaptureListener(prop: string) {
 
 function isStyleProp(prop: string) {
     return prop === 'style'
+}
+
+function isChildrenProp(prop: string) {
+    return prop === 'children'
 }
 
 function isReadonlyProp(prop: string) {
