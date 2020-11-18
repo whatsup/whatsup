@@ -10,7 +10,9 @@ describe('factories', function () {
     })
 
     it('component factory should instantiate ComponentMutator without errors', function () {
-        function Component() {}
+        function Component() {
+            return 'Hello'
+        }
         component(Component, '', '')
     })
 })

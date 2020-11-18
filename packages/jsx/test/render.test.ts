@@ -53,4 +53,25 @@ describe('render', function () {
         expect(container.children[0].tagName).toBe('DIV')
         expect(container.children[1].tagName).toBe('DIV')
     })
+
+    it('should print error to console log', async function () {
+        const container = document.createElement('div')
+        const Root = fractal(async function* () {
+            while (true) {
+                throw 'wtf'
+            }
+        })
+
+        const mock = jest.fn()
+        const original = console.error
+
+        console.error = mock
+
+        await render(Root, container)
+
+        console.error = original
+
+        expect(mock).toBeCalledTimes(1)
+        expect(mock).lastCalledWith('wtf')
+    })
 })

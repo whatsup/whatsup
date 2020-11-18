@@ -4,6 +4,13 @@
 import { html, svg } from '../src/factories'
 
 describe('props', function () {
+    it('should ignore children prop', function () {
+        const mutatorOne = html('div', '', '', { children: 'child' })
+        const element = mutatorOne.mutate()
+
+        expect(element.children).toBeInstanceOf(HTMLCollection)
+    })
+
     it('should mutate simple writable prop', function () {
         const mutatorOne = html('div', '', '', { className: 'one' })
         const mutatorTwo = html('div', '', '', { className: 'two' })
