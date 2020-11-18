@@ -66,7 +66,6 @@ export class Atom<T = any> {
         }
     }
 
-    /** @internal */
     async activate() {
         if (!this.activityId) {
             this.activityId = Math.random()
