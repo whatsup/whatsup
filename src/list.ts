@@ -1,4 +1,4 @@
-import { Emitter } from './emitter'
+import { Fractal } from './fractal'
 import { Context } from './context'
 import { Fraction, FractionOptions } from './fraction'
 
@@ -12,7 +12,7 @@ export class List<T> extends Fraction<T[]> {
             const result = [] as T[]
 
             for (const item of items) {
-                if (delegation && item instanceof Emitter) {
+                if (delegation && item instanceof Fractal) {
                     result.push(yield* item)
                 } else {
                     result.push(item)

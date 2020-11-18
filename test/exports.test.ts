@@ -1,4 +1,3 @@
-import { Emitter } from '../src/emitter'
 import { Atom } from '../src/atom'
 import { fractal, Fractal } from '../src/fractal'
 import { fraction, Fraction } from '../src/fraction'
@@ -9,7 +8,6 @@ import { Mutator } from '../src/mutator'
 import { Event } from '../src/event'
 import { stream, live } from '../src/runners'
 import {
-    Emitter as _Emitter,
     Atom as _Atom,
     fractal as _fractal,
     Fractal as _Fractal,
@@ -26,7 +24,6 @@ import {
 } from '../src/index'
 
 it('Exports', () => {
-    expect(Emitter).toBe(_Emitter)
     expect(Atom).toBe(_Atom)
     expect(fractal).toBe(_fractal)
     expect(Fractal).toBe(_Fractal)

@@ -1,4 +1,4 @@
-import { Emitable, EmitIterator, Emitter } from './emitter'
+import { Emitter, CollectIterator, Fractal } from './fractal'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
@@ -8,13 +8,13 @@ import { Temporary } from './temporary'
 const DESTROYER = Symbol('Destroy symbol')
 
 export class Atom<T = any> {
-    readonly emitter: Emitter<T>
+    readonly fractal: Fractal<T>
     readonly consumer: Atom | null
     readonly delegator: Atom | null
     readonly context: Context = new Context(this)
-    private readonly stack = [] as EmitIterator<T>[]
-    private readonly subatoms = new WeakMap<Emitable<any>, Atom>()
-    private readonly delegations = new WeakMap<Emitter<any>, Delegation<T>>()
+    private readonly stack = [] as CollectIterator<T>[]
+    private readonly subatoms = new WeakMap<Emitter<any>, Atom>()
+    private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
     private readonly dependencies: Dependencies = new Dependencies(this)
     private activityId = 0
     private revision = 0
@@ -24,32 +24,13 @@ export class Atom<T = any> {
     private nextBuildPromise?: Promise<void>
     private nextBuildStarter?: () => void
 
-    constructor(emitter: Emitter<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
-        this.emitter = emitter
+    constructor(fractal: Fractal<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
+        this.fractal = fractal
         this.consumer = consumer
         this.delegator = delegator
     }
 
-    async activate() {
-        if (!this.activityId) {
-            this.activityId = Math.random()
-            await this.build()
-        }
-    }
-
     async *[Symbol.asyncIterator]() {
-        await this.activate()
-
-        const result = yield this
-
-        if (this.dataIsError) {
-            throw result
-        }
-
-        return result
-    }
-
-    async *stream() {
         try {
             await this.activate()
 
@@ -85,20 +66,44 @@ export class Atom<T = any> {
         }
     }
 
-    getSubatom<U>(key: Emitable<U>) {
+    /** @internal */
+    async activate() {
+        if (!this.activityId) {
+            this.activityId = Math.random()
+            await this.build()
+        }
+    }
+
+    /** @internal */
+    async *emit() {
+        await this.activate()
+
+        const result = yield this
+
+        if (this.dataIsError) {
+            throw result
+        }
+
+        return result
+    }
+
+    /** @internal */
+    getRevision() {
+        return this.revision
+    }
+
+    /** @internal */
+    getData() {
+        return this.data
+    }
+
+    /** @internal */
+    getSubatom<U>(key: Emitter<U>) {
         if (!this.subatoms.has(key)) {
             const atom = this.createSubatom(key)
             this.subatoms.set(key, atom)
         }
         return this.subatoms.get(key)!
-    }
-
-    getRevision() {
-        return this.revision
-    }
-
-    getData() {
-        return this.data
     }
 
     private rebuild(initiator: Atom) {
@@ -114,13 +119,13 @@ export class Atom<T = any> {
     }
 
     private async build() {
-        const { activityId, stack, dependencies, emitter, context } = this
+        const { activityId, stack, dependencies, fractal, context } = this
 
         dependencies.swap()
 
         main: while (true) {
             if (!stack.length) {
-                stack.push(emitter.collector(context))
+                stack.push(fractal.collector(context))
             }
 
             let data: T | Delegation<T> | Error
@@ -154,7 +159,7 @@ export class Atom<T = any> {
                         const data = value.getData()
 
                         if (data instanceof Delegation) {
-                            stack.push(data.iterator())
+                            stack.push(data.emit())
                             input = undefined
                         } else {
                             input = data as T
@@ -205,7 +210,7 @@ export class Atom<T = any> {
         if (value instanceof Mutator) {
             return value.mutate(this.data) as T
         }
-        if (this.emitter.delegation && value instanceof Emitter) {
+        if (this.fractal.delegation && value instanceof Fractal) {
             return this.getDelegation(value)
         }
 
@@ -219,31 +224,31 @@ export class Atom<T = any> {
         return new Promise((r) => (this.nextBuildStarter = r))
     }
 
-    private createSubatom<U>(source: Emitable<U>): Atom<U> {
-        if (source instanceof Emitter) {
+    private createSubatom<U>(source: Emitter<U>): Atom<U> {
+        if (source instanceof Fractal) {
             return new Atom<U>(source, this)
         }
         if (source instanceof Delegation) {
-            const { emitter, delegator } = source
-            return new Atom<U>(emitter, this, delegator)
+            const { fractal, delegator } = source
+            return new Atom<U>(fractal, this, delegator)
         }
         throw 'Unknown atom source'
     }
 
-    private getDelegation(emitter: Emitter<T>) {
-        if (!this.delegations.has(emitter)) {
-            this.delegations.set(emitter, new Delegation(emitter, this))
+    private getDelegation(fractal: Fractal<T>) {
+        if (!this.delegations.has(fractal)) {
+            this.delegations.set(fractal, new Delegation(fractal, this))
         }
-        return this.delegations.get(emitter)!
+        return this.delegations.get(fractal)!
     }
 }
 
-class Delegation<T> extends Emitable<T> {
-    constructor(readonly emitter: Emitter<T>, readonly delegator: Atom<T>) {
+class Delegation<T> extends Emitter<T> {
+    constructor(readonly fractal: Fractal<T>, readonly delegator: Atom<T>) {
         super()
     }
 
-    async *iterator() {
+    async *emit() {
         return yield* this
     }
 }

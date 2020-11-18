@@ -1,11 +1,10 @@
-import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
+import { CollectGeneratorFunc, Fractal, FractalOptions, EasyFractal } from './fractal'
 import { Atom } from './atom'
-import { fractal } from './fractal'
 
-class RootEmitter<T> extends Emitter<T> {
-    readonly target: Emitter<T>
+class Root<T> extends Fractal<T> {
+    readonly target: Fractal<T>
 
-    constructor(target: Emitter<T>, options?: EmitterOptions) {
+    constructor(target: Fractal<T>, options?: FractalOptions) {
         super(options)
         this.target = target
     }
@@ -17,24 +16,24 @@ class RootEmitter<T> extends Emitter<T> {
     }
 }
 
-function normalizeSource<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
-    if (source instanceof Emitter) {
+function normalizeSource<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
+    if (source instanceof Fractal) {
         return source
     }
-    return fractal(source)
+    return new EasyFractal(source)
 }
 
-export function stream<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
-    const emitter = normalizeSource(source)
-    const root = new RootEmitter(emitter)
+export async function* stream<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
+    const fractal = normalizeSource(source)
+    const root = new Root(fractal)
     const atom = new Atom(root)
 
-    return atom.stream()
+    return yield* atom
 }
 
-export async function live<T>(source: Emitter<T> | EmitGeneratorFunc<T>) {
-    const emitter = normalizeSource(source)
-    const root = new RootEmitter(emitter)
+export async function live<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
+    const fractal = normalizeSource(source)
+    const root = new Root(fractal)
     const atom = new Atom(root)
 
     await atom.activate()

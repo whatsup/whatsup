@@ -1,22 +1,22 @@
-import { Emitter, EmitIterator } from '../src/emitter'
+import { Fractal, CollectIterator } from '../src/fractal'
 import { ConsumerQuery } from '../src/query'
 
-class TestEmitter extends Emitter<string> {
+class TestFractal extends Fractal<string> {
     async *collector() {
         yield 'Hello'
     }
 }
 
-describe('Emitter', () => {
-    let emitter: TestEmitter
-    let iterator: EmitIterator<string>
+describe('Fractal', () => {
+    let testFractal: TestFractal
+    let iterator: CollectIterator<string>
 
-    it('create new emitter without errors', () => {
-        emitter = new TestEmitter()
+    it('create new fractal without errors', () => {
+        testFractal = new TestFractal()
     })
 
     it('should return ConsumerQuery', async () => {
-        iterator = emitter[Symbol.asyncIterator]()
+        iterator = testFractal[Symbol.asyncIterator]()
         const { done, value } = await iterator.next()
 
         expect(done).toBeFalsy()
@@ -27,7 +27,7 @@ describe('Emitter', () => {
         const fakeConsumer = {
             getSubatom: jest.fn(function () {
                 return {
-                    async *[Symbol.asyncIterator]() {
+                    async *emit() {
                         return yield fakeConsumer
                     },
                 }
@@ -38,7 +38,7 @@ describe('Emitter', () => {
 
         expect(done).toBeFalsy()
         expect(value).toBe(fakeConsumer)
-        expect(fakeConsumer.getSubatom).toBeCalledWith(emitter)
+        expect(fakeConsumer.getSubatom).toBeCalledWith(testFractal)
     })
 
     it('should return FakeResult', async () => {

@@ -1,9 +1,9 @@
-import { Emitter, EmitterOptions } from './emitter'
+import { Fractal, FractalOptions } from './fractal'
 import { Context } from './context'
 
-export interface FractionOptions extends EmitterOptions {}
+export interface FractionOptions extends FractalOptions {}
 
-export class Fraction<T> extends Emitter<T> {
+export class Fraction<T> extends Fractal<T> {
     private contexts = new Set<Context>()
     protected data: T
 

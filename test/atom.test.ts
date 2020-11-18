@@ -1,4 +1,4 @@
-import { Emitter } from '../src/emitter'
+import { Fractal } from '../src/fractal'
 import { Atom } from '../src/atom'
 
 const delay = (time: number) => new Promise((r) => setTimeout(r, time))
@@ -7,7 +7,7 @@ describe('Atom', () => {
     const callCheck = jest.fn()
     const destroyCheck = jest.fn()
 
-    class TestEmitter extends Emitter<string> {
+    class TestFractal extends Fractal<string> {
         async *collector() {
             try {
                 while (true) {
@@ -19,8 +19,8 @@ describe('Atom', () => {
             }
         }
     }
-    const emitter = new TestEmitter()
-    const atom = new Atom(emitter)
+    const testFractal = new TestFractal()
+    const atom = new Atom(testFractal)
 
     it('should throw error when update call before activate', async () => {
         expect(() => atom.update()).toThrow()
@@ -53,7 +53,7 @@ describe('Atom', () => {
     })
 
     it('should be reactivated & return this when it iterate', async () => {
-        const iterator = atom[Symbol.asyncIterator]()
+        const iterator = atom.emit()
 
         const { done, value } = await iterator.next()
 
@@ -67,15 +67,15 @@ describe('Atom', () => {
         expect(callCheck).toBeCalledTimes(3)
     })
 
-    it('should return same atom for emitter', () => {
-        const emitter2 = new TestEmitter()
-        const sub1 = atom.getSubatom(emitter2)
-        const sub2 = atom.getSubatom(emitter2)
+    it('should return same atom for fractal', () => {
+        const fractal2 = new TestFractal()
+        const sub1 = atom.getSubatom(fractal2)
+        const sub2 = atom.getSubatom(fractal2)
 
         expect(sub1).toBe(sub2)
     })
 
-    it('should throw error when source arg of private createSubatom is not Emitter || Delegation', () => {
+    it('should throw error when source arg of private createSubatom is not Fractal || Delegation', () => {
         expect(() => atom['createSubatom'](null as any)).toThrowError()
     })
 })

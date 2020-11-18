@@ -1,12 +1,41 @@
-import { EmitGeneratorFunc, Emitter, EmitterOptions } from './emitter'
+import { Atom } from './atom'
 import { Context } from './context'
+import { ConsumerQuery } from './query'
+import { Temporary } from './temporary'
 
-export interface FractalOptions extends EmitterOptions {}
+export type Bubble<T> = T | Temporary<T> | Atom<any> | ConsumerQuery
+export type CollectIterator<T> = AsyncIterator<Bubble<T>, T, any>
+export type CollectGenerator<T> = AsyncGenerator<Bubble<T>, any, any>
+export type CollectGeneratorFunc<T> = ((context: Context) => CollectGenerator<T>) | (() => CollectGenerator<T>)
 
-export class Fractal<T> extends Emitter<T> {
-    private readonly generator: EmitGeneratorFunc<T>
+const CONSUMER_QUERY = new ConsumerQuery()
 
-    constructor(generator: EmitGeneratorFunc<T>, options: FractalOptions = {}) {
+export abstract class Emitter<T> {
+    async *[Symbol.asyncIterator](): AsyncGenerator<any, T, any> {
+        const consumer = yield* CONSUMER_QUERY
+        return yield* consumer.getSubatom(this).emit()
+    }
+}
+
+export interface FractalOptions {
+    delegation?: boolean
+}
+
+export abstract class Fractal<T> extends Emitter<T> {
+    readonly delegation: boolean
+    abstract collector(context?: Context): CollectGenerator<T>
+
+    constructor(options: FractalOptions = {}) {
+        super()
+        const { delegation = true } = options
+        this.delegation = delegation
+    }
+}
+
+export class EasyFractal<T> extends Fractal<T> {
+    private readonly generator: CollectGeneratorFunc<T>
+
+    constructor(generator: CollectGeneratorFunc<T>, options: FractalOptions = {}) {
         super(options)
         this.generator = generator
     }
@@ -16,6 +45,6 @@ export class Fractal<T> extends Emitter<T> {
     }
 }
 
-export function fractal<T>(generator: EmitGeneratorFunc<T>, options?: FractalOptions) {
-    return new Fractal(generator, options)
+export function fractal<T>(generator: CollectGeneratorFunc<T>, options?: FractalOptions) {
+    return new EasyFractal(generator, options)
 }

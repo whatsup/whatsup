@@ -1,18 +1,18 @@
 import { Factor, factor } from '../src/factor'
 import { Event } from '../src/event'
 import { Atom } from '../src/atom'
-import { Emitter } from '../src/emitter'
+import { Fractal } from '../src/fractal'
 
 describe('Context', () => {
-    class TestEmitter extends Emitter<any> {
+    class TestFractal extends Fractal<any> {
         async *collector() {}
     }
 
-    const testEmitter = new TestEmitter()
-    const atom = new Atom(testEmitter)
-    const atom2 = atom.getSubatom(testEmitter)
-    const atom3 = atom2.getSubatom(testEmitter)
-    const atom4 = atom3.getSubatom(testEmitter)
+    const testFractal = new TestFractal()
+    const atom = new Atom(testFractal)
+    const atom2 = atom.getSubatom(testFractal)
+    const atom3 = atom2.getSubatom(testFractal)
+    const atom4 = atom3.getSubatom(testFractal)
 
     const context1 = atom.context
     const context2 = atom2.context
