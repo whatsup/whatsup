@@ -5,7 +5,7 @@ import { Child } from './types'
 
 interface RendererOptions extends EmitterOptions {}
 
-class RendererEmitter<T> extends Emitter<T> {
+class Renderer<T> extends Emitter<T> {
     readonly root: Emitter<Child>
     readonly container: HTMLElement | SVGElement
 
@@ -38,8 +38,8 @@ class RendererEmitter<T> extends Emitter<T> {
 }
 
 export async function render(root: Emitter<Child>, container: HTMLElement | SVGElement) {
-    const renderer = new RendererEmitter(root, container)
-    const fork = new Atom(renderer)
+    const renderer = new Renderer(root, container)
+    const atom = new Atom(renderer)
 
-    await fork.activate()
+    await atom.activate()
 }
