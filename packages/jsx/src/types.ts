@@ -287,8 +287,8 @@ export interface EventAttributes<T> {
     onClickCapture?: MouseEventHandler<T>
     onContextMenu?: MouseEventHandler<T>
     onContextMenuCapture?: MouseEventHandler<T>
-    onDoubleClick?: MouseEventHandler<T>
-    onDoubleClickCapture?: MouseEventHandler<T>
+    onDblClick?: MouseEventHandler<T>
+    onDblClickCapture?: MouseEventHandler<T>
     onDrag?: DragEventHandler<T>
     onDragCapture?: DragEventHandler<T>
     onDragEnd?: DragEventHandler<T>
