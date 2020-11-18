@@ -16,23 +16,27 @@ class Renderer<T> extends Emitter<T> {
     }
 
     async *collector() {
-        const { root, container } = this
+        try {
+            const { root, container } = this
 
-        let oldReconcileMap = new ReconcileMap()
+            let oldReconcileMap = new ReconcileMap()
 
-        while (true) {
-            const result = yield* root
-            const children = Array.isArray(result) ? result : [result]
-            const elements = [] as (HTMLElement | SVGElement | Text)[]
-            const reconcileMap = new ReconcileMap()
+            while (true) {
+                const result = yield* root
+                const children = Array.isArray(result) ? result : [result]
+                const elements = [] as (HTMLElement | SVGElement | Text)[]
+                const reconcileMap = new ReconcileMap()
 
-            reconcile(reconcileMap, elements, children, oldReconcileMap)
-            removeUnreconciledElements(oldReconcileMap)
-            placeElements(container, elements)
+                reconcile(reconcileMap, elements, children, oldReconcileMap)
+                removeUnreconciledElements(oldReconcileMap)
+                placeElements(container, elements)
 
-            oldReconcileMap = reconcileMap
+                oldReconcileMap = reconcileMap
 
-            yield container
+                yield container
+            }
+        } catch (e) {
+            console.error(e)
         }
     }
 }
