@@ -47,11 +47,6 @@ describe('Context', () => {
             expect(context4.get(testFactor)).toBe('world')
         })
 
-        it('should extract factor from self level', () => {
-            expect(context1.extract(testFactor)).toBe('hello')
-            expect(context3.extract(testFactor)).toBe('world')
-        })
-
         it('factor("test") should return instance of factor', () => {
             expect(factor('test')).toBeInstanceOf(Factor)
         })
