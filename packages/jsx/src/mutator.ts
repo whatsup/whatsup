@@ -213,6 +213,19 @@ export function reconcile(
 
             continue
         }
+
+        if (child === null || child === true || child === false) {
+            // Ignore null & booleans
+            continue
+        }
+
+        throw new InvalidJSXChildError(child)
+    }
+}
+
+class InvalidJSXChildError extends Error {
+    constructor(readonly child: any) {
+        super('Invalid JSX Child')
     }
 }
 

@@ -1511,17 +1511,7 @@ export type Type = TagName | Component
 export type Uid = string
 export type Prop = keyof ComponentProps & string
 export type Key = string | number | void
-export type Child =
-    | JsxMutator<any, any>
-    | HTMLElement
-    | SVGElement
-    | Text
-    | string
-    | number
-    | boolean
-    | null
-    | void
-    | Child[]
+export type Child = JsxMutator<any, any> | HTMLElement | SVGElement | Text | string | number | boolean | null | Child[]
 export type Component = <P extends ComponentProps>(props: P) => Child
 
 export interface Attributes {

@@ -78,14 +78,13 @@ describe('reconcilation', function () {
         expect(element.childNodes[1].textContent).toBe('child2')
     })
 
-    it('should ignore all children except elements, mutators, strings, numbers', function () {
+    it('should render children elements, mutators, strings, numbers & ignore null & booleans', function () {
         const mutator = html('div', 'uid1', '', void 0, [
             html('div', 'child1', '', void 0, ['child1']),
             html('div', 'child2', '', void 0, ['child2']),
             'child3',
             1612,
             null,
-            undefined,
             false,
             true,
         ])
@@ -96,6 +95,21 @@ describe('reconcilation', function () {
         expect(element.childNodes[1].textContent).toBe('child2')
         expect(element.childNodes[2].nodeValue).toBe('child3')
         expect(element.childNodes[3].nodeValue).toBe('1612')
+    })
+
+    it('should throw error on all children except elements, mutators, strings, numbers, booleans, null', function () {
+        const mutator = html('div', 'uid1', '', void 0, [
+            html('div', 'child1', '', void 0, ['child1']),
+            html('div', 'child2', '', void 0, ['child2']),
+            'child3',
+            1612,
+            null,
+            undefined as any,
+            false,
+            true,
+        ])
+
+        expect(() => mutator.mutate()).toThrow('Invalid JSX Child')
     })
 
     it('should remove unreconciled elements', function () {
