@@ -1,5 +1,7 @@
 export const JSX_LIBRARY_NAME = '@fract/jsx'
 
+export const FRAGMENT_COMPONENT_NAME = 'Fragment'
+
 export const JSX_LIBRARY_FACTORIES = {
     HTML: 'html',
     SVG: 'svg',

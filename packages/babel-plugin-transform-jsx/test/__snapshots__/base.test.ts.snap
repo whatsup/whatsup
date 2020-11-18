@@ -13,9 +13,10 @@ _html(\\"div\\", \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
 `;
 
 exports[`transform types Should transform fragment 1`] = `
-"import { component as _component } from \\"@fract/jsx\\";
+"import { Fragment as _Fragment } from \\"@fract/jsx\\";
+import { component as _component } from \\"@fract/jsx\\";
 
-_component(Fragment, \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
+_component(_Fragment, \\"UniqueId\\", undefined, undefined, [\\"foobar\\"]);"
 `;
 
 exports[`transform types Should transform svg 1`] = `

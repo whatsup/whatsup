@@ -33,7 +33,13 @@ import {
     SpreadElement,
     ObjectProperty,
 } from '@babel/types'
-import { SVG_TAG_REGEX, JSX_LIBRARY_NAME, JSX_LIBRARY_FACTORIES, IS_TESTING } from './constants'
+import {
+    SVG_TAG_REGEX,
+    JSX_LIBRARY_NAME,
+    JSX_LIBRARY_FACTORIES,
+    IS_TESTING,
+    FRAGMENT_COMPONENT_NAME,
+} from './constants'
 
 const VOID = identifier('undefined')
 
@@ -60,7 +66,7 @@ export default function () {
                 const { node } = path
                 const { children } = node
 
-                replaceJSXAstToMutatorFactoryCallExpression(path, 'Fragment', [], children)
+                replaceJSXAstToMutatorFactoryCallExpression(path, FRAGMENT_COMPONENT_NAME, [], children)
             },
         },
     }
@@ -73,8 +79,8 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     children: (JSXElement | JSXText | JSXExpressionContainer | JSXSpreadChild | JSXFragment)[]
 ) {
     const factory = getFactory(name)
-    const callee = createCallee(path, factory)
-    const type = createType(name)
+    const callee = createCalleeImport(path, factory)
+    const type = createType(path, name)
     const uid = createUid()
     const { key, props } = parseAttributes(attributes)
     const childs = parseChildren(children)
@@ -88,7 +94,11 @@ function getFactory(name: string) {
     return isComponent(name) ? Component : isSVG(name) ? SVG : HTML
 }
 
-function createCallee<T extends Node>(path: NodePath<T>, factory: string) {
+function createFragmentImport<T extends Node>(path: NodePath<T>) {
+    return createImport(path, JSX_LIBRARY_NAME, 'Fragment')
+}
+
+function createCalleeImport<T extends Node>(path: NodePath<T>, factory: string) {
     return createImport(path, JSX_LIBRARY_NAME, factory)
 }
 
@@ -96,8 +106,15 @@ function createImport<T extends Node>(path: NodePath<T>, importSource: string, m
     return addNamed(path, method, importSource, { importedType: 'es6' })
 }
 
-function createType(name: string) {
-    return isComponent(name) ? identifier(name) : stringLiteral(name)
+function createType<T extends Node>(path: NodePath<T>, name: string) {
+    if (isFragment(name)) {
+        return createFragmentImport(path)
+    }
+    if (isComponent(name)) {
+        return identifier(name)
+    }
+
+    return stringLiteral(name)
 }
 
 function createUid() {
@@ -190,6 +207,10 @@ function generateUid() {
 function isComponent(name: string) {
     const firstLetter = name.charAt(0)
     return firstLetter.toUpperCase() === firstLetter
+}
+
+function isFragment(name: string) {
+    return name === FRAGMENT_COMPONENT_NAME
 }
 
 function isSVG(name: string) {
