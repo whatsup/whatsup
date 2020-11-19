@@ -1,47 +1,36 @@
 import { Mutator } from '@fract/core'
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE } from './constants'
 import { ReconcileMap } from './reconcile_map'
-import {
-    Type,
-    Component,
-    TagName,
-    Key,
-    Uid,
-    Child,
-    ElementProps,
-    ComponentProps,
-    JsxMutatorLike,
-    ElementMutatorLike,
-    ComponentMutatorLike,
-} from './types'
+import { FractalJSX } from './types'
 
-export function Fragment(props: ComponentProps) {
+export function Fragment(props: FractalJSX.ComponentProps) {
     return props.children
 }
 
 const JSX_MUTATOR_ATTACH_KEY = Symbol('Jsx mutator attach key')
 
-const FAKE_JSX_ELEMENT_MUTATOR: ElementMutatorLike<HTMLElement | SVGElement> = {
-    props: {} as ElementProps,
+const FAKE_JSX_ELEMENT_MUTATOR: FractalJSX.ElementMutatorLike<HTMLElement | SVGElement> = {
+    props: {} as FractalJSX.ElementProps,
     children: {
         reconcileMap: new ReconcileMap(),
     },
 }
 
-const FAKE_JSX_COMPONENT_MUTATOR: ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> = {
+const FAKE_JSX_COMPONENT_MUTATOR: FractalJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> = {
     reconcileMap: new ReconcileMap(),
 }
 
-export abstract class JsxMutator<T extends Type, R> extends Mutator<R> implements JsxMutatorLike<R> {
-    abstract doMutation(oldMutator: JsxMutatorLike<R> | void): R
+export abstract class JsxMutator<T extends FractalJSX.Type, R> extends Mutator<R>
+    implements FractalJSX.JsxMutatorLike<R> {
+    abstract doMutation(oldMutator: FractalJSX.JsxMutatorLike<R> | void): R
 
     readonly type: T
-    readonly uid: Uid
-    readonly key: Key
+    readonly uid: FractalJSX.Uid
+    readonly key: FractalJSX.Key
     readonly reconcileId: string
     result!: R
 
-    constructor(type: T, uid: Uid, key: Key) {
+    constructor(type: T, uid: FractalJSX.Uid, key: FractalJSX.Key) {
         super()
         this.type = type
         this.uid = uid
@@ -79,14 +68,20 @@ export abstract class JsxMutator<T extends Type, R> extends Mutator<R> implement
     }
 }
 
-export abstract class JsxElementMutator extends JsxMutator<TagName, HTMLElement | SVGElement>
-    implements ElementMutatorLike<HTMLElement | SVGElement> {
+export abstract class JsxElementMutator extends JsxMutator<FractalJSX.TagName, HTMLElement | SVGElement>
+    implements FractalJSX.ElementMutatorLike<HTMLElement | SVGElement> {
     protected abstract createElement(): HTMLElement | SVGElement
 
-    readonly props: ElementProps
+    readonly props: FractalJSX.ElementProps
     readonly children: ComponentMutator
 
-    constructor(type: TagName, uid: Uid, key: Key, props: ElementProps, children: Child[]) {
+    constructor(
+        type: FractalJSX.TagName,
+        uid: FractalJSX.Uid,
+        key: FractalJSX.Key,
+        props: FractalJSX.ElementProps,
+        children: FractalJSX.Child[]
+    ) {
         super(type, uid, key)
         this.props = props
         this.children = new ComponentMutator(Fragment, uid, void 0, EMPTY_OBJ, children)
@@ -119,12 +114,18 @@ export class HTMLElementMutator extends JsxElementMutator {
     }
 }
 
-export class ComponentMutator extends JsxMutator<Component, (HTMLElement | SVGElement | Text)[]>
-    implements ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> {
-    readonly children: Child[]
+export class ComponentMutator extends JsxMutator<FractalJSX.Component, (HTMLElement | SVGElement | Text)[]>
+    implements FractalJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> {
+    readonly children: FractalJSX.Child[]
     readonly reconcileMap = new ReconcileMap()
 
-    constructor(type: Component, uid: Uid, key: Key, props: ComponentProps, children: Child[]) {
+    constructor(
+        type: FractalJSX.Component,
+        uid: FractalJSX.Uid,
+        key: FractalJSX.Key,
+        props: FractalJSX.ComponentProps,
+        children: FractalJSX.Child[]
+    ) {
         super(type, uid, key)
         const childs = type.call(void 0, { ...props, children })
         this.children = Array.isArray(childs) ? childs : [childs]
@@ -163,7 +164,7 @@ export function placeElements(node: HTMLElement | SVGElement, elements: (HTMLEle
 export function reconcile(
     reconcileMap: ReconcileMap,
     elements: (HTMLElement | SVGElement | Text)[],
-    children: Child[],
+    children: FractalJSX.Child[],
     oldReconcileMap: ReconcileMap
 ) {
     for (let i = 0; i < children.length; i++) {
@@ -229,7 +230,7 @@ class InvalidJSXChildError extends Error {
     }
 }
 
-function mutateProps<T extends ElementProps>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
+function mutateProps<T extends FractalJSX.ElementProps>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
     for (const prop in oldProps) {
         if (!(prop in props)) {
             mutateProp(node, prop, void 0, oldProps[prop])
@@ -242,7 +243,7 @@ function mutateProps<T extends ElementProps>(node: HTMLElement | SVGElement, pro
     }
 }
 
-function mutateProp<T extends ElementProps, K extends keyof T & string>(
+function mutateProp<T extends FractalJSX.ElementProps, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     value: T[K] | undefined,
@@ -266,7 +267,7 @@ function mutateProp<T extends ElementProps, K extends keyof T & string>(
     }
 }
 
-function mutateEventListener<T extends ElementProps, K extends keyof T & string>(
+function mutateEventListener<T extends FractalJSX.ElementProps, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     listener: T[K] | undefined,
@@ -283,7 +284,7 @@ function mutateEventListener<T extends ElementProps, K extends keyof T & string>
     }
 }
 
-function mutateStyle<T extends CSSStyleDeclaration | ElementProps>(
+function mutateStyle<T extends CSSStyleDeclaration | FractalJSX.ElementProps>(
     node: HTMLElement | SVGElement,
     value: T = EMPTY_OBJ as T,
     oldValue: T = EMPTY_OBJ as T
@@ -305,7 +306,7 @@ function mutateStyle<T extends CSSStyleDeclaration | ElementProps>(
     }
 }
 
-function mutateStyleProp<T extends ElementProps, K extends keyof T & string>(
+function mutateStyleProp<T extends FractalJSX.ElementProps, K extends keyof T & string>(
     style: CSSStyleDeclaration,
     prop: K,
     value: T[K]
@@ -319,8 +320,8 @@ function mutateStyleProp<T extends ElementProps, K extends keyof T & string>(
 
 function mutatePropThroughAttributeApi<T extends HTMLElement | SVGElement>(
     node: T,
-    prop: keyof ElementProps & string,
-    value: ElementProps[keyof ElementProps]
+    prop: keyof FractalJSX.ElementProps & string,
+    value: FractalJSX.ElementProps[keyof FractalJSX.ElementProps]
 ) {
     if (value == null) {
         node.removeAttribute(prop)
@@ -331,8 +332,8 @@ function mutatePropThroughAttributeApi<T extends HTMLElement | SVGElement>(
 
 function mutatePropThroughUsualWay<T extends HTMLElement | SVGElement>(
     node: T,
-    prop: keyof ElementProps,
-    value: ElementProps[keyof ElementProps]
+    prop: keyof FractalJSX.ElementProps,
+    value: FractalJSX.ElementProps[keyof FractalJSX.ElementProps]
 ) {
     node[prop as keyof T] = value == null ? '' : value
 }
