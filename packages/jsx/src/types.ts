@@ -780,7 +780,7 @@ export namespace FractalJSX {
         capture?: boolean | string
         checked?: boolean
         crossOrigin?: string
-        defaultValue?: string
+        defaultValue?: number | string
         disabled?: boolean
         form?: string
         formAction?: string
