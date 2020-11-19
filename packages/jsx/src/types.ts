@@ -1341,7 +1341,7 @@ export namespace FractalJSX {
         bdi: HTMLProps<HTMLAttributes<HTMLElement>>
         bdo: HTMLProps<HTMLAttributes<HTMLElement>>
         big: HTMLProps<HTMLAttributes<HTMLElement>>
-        blockquote: HTMLProps<HTMLAttributes<HTMLElement>>
+        blockquote: HTMLProps<BlockquoteHTMLAttributes<HTMLElement>>
         body: HTMLProps<HTMLAttributes<HTMLBodyElement>>
         br: HTMLProps<HTMLAttributes<HTMLBRElement>>
         button: HTMLProps<ButtonHTMLAttributes<HTMLButtonElement>>
@@ -1349,13 +1349,13 @@ export namespace FractalJSX {
         caption: HTMLProps<HTMLAttributes<HTMLElement>>
         cite: HTMLProps<HTMLAttributes<HTMLElement>>
         code: HTMLProps<HTMLAttributes<HTMLElement>>
-        col: HTMLProps<HTMLAttributes<HTMLTableColElement>>
-        colgroup: HTMLProps<HTMLAttributes<HTMLTableColElement>>
+        col: HTMLProps<ColHTMLAttributes<HTMLTableColElement>>
+        colgroup: HTMLProps<ColgroupHTMLAttributes<HTMLTableColElement>>
         data: HTMLProps<DataHTMLAttributes<HTMLDataElement>>
         datalist: HTMLProps<HTMLAttributes<HTMLDataListElement>>
         dd: HTMLProps<HTMLAttributes<HTMLElement>>
-        del: HTMLProps<HTMLAttributes<HTMLElement>>
-        details: HTMLProps<HTMLAttributes<HTMLElement>>
+        del: HTMLProps<DelHTMLAttributes<HTMLElement>>
+        details: HTMLProps<DetailsHTMLAttributes<HTMLElement>>
         dfn: HTMLProps<HTMLAttributes<HTMLElement>>
         dialog: HTMLProps<DialogHTMLAttributes<HTMLDialogElement>>
         div: HTMLProps<HTMLAttributes<HTMLDivElement>>
@@ -1363,7 +1363,7 @@ export namespace FractalJSX {
         dt: HTMLProps<HTMLAttributes<HTMLElement>>
         em: HTMLProps<HTMLAttributes<HTMLElement>>
         embed: HTMLProps<EmbedHTMLAttributes<HTMLEmbedElement>>
-        fieldset: HTMLProps<HTMLAttributes<HTMLFieldSetElement>>
+        fieldset: HTMLProps<FieldsetHTMLAttributes<HTMLFieldSetElement>>
         figcaption: HTMLProps<HTMLAttributes<HTMLElement>>
         figure: HTMLProps<HTMLAttributes<HTMLElement>>
         footer: HTMLProps<HTMLAttributes<HTMLElement>>
@@ -1380,31 +1380,31 @@ export namespace FractalJSX {
         hr: HTMLProps<HTMLAttributes<HTMLHRElement>>
         html: HTMLProps<HtmlHTMLAttributes<HTMLHtmlElement>>
         i: HTMLProps<HTMLAttributes<HTMLElement>>
-        iframe: HTMLProps<HTMLAttributes<HTMLIFrameElement>>
-        img: HTMLProps<HTMLAttributes<HTMLImageElement>>
+        iframe: HTMLProps<IframeHTMLAttributes<HTMLIFrameElement>>
+        img: HTMLProps<ImgHTMLAttributes<HTMLImageElement>>
         input: HTMLProps<InputHTMLAttributes<HTMLInputElement>>
-        ins: HTMLProps<HTMLAttributes<HTMLModElement>>
+        ins: HTMLProps<InsHTMLAttributes<HTMLModElement>>
         kbd: HTMLProps<HTMLAttributes<HTMLElement>>
-        keygen: HTMLProps<HTMLAttributes<HTMLElement>>
+        keygen: HTMLProps<KeygenHTMLAttributes<HTMLElement>>
         label: HTMLProps<LabelHTMLAttributes<HTMLLabelElement>>
         legend: HTMLProps<HTMLAttributes<HTMLLegendElement>>
-        li: HTMLProps<HTMLAttributes<HTMLLIElement>>
+        li: HTMLProps<LiHTMLAttributes<HTMLLIElement>>
         link: HTMLProps<LinkHTMLAttributes<HTMLLinkElement>>
         main: HTMLProps<HTMLAttributes<HTMLElement>>
         map: HTMLProps<MapHTMLAttributes<HTMLMapElement>>
         mark: HTMLProps<HTMLAttributes<HTMLElement>>
-        menu: HTMLProps<HTMLAttributes<HTMLElement>>
+        menu: HTMLProps<MenuHTMLAttributes<HTMLElement>>
         menuitem: HTMLProps<HTMLAttributes<HTMLElement>>
         meta: HTMLProps<MetaHTMLAttributes<HTMLMetaElement>>
-        meter: HTMLProps<HTMLAttributes<HTMLElement>>
+        meter: HTMLProps<MeterHTMLAttributes<HTMLElement>>
         nav: HTMLProps<HTMLAttributes<HTMLElement>>
         noindex: HTMLProps<HTMLAttributes<HTMLElement>>
         noscript: HTMLProps<HTMLAttributes<HTMLElement>>
         object: HTMLProps<ObjectHTMLAttributes<HTMLObjectElement>>
-        ol: HTMLProps<HTMLAttributes<HTMLOListElement>>
-        optgroup: HTMLProps<HTMLAttributes<HTMLOptGroupElement>>
+        ol: HTMLProps<OlHTMLAttributes<HTMLOListElement>>
+        optgroup: HTMLProps<OptgroupHTMLAttributes<HTMLOptGroupElement>>
         option: HTMLProps<OptionHTMLAttributes<HTMLOptionElement>>
-        output: HTMLProps<HTMLAttributes<HTMLElement>>
+        output: HTMLProps<OutputHTMLAttributes<HTMLElement>>
         p: HTMLProps<HTMLAttributes<HTMLParagraphElement>>
         param: HTMLProps<ParamHTMLAttributes<HTMLParamElement>>
         picture: HTMLProps<HTMLAttributes<HTMLElement>>
@@ -1431,12 +1431,12 @@ export namespace FractalJSX {
         table: HTMLProps<TableHTMLAttributes<HTMLTableElement>>
         template: HTMLProps<HTMLAttributes<HTMLTemplateElement>>
         tbody: HTMLProps<HTMLAttributes<HTMLTableSectionElement>>
-        td: HTMLProps<HTMLAttributes<HTMLTableDataCellElement>>
-        textarea: HTMLProps<HTMLAttributes<HTMLTextAreaElement>>
+        td: HTMLProps<TdHTMLAttributes<HTMLTableDataCellElement>>
+        textarea: HTMLProps<TextareaHTMLAttributes<HTMLTextAreaElement>>
         tfoot: HTMLProps<HTMLAttributes<HTMLTableSectionElement>>
-        th: HTMLProps<HTMLAttributes<HTMLTableHeaderCellElement>>
+        th: HTMLProps<ThHTMLAttributes<HTMLTableHeaderCellElement>>
         thead: HTMLProps<HTMLAttributes<HTMLTableSectionElement>>
-        time: HTMLProps<HTMLAttributes<HTMLElement>>
+        time: HTMLProps<TimeHTMLAttributes<HTMLElement>>
         title: HTMLProps<HTMLAttributes<HTMLTitleElement>>
         tr: HTMLProps<HTMLAttributes<HTMLTableRowElement>>
         track: HTMLProps<TrackHTMLAttributes<HTMLTrackElement>>
