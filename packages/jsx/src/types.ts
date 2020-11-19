@@ -779,6 +779,7 @@ export interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
     capture?: boolean | string
     checked?: boolean
     crossOrigin?: string
+    defaultValue?: string
     disabled?: boolean
     form?: string
     formAction?: string
