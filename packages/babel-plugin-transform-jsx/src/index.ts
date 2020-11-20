@@ -82,9 +82,9 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     const callee = createCalleeImport(path, factory)
     const type = createType(path, name)
     const uid = createUid()
-    const { key, props } = parseAttributes(attributes)
+    const { key, ref, props } = parseAttributes(attributes)
     const childs = parseChildren(children)
-    const expression = callExpression(callee, [type, uid, key, props, childs])
+    const expression = callExpression(callee, [type, uid, key, ref, props, childs])
 
     path.replaceWith(expression)
 }
@@ -123,6 +123,7 @@ function createUid() {
 
 function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
     let key: Expression = VOID
+    let ref: Expression = VOID
     const members = [] as (SpreadElement | ObjectProperty)[]
 
     for (const attr of attributes) {
@@ -141,6 +142,8 @@ function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
 
         if (name === 'key') {
             key = value
+        } else if (name === 'ref') {
+            ref = value
         } else {
             const prop = identifier(name)
             const member = objectProperty(prop, value)
@@ -150,7 +153,7 @@ function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
 
     const props = members.length ? objectExpression(members) : VOID
 
-    return { key, props }
+    return { key, ref, props }
 }
 
 function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExpressionContainer | null) {

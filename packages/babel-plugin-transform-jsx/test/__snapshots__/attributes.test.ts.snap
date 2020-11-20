@@ -3,7 +3,7 @@
 exports[`transform attributes Should transform boolean prop 1`] = `
 "import { html as _html } from \\"@fract/jsx\\";
 
-_html(\\"div\\", \\"UniqueId\\", undefined, {
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, {
   focused: true
 }, undefined);"
 `;
@@ -11,7 +11,17 @@ _html(\\"div\\", \\"UniqueId\\", undefined, {
 exports[`transform attributes Should transform different props variations 1`] = `
 "import { html as _html } from \\"@fract/jsx\\";
 
-_html(\\"div\\", \\"UniqueId\\", \\"Key\\", {
+_html(\\"div\\", \\"UniqueId\\", \\"Key\\", undefined, {
+  prop1: \\"value1\\",
+  prop2: 2 + 2,
+  ...props
+}, undefined);"
+`;
+
+exports[`transform attributes Should transform different props with ref 1`] = `
+"import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", \\"Key\\", myRef, {
   prop1: \\"value1\\",
   prop2: 2 + 2,
   ...props
@@ -21,20 +31,20 @@ _html(\\"div\\", \\"UniqueId\\", \\"Key\\", {
 exports[`transform attributes Should transform key prop 1`] = `
 "import { html as _html } from \\"@fract/jsx\\";
 
-_html(\\"div\\", \\"UniqueId\\", \\"Key\\", undefined, undefined);"
+_html(\\"div\\", \\"UniqueId\\", \\"Key\\", undefined, undefined, undefined);"
 `;
 
 exports[`transform attributes Should transform props spread 1`] = `
 "import { html as _html } from \\"@fract/jsx\\";
 
-_html(\\"div\\", \\"UniqueId\\", undefined, { ...props
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, { ...props
 }, undefined);"
 `;
 
 exports[`transform attributes Should transform props with expressions 1`] = `
 "import { html as _html } from \\"@fract/jsx\\";
 
-_html(\\"div\\", \\"UniqueId\\", undefined, {
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, {
   prop1: 1 + 1
 }, undefined);"
 `;
@@ -42,7 +52,7 @@ _html(\\"div\\", \\"UniqueId\\", undefined, {
 exports[`transform attributes Should transform simple props 1`] = `
 "import { html as _html } from \\"@fract/jsx\\";
 
-_html(\\"div\\", \\"UniqueId\\", undefined, {
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, {
   prop1: \\"value1\\"
 }, undefined);"
 `;
