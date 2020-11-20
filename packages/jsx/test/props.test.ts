@@ -5,15 +5,15 @@ import { html, svg } from '../src/factories'
 
 describe('props', function () {
     it('should ignore children prop', function () {
-        const mutatorOne = html('div', '', '', { children: 'child' })
+        const mutatorOne = html('div', '', '', undefined, { children: 'child' })
         const element = mutatorOne.mutate()
 
         expect(element.children).toBeInstanceOf(HTMLCollection)
     })
 
     it('should mutate simple writable prop', function () {
-        const mutatorOne = html('div', '', '', { className: 'one' })
-        const mutatorTwo = html('div', '', '', { className: 'two' })
+        const mutatorOne = html('div', '', '', undefined, { className: 'one' })
+        const mutatorTwo = html('div', '', '', undefined, { className: 'two' })
         const element = mutatorOne.mutate()
 
         expect(element.className).toBe('one')
@@ -24,8 +24,8 @@ describe('props', function () {
     })
 
     it('should reset prop to default value', function () {
-        const mutatorOne = html('div', '', '', { className: 'one' })
-        const mutatorTwo = html('div', '', '', {})
+        const mutatorOne = html('div', '', '', undefined, { className: 'one' })
+        const mutatorTwo = html('div', '', '', undefined, {})
         const element = mutatorOne.mutate()
 
         expect(element.className).toBe('one')
@@ -36,8 +36,8 @@ describe('props', function () {
     })
 
     it('should mutate only changed props', function () {
-        const mutatorOne = html('div', '', '', { className: 'one', id: 'ID' })
-        const mutatorTwo = html('div', '', '', { className: 'two', id: 'ID' })
+        const mutatorOne = html('div', '', '', undefined, { className: 'one', id: 'ID' })
+        const mutatorTwo = html('div', '', '', undefined, { className: 'two', id: 'ID' })
         const element = mutatorOne.mutate()
 
         expect(element.className).toBe('one')
@@ -50,8 +50,8 @@ describe('props', function () {
     })
 
     it('should mutate stype properties', function () {
-        const mutatorOne = html('div', '', '', { style: { backgroundColor: 'red' } })
-        const mutatorTwo = html('div', '', '', { style: { backgroundColor: 'yellow' } })
+        const mutatorOne = html('div', '', '', undefined, { style: { backgroundColor: 'red' } })
+        const mutatorTwo = html('div', '', '', undefined, { style: { backgroundColor: 'yellow' } })
         const element = mutatorOne.mutate()
 
         expect(element.style.backgroundColor).toBe('red')
@@ -62,8 +62,8 @@ describe('props', function () {
     })
 
     it('should reset style prop to default', function () {
-        const mutatorOne = html('div', '', '', { style: { backgroundColor: 'red' } })
-        const mutatorTwo = html('div', '', '', { style: {} })
+        const mutatorOne = html('div', '', '', undefined, { style: { backgroundColor: 'red' } })
+        const mutatorTwo = html('div', '', '', undefined, { style: {} })
 
         const element = mutatorOne.mutate()
 
@@ -75,8 +75,8 @@ describe('props', function () {
     })
 
     it('should reset all style props to default when style prop not exists', function () {
-        const mutatorOne = html('div', '', '', { style: { backgroundColor: 'red', color: 'white' } })
-        const mutatorTwo = html('div', '', '', {})
+        const mutatorOne = html('div', '', '', undefined, { style: { backgroundColor: 'red', color: 'white' } })
+        const mutatorTwo = html('div', '', '', undefined, {})
 
         const element = mutatorOne.mutate()
 
@@ -90,8 +90,8 @@ describe('props', function () {
     })
 
     it('should mutate only changed style props', function () {
-        const mutatorOne = html('div', '', '', { style: { backgroundColor: 'red', fontSize: 16 } })
-        const mutatorTwo = html('div', '', '', { style: { fontSize: 16, color: 'black' } })
+        const mutatorOne = html('div', '', '', undefined, { style: { backgroundColor: 'red', fontSize: 16 } })
+        const mutatorTwo = html('div', '', '', undefined, { style: { fontSize: 16, color: 'black' } })
 
         const element = mutatorOne.mutate()
 
@@ -106,29 +106,29 @@ describe('props', function () {
     })
 
     it('should copy stype when style prop is CSSDeclaration', function () {
-        const declaration = html('div', '', '', { style: { backgroundColor: 'red' } }).mutate().style
-        const mutator = html('div', '', '', { style: declaration })
+        const declaration = html('div', '', '', undefined, { style: { backgroundColor: 'red' } }).mutate().style
+        const mutator = html('div', '', '', undefined, { style: declaration })
         const element = mutator.mutate()
 
         expect(element.style.backgroundColor).toBe('red')
     })
 
     it('should add "px" suffix to dimensional style prop', function () {
-        const mutator = html('div', '', '', { style: { top: 10 } })
+        const mutator = html('div', '', '', undefined, { style: { top: 10 } })
         const element = mutator.mutate()
 
         expect(element.style.top).toBe('10px')
     })
 
     it('should mutate readonly prop through attribute api', function () {
-        const mutator = html('a', '', '', { href: 'https://github.com/' })
+        const mutator = html('a', '', '', undefined, { href: 'https://github.com/' })
         const element = mutator.mutate() as HTMLAnchorElement
 
         expect(element.getAttribute('href')).toBe('https://github.com/')
     })
 
     it('should reset readonly prop through attribute api', function () {
-        const mutatorOne = html('a', '', '', { href: 'https://github.com/' })
+        const mutatorOne = html('a', '', '', undefined, { href: 'https://github.com/' })
         const mutatorTwo = html('a', '', '', {})
 
         const element = mutatorOne.mutate()
@@ -141,7 +141,7 @@ describe('props', function () {
     })
 
     it('should mutate svg prop through attribute api', function () {
-        const mutator = svg('circle', '', '', { cx: '50' })
+        const mutator = svg('circle', '', '', undefined, { cx: '50' })
         const element = mutator.mutate() as SVGCircleElement
 
         expect(element.getAttribute('cx')).toBe('50')
@@ -150,7 +150,7 @@ describe('props', function () {
     it('should set event listener', function () {
         let clicked = false
         const listener = () => (clicked = true)
-        const mutator = html('div', '', '', { onClick: listener })
+        const mutator = html('div', '', '', undefined, { onClick: listener })
         const element = mutator.mutate()
 
         expect(clicked).toBeFalsy()
@@ -163,8 +163,8 @@ describe('props', function () {
     it('should reset event listener', function () {
         let clicked = 0
         const listenerOne = () => clicked++
-        const mutatorOne = html('div', '', '', { onClick: listenerOne })
-        const mutatorTwo = html('div', '', '', {})
+        const mutatorOne = html('div', '', '', undefined, { onClick: listenerOne })
+        const mutatorTwo = html('div', '', '', undefined, {})
 
         const element = mutatorOne.mutate()
 
@@ -184,7 +184,7 @@ describe('props', function () {
     it('should set captured event listener', function () {
         let phase: number
         const listener = (e: MouseEvent) => (phase = e.eventPhase)
-        const mutator = html('div', '', '', { onClickCapture: listener }, [html('div', '', '', {})])
+        const mutator = html('div', '', '', undefined, { onClickCapture: listener }, [html('div', '', '', {})])
         const element = mutator.mutate()
 
         element.firstChild!.dispatchEvent(new MouseEvent('click'))

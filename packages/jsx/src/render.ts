@@ -41,7 +41,7 @@ class Renderer<T> extends Fractal<T> {
     }
 }
 
-export async function render(root: Fractal<FractalJSX.Child>, container: HTMLElement | SVGElement) {
+export async function render(root: Fractal<FractalJSX.Child>, container: HTMLElement | SVGElement = document.body) {
     const renderer = new Renderer(root, container)
     const atom = new Atom(renderer)
 

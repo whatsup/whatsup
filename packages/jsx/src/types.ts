@@ -1512,7 +1512,7 @@ export namespace FractalJSX {
     export type Type = TagName | Component
     export type Uid = string
     export type Prop = keyof ComponentProps & string
-    export type Key = string | number | void
+    export type Key = string | number
     export type Child =
         | JsxMutator<any, any>
         | HTMLElement
@@ -1525,8 +1525,13 @@ export namespace FractalJSX {
         | Child[]
     export type Component = <P extends ComponentProps>(props: P) => Child
 
+    export interface Ref {
+        current?: any
+    }
+
     export interface Attributes {
         key?: Key
+        ref?: Ref
         children?: Child | any
     }
 

@@ -11,7 +11,7 @@ describe('render', function () {
         const container = document.createElement('div')
         const Root = fractal(async function* () {
             while (true) {
-                yield html('div', '', '')
+                yield html('div', '', '', undefined)
             }
         })
 
@@ -25,7 +25,7 @@ describe('render', function () {
         const container = document.createElement('div')
         const Root = fractal(async function* () {
             while (true) {
-                yield [html('div', '', ''), html('div', '', '')]
+                yield [html('div', '', '', undefined), html('div', '', '', undefined)]
             }
         })
 
@@ -38,12 +38,12 @@ describe('render', function () {
 
     it('should render component', async function () {
         function Component() {
-            return [html('div', '', ''), html('div', '', '')]
+            return [html('div', '', '', undefined), html('div', '', '', undefined)]
         }
         const container = document.createElement('div')
         const Root = fractal(async function* () {
             while (true) {
-                yield component(Component, '', '')
+                yield component(Component, '', '', undefined)
             }
         })
 
@@ -73,5 +73,18 @@ describe('render', function () {
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('wtf')
+    })
+
+    it('should render default to document.body', async function () {
+        const Root = fractal(async function* () {
+            while (true) {
+                yield html('div', '', '', undefined)
+            }
+        })
+
+        await render(Root)
+
+        expect(document.body.childNodes.length).toBe(1)
+        expect(document.body.children[0].tagName).toBe('DIV')
     })
 })

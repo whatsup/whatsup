@@ -26,15 +26,17 @@ export abstract class JsxMutator<T extends FractalJSX.Type, R> extends Mutator<R
 
     readonly type: T
     readonly uid: FractalJSX.Uid
-    readonly key: FractalJSX.Key
+    readonly key: FractalJSX.Key | undefined
+    readonly ref: FractalJSX.Ref | undefined
     readonly reconcileId: string
     result!: R
 
-    constructor(type: T, uid: FractalJSX.Uid, key: FractalJSX.Key) {
+    constructor(type: T, uid: FractalJSX.Uid, key: FractalJSX.Key | undefined, ref: FractalJSX.Ref | undefined) {
         super()
         this.type = type
         this.uid = uid
         this.key = key
+        this.ref = ref
         this.reconcileId = key != null ? `${uid}|${key}` : uid
     }
 
@@ -45,11 +47,18 @@ export abstract class JsxMutator<T extends FractalJSX.Type, R> extends Mutator<R
             return data!
         }
 
-        this.result = this.doMutation(oldMutator)
+        const newData = this.doMutation(oldMutator)
 
-        this.attachTo(this.result)
+        this.attachTo(newData)
+        this.updateRef(newData)
 
-        return this.result
+        return (this.result = newData)
+    }
+
+    private updateRef(target: R) {
+        if (this.ref) {
+            this.ref.current = Array.isArray(target) && target.length === 1 ? target[0] : target
+        }
     }
 
     private extractFrom(target: any): JsxMutator<T, R> | void {
@@ -78,13 +87,14 @@ export abstract class JsxElementMutator extends JsxMutator<FractalJSX.TagName, H
     constructor(
         type: FractalJSX.TagName,
         uid: FractalJSX.Uid,
-        key: FractalJSX.Key,
+        key: FractalJSX.Key | undefined,
+        ref: FractalJSX.Ref | undefined,
         props: FractalJSX.ElementProps,
         children: FractalJSX.Child[]
     ) {
-        super(type, uid, key)
+        super(type, uid, key, ref)
         this.props = props
-        this.children = new ComponentMutator(Fragment, uid, void 0, EMPTY_OBJ, children)
+        this.children = new ComponentMutator(Fragment, uid, undefined, undefined, EMPTY_OBJ, children)
     }
 
     doMutation({
@@ -122,12 +132,13 @@ export class ComponentMutator extends JsxMutator<FractalJSX.Component, (HTMLElem
     constructor(
         type: FractalJSX.Component,
         uid: FractalJSX.Uid,
-        key: FractalJSX.Key,
+        key: FractalJSX.Key | undefined,
+        ref: FractalJSX.Ref | undefined,
         props: FractalJSX.ComponentProps,
         children: FractalJSX.Child[]
     ) {
-        super(type, uid, key)
-        const childs = type.call(void 0, { ...props, children })
+        super(type, uid, key, ref)
+        const childs = type.call(undefined, { ...props, children })
         this.children = Array.isArray(childs) ? childs : [childs]
     }
 
@@ -233,7 +244,7 @@ class InvalidJSXChildError extends Error {
 function mutateProps<T extends FractalJSX.ElementProps>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
     for (const prop in oldProps) {
         if (!(prop in props)) {
-            mutateProp(node, prop, void 0, oldProps[prop])
+            mutateProp(node, prop, undefined, oldProps[prop])
         }
     }
     for (const prop in props) {
@@ -250,7 +261,7 @@ function mutateProp<T extends FractalJSX.ElementProps, K extends keyof T & strin
     oldValue: T[K] | undefined
 ) {
     switch (true) {
-        case isChildrenProp(prop):
+        case isIgnorableProp(prop):
             break
         case isEventListener(prop):
             mutateEventListener(node, prop, value, oldValue)
@@ -358,8 +369,8 @@ function isStyleProp(prop: string) {
     return prop === 'style'
 }
 
-function isChildrenProp(prop: string) {
-    return prop === 'children'
+function isIgnorableProp(prop: string) {
+    return prop === 'key' || prop === 'ref' || prop === 'children'
 }
 
 function isReadonlyProp(prop: string) {

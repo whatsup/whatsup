@@ -6,14 +6,14 @@ import { html, svg, component } from '../src/factories'
 describe('reconcilation', function () {
     it('expect uid to be "uiniqueId"', function () {
         const uid = 'uiniqueId'
-        const mutator = html('div', uid, '')
+        const mutator = html('div', uid, '', undefined)
 
         expect(mutator.uid).toBe(uid)
     })
 
     it('expect key to be "elementKey"', function () {
         const key = 'elementKey'
-        const mutator = html('div', '', key)
+        const mutator = html('div', '', key, undefined)
 
         expect(mutator.key).toBe(key)
     })
@@ -21,27 +21,27 @@ describe('reconcilation', function () {
     it('expect reconcileId to be "uiniqueId|elementKey"', function () {
         const uid = 'uiniqueId'
         const key = 'elementKey'
-        const mutator = html('div', uid, key)
+        const mutator = html('div', uid, key, undefined)
 
         expect(mutator.reconcileId).toBe(uid + '|' + key)
     })
 
     it('expect HTMLElementMutator.mutate return div element', function () {
-        const mutator = html('div', '', '')
+        const mutator = html('div', '', '', undefined)
         const element = mutator.mutate()
 
         expect(element.tagName).toBe('DIV')
     })
 
     it('expect SVGElementMutator.mutate return svg element', function () {
-        const mutator = svg('svg', '', '')
+        const mutator = svg('svg', '', '', undefined)
         const element = mutator.mutate()
 
         expect(element.tagName).toBe('svg')
     })
 
     it('should return data when old mutator is same mutator', function () {
-        const mutator = svg('svg', '', '')
+        const mutator = svg('svg', '', '', undefined)
         const element = mutator.mutate()
         const nextElement = mutator.mutate(element)
 
@@ -49,8 +49,8 @@ describe('reconcilation', function () {
     })
 
     it('should reuse element when old mutator have same type & reconcileId', function () {
-        const mutatorOne = html('div', 'uid', 'key')
-        const mutatorTwo = html('div', 'uid', 'key')
+        const mutatorOne = html('div', 'uid', 'key', undefined)
+        const mutatorTwo = html('div', 'uid', 'key', undefined)
         const elementOne = mutatorOne.mutate()
         const elementTwo = mutatorTwo.mutate(elementOne)
 
@@ -58,8 +58,8 @@ describe('reconcilation', function () {
     })
 
     it('should not reuse element when old mutator not have same type & reconcileId', function () {
-        const mutatorOne = html('div', 'uid1', 'key1')
-        const mutatorTwo = html('div', 'uid2', 'key2')
+        const mutatorOne = html('div', 'uid1', 'key1', undefined)
+        const mutatorTwo = html('div', 'uid2', 'key2', undefined)
         const elementOne = mutatorOne.mutate()
         const elementTwo = mutatorTwo.mutate(elementOne)
 
@@ -67,9 +67,9 @@ describe('reconcilation', function () {
     })
 
     it('should render children', function () {
-        const mutator = html('div', 'uid1', '', void 0, [
-            html('div', 'child1', '', void 0, ['child1']),
-            html('div', 'child2', '', void 0, ['child2']),
+        const mutator = html('div', 'uid1', '', undefined, undefined, [
+            html('div', 'child1', '', undefined, undefined, ['child1']),
+            html('div', 'child2', '', undefined, undefined, ['child2']),
         ])
         const element = mutator.mutate()
 
@@ -79,9 +79,9 @@ describe('reconcilation', function () {
     })
 
     it('should render children elements, mutators, strings, numbers & ignore null & booleans', function () {
-        const mutator = html('div', 'uid1', '', void 0, [
-            html('div', 'child1', '', void 0, ['child1']),
-            html('div', 'child2', '', void 0, ['child2']),
+        const mutator = html('div', 'uid1', '', undefined, undefined, [
+            html('div', 'child1', '', undefined, undefined, ['child1']),
+            html('div', 'child2', '', undefined, undefined, ['child2']),
             'child3',
             1612,
             null,
@@ -98,9 +98,9 @@ describe('reconcilation', function () {
     })
 
     it('should throw error on all children except elements, mutators, strings, numbers, booleans, null', function () {
-        const mutator = html('div', 'uid1', '', void 0, [
-            html('div', 'child1', '', void 0, ['child1']),
-            html('div', 'child2', '', void 0, ['child2']),
+        const mutator = html('div', 'uid1', '', undefined, undefined, [
+            html('div', 'child1', '', undefined, undefined, ['child1']),
+            html('div', 'child2', '', undefined, undefined, ['child2']),
             'child3',
             1612,
             null,
@@ -113,8 +113,8 @@ describe('reconcilation', function () {
     })
 
     it('should remove unreconciled elements', function () {
-        const mutatorOne = html('div', 'uid1', '', void 0, [html('div', 'child1', '')])
-        const mutatorTwo = html('div', 'uid1', '')
+        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [html('div', 'child1', '', undefined)])
+        const mutatorTwo = html('div', 'uid1', '', undefined)
         const element = mutatorOne.mutate()
 
         expect(element.childNodes.length).toBe(1)
@@ -125,8 +125,8 @@ describe('reconcilation', function () {
     })
 
     it('should replace elements with different reconcileId', function () {
-        const mutatorOne = html('div', 'uid1', '', void 0, [html('div', 'child1', '')])
-        const mutatorTwo = html('div', 'uid1', '', void 0, [html('div', 'child2', '')])
+        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [html('div', 'child1', '', undefined)])
+        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, [html('div', 'child2', '', undefined)])
         const element = mutatorOne.mutate()
         const childOne = element.childNodes[0]
 
@@ -139,8 +139,14 @@ describe('reconcilation', function () {
     })
 
     it('should reverse elements when mutators reversed', function () {
-        const mutatorOne = html('div', 'uid1', '', void 0, [html('div', 'child1', ''), html('div', 'child2', '')])
-        const mutatorTwo = html('div', 'uid1', '', void 0, [html('div', 'child2', ''), html('div', 'child1', '')])
+        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [
+            html('div', 'child1', '', undefined),
+            html('div', 'child2', '', undefined),
+        ])
+        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, [
+            html('div', 'child2', '', undefined),
+            html('div', 'child1', '', undefined),
+        ])
         const element = mutatorOne.mutate()
 
         expect(element.childNodes.length).toBe(2)
@@ -156,11 +162,11 @@ describe('reconcilation', function () {
     })
 
     it('should save rendered elements', function () {
-        const htmlRendered = html('div', '', '').mutate()
-        const svgRendered = svg('svg', '', '').mutate()
+        const htmlRendered = html('div', '', '', undefined).mutate()
+        const svgRendered = svg('svg', '', '', undefined).mutate()
         const textRendered = document.createTextNode('')
-        const mutatorOne = html('div', 'uid1', '', void 0, [htmlRendered, svgRendered, textRendered])
-        const mutatorTwo = html('div', 'uid1', '', void 0, [htmlRendered, svgRendered, textRendered])
+        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [htmlRendered, svgRendered, textRendered])
+        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, [htmlRendered, svgRendered, textRendered])
         const element = mutatorOne.mutate()
 
         mutatorTwo.mutate(element)
@@ -172,7 +178,7 @@ describe('reconcilation', function () {
     })
 
     it('should render string | number to TextNode', function () {
-        const mutator = html('div', 'uid1', '', void 0, ['hello', 1612])
+        const mutator = html('div', 'uid1', '', undefined, undefined, ['hello', 1612])
         const element = mutator.mutate()
 
         expect(element.childNodes.length).toBe(2)
@@ -183,8 +189,8 @@ describe('reconcilation', function () {
     })
 
     it('should reuse TextNode', function () {
-        const mutatorOne = html('div', 'uid1', '', void 0, ['hello', 1612])
-        const mutatorTwo = html('div', 'uid1', '', void 0, ['hello', 'world'])
+        const mutatorOne = html('div', 'uid1', '', undefined, undefined, ['hello', 1612])
+        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, ['hello', 'world'])
         const element = mutatorOne.mutate()
 
         expect(element.childNodes.length).toBe(2)
@@ -204,9 +210,12 @@ describe('reconcilation', function () {
     })
 
     it('should render nested array', function () {
-        const mutator = html('div', '1', '', void 0, [
-            html('div', '2', '', void 0, ['foo']),
-            [html('div', '3', '1', void 0, ['baz']), html('div', '3', '1', void 0, ['bar'])],
+        const mutator = html('div', '1', '', undefined, undefined, [
+            html('div', '2', '', undefined, undefined, ['foo']),
+            [
+                html('div', '3', '1', undefined, undefined, ['baz']),
+                html('div', '3', '1', undefined, undefined, ['bar']),
+            ],
         ])
         const element = mutator.mutate()
 
@@ -216,9 +225,15 @@ describe('reconcilation', function () {
 
     it('should be prepared for the child to return an array', function () {
         function Comp() {
-            return [html('div', '3', '1', void 0, ['baz']), html('div', '3', '1', void 0, ['bar'])]
+            return [
+                html('div', '3', '1', undefined, undefined, ['baz']),
+                html('div', '3', '1', undefined, undefined, ['bar']),
+            ]
         }
-        const mutator = html('div', '1', '', void 0, [html('div', '2', '', void 0, ['foo']), component(Comp, '1', '')])
+        const mutator = html('div', '1', '', undefined, undefined, [
+            html('div', '2', '', undefined, undefined, ['foo']),
+            component(Comp, '1', '', undefined),
+        ])
         const element = mutator.mutate()
 
         expect(element.childNodes.length).toBe(3)
