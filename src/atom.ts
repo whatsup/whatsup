@@ -3,6 +3,7 @@ import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
 import { Mutator } from './mutator'
+import { initTransaction } from 'transaction'
 
 const DESTROYER = Symbol('Destroy symbol')
 
@@ -26,13 +27,9 @@ export class Atom<T = any> {
     }
 
     update() {
-        const { data, dataIsError } = this
-
-        this.build()
-
-        if (this.consumer && (data !== this.data || dataIsError !== this.dataIsError)) {
-            this.consumer.update()
-        }
+        const transaction = initTransaction(this)
+        transaction.add(this)
+        transaction.run(this)
     }
 
     destroy() {
@@ -81,7 +78,7 @@ export class Atom<T = any> {
         return this.subatoms.get(key)!
     }
 
-    private build() {
+    build() {
         const { stack, dependencies, fractal, context } = this
 
         dependencies.swap()

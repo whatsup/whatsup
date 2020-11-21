@@ -1,5 +1,6 @@
 import { Fractal, FractalOptions } from './fractal'
 import { Context } from './context'
+import { initTransaction } from 'transaction'
 
 export interface FractionOptions extends FractalOptions {}
 
@@ -31,9 +32,13 @@ export class Fraction<T> extends Fractal<T> {
     set(value: T) {
         this.data = value
 
+        const transaction = initTransaction(this)
+
         for (const context of this.contexts) {
             context.update()
         }
+
+        transaction.run(this)
     }
 }
 
