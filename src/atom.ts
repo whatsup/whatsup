@@ -60,6 +60,7 @@ export class Atom<T = any> {
         this.nextBuildPromise = undefined
         this.nextBuildStarter = undefined
         this.dependencies.destroy()
+        this.context.destroy()
 
         while (this.stack.length) {
             this.stack.pop()!.return!()

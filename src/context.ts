@@ -16,6 +16,12 @@ export class Context {
         this[$Atom] = atom
     }
 
+    /**@internal */
+    destroy() {
+        this[$Factors] = undefined!
+        this[$EventListeners] = undefined!
+    }
+
     get [$Parent](): Context | null {
         const { consumer, delegator } = this[$Atom]
         return delegator?.context || consumer?.context || null
