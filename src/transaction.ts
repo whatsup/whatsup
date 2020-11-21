@@ -55,6 +55,7 @@ class Transaction {
     run(initiator: Initiator) {
         if (initiator === this.initiator) {
             const { queue } = this
+            const needUpdate = new Set<Atom>()
 
             let i = 0
 
@@ -67,11 +68,12 @@ class Transaction {
 
                 if (consumer) {
                     if (data !== atom.data || dataIsError !== atom.dataIsError) {
-                        consumer.transactNeedUpdate = true
+                        needUpdate.add(consumer)
                     }
 
                     while (--consumer.transactCounter === 0) {
-                        if (consumer.transactNeedUpdate) {
+                        if (needUpdate.has(consumer)) {
+                            needUpdate.delete(consumer)
                             queue.push(consumer)
                             break
                         }

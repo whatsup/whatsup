@@ -19,9 +19,7 @@ export class Atom<T = any> {
     private revision = 0
     data?: T | Delegation<T> | Error
     dataIsError?: boolean
-
     transactCounter = 0
-    transactNeedUpdate = false
 
     constructor(fractal: Fractal<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
         this.fractal = fractal

@@ -23,7 +23,7 @@ function normalizeSource<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
     return new EasyFractal(source)
 }
 
-export function live<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
+export function run<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
     const fractal = normalizeSource(source)
     const root = new Root(fractal)
     const atom = new Atom(root)
