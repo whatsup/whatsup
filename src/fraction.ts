@@ -1,6 +1,6 @@
 import { Fractal, FractalOptions } from './fractal'
 import { Context } from './context'
-import { initTransaction } from 'transaction'
+import { initTransaction } from './transaction'
 
 export interface FractionOptions extends FractalOptions {}
 

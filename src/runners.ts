@@ -28,7 +28,7 @@ export function live<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
     const root = new Root(fractal)
     const atom = new Atom(root)
 
-    atom.update()
+    atom.build()
 
     return () => atom.destroy()
 }

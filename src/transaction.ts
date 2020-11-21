@@ -4,6 +4,10 @@ type Initiator = object | symbol
 
 let CURRENT_TRANSACTION: Transaction | null = null
 
+export function createTransactionKey() {
+    return Symbol('Transaction key')
+}
+
 export function initTransaction(initiator: Initiator) {
     if (!CURRENT_TRANSACTION) {
         CURRENT_TRANSACTION = new Transaction(initiator)
@@ -26,33 +30,59 @@ export const action = transaction
 
 class Transaction {
     private initiator: Initiator
-    private indexes = new Map<Atom, number>()
-    private queue = [] as (Atom | null)[]
+    private queue = [] as Atom[]
 
     constructor(initiator: Initiator) {
         this.initiator = initiator
     }
 
     add(atom: Atom) {
-        if (this.indexes.has(atom)) {
-            const index = this.indexes.get(atom)!
-            this.queue[index] = null
-        }
+        this.queue.push(atom)
 
-        const index = this.queue.push(atom)
+        let { consumer } = atom
 
-        this.indexes.set(atom, index)
+        while (consumer) {
+            consumer.transactCounter++
 
-        if (atom.consumer) {
-            this.add(atom.consumer)
+            if (consumer.transactCounter > 1) {
+                break
+            }
+
+            consumer = consumer.consumer
         }
     }
 
     run(initiator: Initiator) {
         if (initiator === this.initiator) {
-            for (const atom of this.queue) {
-                if (atom) {
-                    atom.build()
+            const { queue } = this
+
+            let i = 0
+
+            while (i < queue.length) {
+                const atom = queue[i++]
+                const { data, dataIsError } = atom
+                let { consumer } = atom
+
+                atom.build()
+
+                if (consumer) {
+                    if (data !== atom.data || dataIsError !== atom.dataIsError) {
+                        consumer.transactNeedUpdate = true
+                    }
+
+                    while (--consumer.transactCounter === 0) {
+                        if (consumer.transactNeedUpdate) {
+                            queue.push(consumer)
+                            break
+                        }
+
+                        if (consumer.consumer) {
+                            consumer = consumer.consumer
+                            continue
+                        }
+
+                        break
+                    }
                 }
             }
 

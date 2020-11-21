@@ -3,7 +3,7 @@ import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
 import { Mutator } from './mutator'
-import { initTransaction } from 'transaction'
+import { initTransaction } from './transaction'
 
 const DESTROYER = Symbol('Destroy symbol')
 
@@ -17,8 +17,11 @@ export class Atom<T = any> {
     private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
     private readonly dependencies: Dependencies = new Dependencies()
     private revision = 0
-    private data?: T | Delegation<T> | Error
-    private dataIsError?: boolean
+    data?: T | Delegation<T> | Error
+    dataIsError?: boolean
+
+    transactCounter = 0
+    transactNeedUpdate = false
 
     constructor(fractal: Fractal<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
         this.fractal = fractal
