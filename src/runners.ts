@@ -9,7 +9,7 @@ class Root<T> extends Fractal<T> {
         this.target = target
     }
 
-    async *collector() {
+    *collector() {
         while (true) {
             yield yield* this.target
         }
@@ -23,20 +23,12 @@ function normalizeSource<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
     return new EasyFractal(source)
 }
 
-export async function* stream<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
+export function live<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
     const fractal = normalizeSource(source)
     const root = new Root(fractal)
     const atom = new Atom(root)
 
-    return yield* atom
-}
-
-export async function live<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
-    const fractal = normalizeSource(source)
-    const root = new Root(fractal)
-    const atom = new Atom(root)
-
-    await atom.activate()
+    atom.update()
 
     return () => atom.destroy()
 }

@@ -12,7 +12,7 @@ export class Fraction<T> extends Fractal<T> {
         this.data = value
     }
 
-    async *collector(context: Context) {
+    *collector(context: Context) {
         this.contexts.add(context)
 
         try {

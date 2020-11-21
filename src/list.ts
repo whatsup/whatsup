@@ -5,10 +5,10 @@ import { Fraction, FractionOptions } from './fraction'
 export interface ListOptions extends FractionOptions {}
 
 export class List<T> extends Fraction<T[]> {
-    async *collector(context: Context) {
+    *collector(context: Context) {
         const { delegation } = this
 
-        for await (const items of super.collector(context)) {
+        for (const items of super.collector(context)) {
             const result = [] as T[]
 
             for (const item of items) {

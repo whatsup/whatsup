@@ -1,17 +1,16 @@
 import { Atom } from './atom'
 import { Context } from './context'
 import { ConsumerQuery } from './query'
-import { Temporary } from './temporary'
 
-export type Bubble<T> = T | Temporary<T> | Atom<any> | ConsumerQuery
-export type CollectIterator<T> = AsyncIterator<Bubble<T>, T, any>
-export type CollectGenerator<T> = AsyncGenerator<Bubble<T>, any, any>
+export type Bubble<T> = T | Atom<any> | ConsumerQuery
+export type CollectIterator<T> = Iterator<Bubble<T>, T, any>
+export type CollectGenerator<T> = Generator<Bubble<T>, any, any>
 export type CollectGeneratorFunc<T> = ((context: Context) => CollectGenerator<T>) | (() => CollectGenerator<T>)
 
 const CONSUMER_QUERY = new ConsumerQuery()
 
 export abstract class Emitter<T> {
-    async *[Symbol.asyncIterator](): AsyncGenerator<any, T, any> {
+    *[Symbol.iterator](): Generator<any, T, any> {
         const consumer = yield* CONSUMER_QUERY
         return yield* consumer.getSubatom(this).emit()
     }
@@ -40,7 +39,7 @@ export class EasyFractal<T> extends Fractal<T> {
         this.generator = generator
     }
 
-    async *collector(context: Context) {
+    *collector(context: Context) {
         return yield* this.generator(context)
     }
 }
