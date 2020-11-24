@@ -1,4 +1,4 @@
-enum Propagation {
+enum State {
     Default,
     Stopped,
     ImmediateStopped,
@@ -8,21 +8,21 @@ export type EventCtor<T extends Event = any> = new (...args: any[]) => T
 export type EventListener<T extends Event = any> = (event: T) => void
 
 export abstract class Event {
-    private propagation = Propagation.Default
+    private state = State.Default
 
     stopPropagation() {
-        this.propagation = Propagation.Stopped
+        this.state = State.Stopped
     }
 
     stopImmediatePropagation() {
-        this.propagation = Propagation.ImmediateStopped
+        this.state = State.ImmediateStopped
     }
 
     isPropagationStopped() {
-        return this.propagation === Propagation.Stopped || this.isPropagationImmediateStopped()
+        return this.state === State.Stopped || this.isPropagationImmediateStopped()
     }
 
     isPropagationImmediateStopped() {
-        return this.propagation === Propagation.ImmediateStopped
+        return this.state === State.ImmediateStopped
     }
 }

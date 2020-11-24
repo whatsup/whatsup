@@ -1,27 +1,27 @@
 import { Atom } from './atom'
 
-type Initiator = object | symbol
-
 let CURRENT_TRANSACTION: Transaction | null = null
 
 export function createTransactionKey() {
     return Symbol('Transaction key')
 }
 
-export function initTransaction(initiator: Initiator) {
+export function initTransaction(key: symbol) {
     if (!CURRENT_TRANSACTION) {
-        CURRENT_TRANSACTION = new Transaction(initiator)
+        CURRENT_TRANSACTION = new Transaction(key)
+    } else if (CURRENT_TRANSACTION.isRunned()) {
+        throw 'Do not start a new transaction inside a transaction'
     }
 
     return CURRENT_TRANSACTION
 }
 
 export function transaction<T>(cb: () => T) {
-    const initiator = Symbol()
-    const transaction = initTransaction(initiator)
-    const result = cb()
+    const key = createTransactionKey()
+    const transaction = initTransaction(key)
+    const result = cb.call(undefined)
 
-    transaction.run(initiator)
+    transaction.run(key)
 
     return result
 }
@@ -29,66 +29,96 @@ export function transaction<T>(cb: () => T) {
 export const action = transaction
 
 class Transaction {
-    private initiator: Initiator
-    private queue = [] as Atom[]
+    private readonly key: symbol
+    private readonly queue = [] as Atom[]
+    private readonly queueCandidates = new Set<Atom>()
+    private readonly counters = new WeakMap<Atom, number>()
+    private runned = false
 
-    constructor(initiator: Initiator) {
-        this.initiator = initiator
+    constructor(key: symbol) {
+        this.key = key
+    }
+
+    isRunned() {
+        return this.runned
     }
 
     add(atom: Atom) {
         this.queue.push(atom)
-
-        let { consumer } = atom
-
-        while (consumer) {
-            consumer.transactCounter++
-
-            if (consumer.transactCounter > 1) {
-                break
-            }
-
-            consumer = consumer.consumer
-        }
+        this.addConsumers(atom.getConsumers())
     }
 
-    run(initiator: Initiator) {
-        if (initiator === this.initiator) {
+    run(key: symbol) {
+        if (key === this.key) {
+            this.runned = true
+
             const { queue } = this
-            const needUpdate = new Set<Atom>()
 
             let i = 0
 
             while (i < queue.length) {
                 const atom = queue[i++]
-                const { data, dataIsError } = atom
-                let { consumer } = atom
+                const oldCache = atom.getCache()
 
                 atom.build()
 
-                if (consumer) {
-                    if (data !== atom.data || dataIsError !== atom.dataIsError) {
-                        needUpdate.add(consumer)
-                    }
+                const newCache = atom.getCache()
+                const consumers = atom.getConsumers()
 
-                    while (--consumer.transactCounter === 0) {
-                        if (needUpdate.has(consumer)) {
-                            needUpdate.delete(consumer)
-                            queue.push(consumer)
-                            break
-                        }
-
-                        if (consumer.consumer) {
-                            consumer = consumer.consumer
-                            continue
-                        }
-
-                        break
+                if (!newCache!.equal(oldCache)) {
+                    for (const consumer of consumers) {
+                        this.queueCandidates.add(consumer)
                     }
                 }
+
+                this.updateQueue(consumers)
             }
 
             CURRENT_TRANSACTION = null
         }
+    }
+
+    private addConsumers(consumers: Iterable<Atom>) {
+        for (const consumer of consumers) {
+            const counter = this.incrementCounter(consumer)
+
+            if (counter > 1) {
+                continue
+            }
+
+            this.addConsumers(consumer.getConsumers())
+        }
+    }
+
+    private updateQueue(consumers: Iterable<Atom>) {
+        for (const consumer of consumers) {
+            const counter = this.decrementCounter(consumer)
+
+            if (counter === 0) {
+                if (this.queueCandidates.has(consumer)) {
+                    this.queueCandidates.delete(consumer)
+                    this.queue.push(consumer)
+                    continue
+                }
+
+                this.updateQueue(consumer.getConsumers())
+            }
+        }
+    }
+
+    private incrementCounter(consumer: Atom) {
+        const counter = this.counters.has(consumer) ? this.counters.get(consumer)! + 1 : 1
+
+        this.counters.set(consumer, counter)
+
+        return counter
+    }
+
+    private decrementCounter(consumer: Atom) {
+        const counter = this.counters.get(consumer)! - 1
+
+        this.counters.set(consumer, counter)
+
+        return counter
     }
 }

@@ -1,34 +1,18 @@
-import { CollectGeneratorFunc, Fractal, FractalOptions, EasyFractal } from './fractal'
-import { Atom } from './atom'
+import { CollectGeneratorFunc, Stream } from './stream'
+import { EasyComputed } from './computed'
+import { Reaction } from './reaction'
 
-class Root<T> extends Fractal<T> {
-    readonly target: Fractal<T>
-
-    constructor(target: Fractal<T>, options?: FractalOptions) {
-        super(options)
-        this.target = target
-    }
-
-    *collector() {
-        while (true) {
-            yield yield* this.target
-        }
-    }
-}
-
-function normalizeSource<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
-    if (source instanceof Fractal) {
+function normalizeSource<T>(source: Stream<T> | CollectGeneratorFunc<T>): Stream<T> {
+    if (source instanceof Stream) {
         return source
     }
-    return new EasyFractal(source)
+    return new EasyComputed(source)
 }
 
-export function run<T>(source: Fractal<T> | CollectGeneratorFunc<T>) {
-    const fractal = normalizeSource(source)
-    const root = new Root(fractal)
-    const atom = new Atom(root)
+export function run<T>(source: Stream<T> | CollectGeneratorFunc<T>) {
+    const normalized = normalizeSource(source)
+    const onData = () => {}
+    const reaction = new Reaction(normalized, onData)
 
-    atom.build()
-
-    return () => atom.destroy()
+    return reaction.run()
 }

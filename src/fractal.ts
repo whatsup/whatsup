@@ -1,49 +1,37 @@
 import { Atom } from './atom'
-import { Context } from './context'
-import { ConsumerQuery } from './query'
+import { Atomizer } from './atomizer'
+import { ContextController } from './controller'
+import { StreamOptions, Stream, CollectGenerator, CollectGeneratorFunc } from './stream'
 
-export type Bubble<T> = T | Atom<any> | ConsumerQuery
-export type CollectIterator<T> = Iterator<Bubble<T>, T, any>
-export type CollectGenerator<T> = Generator<Bubble<T>, any, any>
-export type CollectGeneratorFunc<T> = ((context: Context) => CollectGenerator<T>) | (() => CollectGenerator<T>)
+export interface FractalOptions extends StreamOptions {}
 
-const CONSUMER_QUERY = new ConsumerQuery()
+export abstract class Fractal<T> extends Stream<T> {
+    private readonly atomizer: Atomizer<T>
+    protected abstract stream(controller: ContextController): CollectGenerator<T>
 
-export abstract class Emitter<T> {
-    *[Symbol.iterator](): Generator<any, T, any> {
-        const consumer = yield* CONSUMER_QUERY
-        return yield* consumer.getSubatom(this).emit()
+    constructor(options?: FractalOptions) {
+        super(options)
+        this.atomizer = new Atomizer(this)
     }
-}
 
-export interface FractalOptions {
-    delegation?: boolean
-}
-
-export abstract class Fractal<T> extends Emitter<T> {
-    readonly delegation: boolean
-    abstract collector(context?: Context): CollectGenerator<T>
-
-    constructor(options: FractalOptions = {}) {
-        super()
-        const { delegation = true } = options
-        this.delegation = delegation
+    protected getAtom(consumer: Atom) {
+        return this.atomizer.get(consumer)
     }
 }
 
 export class EasyFractal<T> extends Fractal<T> {
-    private readonly generator: CollectGeneratorFunc<T>
+    private readonly generator: CollectGeneratorFunc<T, ContextController>
 
-    constructor(generator: CollectGeneratorFunc<T>, options: FractalOptions = {}) {
+    constructor(generator: CollectGeneratorFunc<T, ContextController>, options?: FractalOptions) {
         super(options)
         this.generator = generator
     }
 
-    *collector(context: Context) {
-        return yield* this.generator(context)
+    stream(controller: ContextController) {
+        return this.generator(controller)
     }
 }
 
-export function fractal<T>(generator: CollectGeneratorFunc<T>, options?: FractalOptions) {
+export function fractal<T>(generator: CollectGeneratorFunc<T, ContextController>, options?: FractalOptions) {
     return new EasyFractal(generator, options)
 }

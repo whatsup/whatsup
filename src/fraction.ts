@@ -1,44 +1,42 @@
 import { Fractal, FractalOptions } from './fractal'
-import { Context } from './context'
-import { initTransaction } from './transaction'
+import { Controller } from './controller'
+import { transaction } from './transaction'
 
 export interface FractionOptions extends FractalOptions {}
 
 export class Fraction<T> extends Fractal<T> {
-    private contexts = new Set<Context>()
-    protected data: T
+    private controllers = new Set<Controller>()
+    protected value: T
 
     constructor(value: T, options: FractionOptions = {}) {
         super(options)
-        this.data = value
+        this.value = value
     }
 
-    *collector(context: Context) {
-        this.contexts.add(context)
+    *stream(controller: Controller) {
+        this.controllers.add(controller)
 
         try {
             while (true) {
-                yield this.data
+                yield this.value
             }
         } finally {
-            this.contexts.delete(context)
+            this.controllers.delete(controller)
         }
     }
 
     get() {
-        return this.data
+        return this.value
     }
 
     set(value: T) {
-        this.data = value
+        this.value = value
 
-        const transaction = initTransaction(this)
-
-        for (const context of this.contexts) {
-            context.update()
-        }
-
-        transaction.run(this)
+        transaction(() => {
+            for (const controller of this.controllers) {
+                controller.update()
+            }
+        })
     }
 }
 

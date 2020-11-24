@@ -1,18 +1,16 @@
 import { Fractal } from './fractal'
-import { Context } from './context'
+import { Controller } from './controller'
 import { Fraction, FractionOptions } from './fraction'
 
 export interface ListOptions extends FractionOptions {}
 
 export class List<T> extends Fraction<T[]> {
-    *collector(context: Context) {
-        const { delegation } = this
-
-        for (const items of super.collector(context)) {
+    *stream(controller: Controller) {
+        for (const items of super.stream(controller)) {
             const result = [] as T[]
 
             for (const item of items) {
-                if (delegation && item instanceof Fractal) {
+                if (item instanceof Fractal) {
                     result.push(yield* item)
                 } else {
                     result.push(item)
@@ -26,14 +24,14 @@ export class List<T> extends Fraction<T[]> {
     splice(start: number, deleteCount?: number): this
     splice(start: number, deleteCount: number, ...items: T[]): this
     splice(start: number, ...other: any[]): this {
-        const newItems = this.data.slice()
+        const newItems = this.value.slice()
         newItems.splice(start, ...other)
         this.set(newItems)
         return this
     }
 
     insert(...items: T[]): this {
-        const newItems = this.data.slice()
+        const newItems = this.value.slice()
         newItems.push(...items)
         this.set(newItems)
         return this
@@ -44,7 +42,7 @@ export class List<T> extends Fraction<T[]> {
     }
 
     delete(...items: T[]): this {
-        const newItems = this.data.slice()
+        const newItems = this.value.slice()
 
         for (const item of items) {
             const index = newItems.indexOf(item)
@@ -61,14 +59,14 @@ export class List<T> extends Fraction<T[]> {
     }
 
     sort(compareFn?: (a: T, b: T) => number): this {
-        const newItems = this.data.slice()
+        const newItems = this.value.slice()
         newItems.sort(compareFn)
         this.set(newItems)
         return this
     }
 
     reverse(): this {
-        const newItems = this.data.slice()
+        const newItems = this.value.slice()
         newItems.reverse()
         this.set(newItems)
         return this

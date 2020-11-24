@@ -1,108 +1,102 @@
-import { Emitter, CollectIterator, Fractal } from './fractal'
-import { Context } from './context'
+import { CollectIterator, Stream, Delegation, Streamable } from './stream'
+import { Fractal } from './fractal'
+import { Computed } from './computed'
+import { Controller, ContextController } from './controller'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
 import { Mutator } from './mutator'
-import { initTransaction } from './transaction'
+import { initTransaction, createTransactionKey } from './transaction'
+import { ErrorCache, DataCache } from './cache'
+import { Stack } from './stack'
 
-const DESTROYER = Symbol('Destroy symbol')
+export abstract class Atom<T = any> {
+    protected abstract readonly controller: Controller
+    protected abstract extract(atom: Atom<T>): undefined | T | Error
 
-export class Atom<T = any> {
-    readonly fractal: Fractal<T>
-    readonly consumer: Atom | null
-    readonly delegator: Atom | null
-    readonly context: Context = new Context(this)
-    private readonly stack = [] as CollectIterator<T>[]
-    private readonly subatoms = new WeakMap<Emitter<any>, Atom>()
-    private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
-    private readonly dependencies: Dependencies = new Dependencies()
-    private revision = 0
-    data?: T | Delegation<T> | Error
-    dataIsError?: boolean
-    transactCounter = 0
+    private readonly entity: Stream<T>
+    private readonly consumers = new Set<Atom>()
+    private readonly stack = new Stack<CollectIterator<T>>()
+    private readonly dependencies: Dependencies
+    private cache: ErrorCache | DataCache<T> | undefined
 
-    constructor(fractal: Fractal<T>, consumer: Atom | null = null, delegator: Atom | null = null) {
-        this.fractal = fractal
-        this.consumer = consumer
-        this.delegator = delegator
+    constructor(entity: Stream<T>) {
+        this.entity = entity
+        this.dependencies = new Dependencies(this)
+    }
+
+    addConsumer(consumer: Atom) {
+        this.consumers.add(consumer)
+    }
+
+    getConsumers() {
+        return this.consumers
+    }
+
+    getController() {
+        return this.controller
+    }
+
+    getCache() {
+        return this.cache
+    }
+
+    getCacheValue() {
+        return this.cache && this.cache.value
     }
 
     update() {
-        const transaction = initTransaction(this)
+        const key = createTransactionKey()
+        const transaction = initTransaction(key)
         transaction.add(this)
-        transaction.run(this)
+        transaction.run(key)
     }
 
-    destroy() {
-        this.revision = 0
-        this.data = undefined
-        this.dataIsError = undefined
-        this.dependencies.destroy()
-        this.context.destroy()
+    destroy(initiator?: Atom) {
+        if (initiator) {
+            this.consumers.delete(initiator)
+        }
+        if (this.consumers.size === 0) {
+            this.cache = undefined
+            this.controller.destroy()
+            this.dependencies.destroy()
 
-        while (this.stack.length) {
-            this.stack.pop()!.return!()
+            while (!this.stack.empty) {
+                this.stack.pop()!.return!()
+            }
         }
     }
 
-    /** @internal */
-    *emit() {
-        if (this.revision === 0) {
+    *[Symbol.iterator]() {
+        if (!this.cache) {
             this.build()
         }
 
-        const result = yield this
-
-        if (this.dataIsError) {
-            throw result
+        if (this.cache instanceof ErrorCache) {
+            throw yield this
         }
 
-        return result
-    }
-
-    /** @internal */
-    getRevision() {
-        return this.revision
-    }
-
-    /** @internal */
-    getData() {
-        return this.data
-    }
-
-    /** @internal */
-    getSubatom<U>(key: Emitter<U>) {
-        if (!this.subatoms.has(key)) {
-            const atom = this.createSubatom(key)
-            this.subatoms.set(key, atom)
-        }
-        return this.subatoms.get(key)!
+        return yield this
     }
 
     build() {
-        const { stack, dependencies, fractal, context } = this
+        const { stack, dependencies, controller, entity } = this
 
         dependencies.swap()
 
-        if (!stack.length) {
-            stack.push(fractal.collector(context))
+        if (stack.empty) {
+            stack.push(entity.collect(controller))
         }
 
-        let data: T | Delegation<T> | Error
-        let dataIsError: boolean
         let input: any
 
         while (true) {
-            const lastIndex = stack.length - 1
-            const iterator = stack[lastIndex]
-
             try {
-                const { done, value } = iterator.next(input)
+                const { done, value } = stack.last.next(input)
 
                 if (done) {
                     stack.pop()
 
-                    if (stack.length) {
+                    if (!stack.empty) {
                         input = value
                         continue
                     }
@@ -112,78 +106,85 @@ export class Atom<T = any> {
                     continue
                 }
                 if (value instanceof Atom) {
-                    const data = value.getData()
-
-                    if (data instanceof Delegation) {
-                        stack.push(data.emit())
-                        input = undefined
-                    } else {
-                        input = data as T
-                    }
-
+                    input = this.extract(value)
                     dependencies.add(value)
                     continue
                 }
 
-                data = this.prepareNewData(value)
-                dataIsError = false
+                const data = this.prepareNewData(value)
+                this.cache = new DataCache(data)
             } catch (error) {
-                if (error === DESTROYER) {
-                    return
-                }
-
-                this.stack.pop()
-
-                data = error
-                dataIsError = true
+                stack.pop()
+                this.cache = new ErrorCache(error)
             }
 
             dependencies.destroyUnused()
-
-            this.data = data
-            this.dataIsError = dataIsError
-            this.revision++
-
             return
         }
     }
 
-    private prepareNewData(value: T): T | Delegation<T> {
+    protected prepareNewData(value: T) {
         if (value instanceof Mutator) {
-            return value.mutate(this.data) as T
-        }
-        if (this.fractal.delegation && value instanceof Fractal) {
-            return this.getDelegation(value)
+            const oldValue = this.getCacheValue()
+            const newValue = value.mutate(oldValue) as T
+            return newValue
         }
 
         return value
     }
 
-    private createSubatom<U>(source: Emitter<U>): Atom<U> {
-        if (source instanceof Fractal) {
-            return new Atom<U>(source, this)
+    protected pushToStack(iterator: CollectIterator<T>) {
+        this.stack.push(iterator)
+    }
+}
+
+export class ComputedAtom<T = any> extends Atom<T> {
+    protected readonly controller: Controller
+
+    constructor(entity: Computed<T>) {
+        super(entity)
+        this.controller = new Controller(this)
+    }
+
+    protected extract(atom: Atom<T>) {
+        return atom.getCacheValue()
+    }
+}
+
+export class FractalAtom<T = any> extends Atom<T | Delegation<T>> {
+    protected readonly controller: ContextController
+    private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
+
+    constructor(entity: Fractal<T>, parentController: ContextController | null) {
+        super(entity)
+        this.controller = new ContextController(this, parentController)
+    }
+
+    protected extract(atom: Atom<T>) {
+        const value = atom.getCacheValue()
+
+        if (value instanceof Streamable) {
+            const iterator = value[Symbol.iterator]()
+            this.pushToStack(iterator)
+            return undefined
         }
-        if (source instanceof Delegation) {
-            const { fractal, delegator } = source
-            return new Atom<U>(fractal, this, delegator)
+
+        return value
+    }
+
+    protected prepareNewData(value: T) {
+        if (value instanceof Fractal) {
+            return this.getDelegation(value)
         }
-        throw 'Unknown atom source'
+
+        return super.prepareNewData(value)
     }
 
     private getDelegation(fractal: Fractal<T>) {
         if (!this.delegations.has(fractal)) {
-            this.delegations.set(fractal, new Delegation(fractal, this))
+            const delegation = new Delegation(fractal, this.controller)
+            this.delegations.set(fractal, delegation)
         }
         return this.delegations.get(fractal)!
-    }
-}
-
-class Delegation<T> extends Emitter<T> {
-    constructor(readonly fractal: Fractal<T>, readonly delegator: Atom<T>) {
-        super()
-    }
-
-    *emit() {
-        return yield* this
     }
 }

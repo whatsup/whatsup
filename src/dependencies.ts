@@ -1,12 +1,16 @@
 import { Atom } from './atom'
 
 export class Dependencies {
-    private current = new Map<Atom, number>()
-    private fusty = new Map<Atom, number>()
+    private readonly atom: Atom
+    private current = new Set<Atom>()
+    private fusty = new Set<Atom>()
+
+    constructor(atom: Atom) {
+        this.atom = atom
+    }
 
     add(atom: Atom) {
-        const revision = atom.getRevision()
-        this.current.set(atom, revision)
+        this.current.add(atom)
         this.fusty.delete(atom)
     }
 
@@ -17,12 +21,16 @@ export class Dependencies {
     }
 
     destroy() {
-        this.current.forEach((_, atom) => atom.destroy())
+        for (const atom of this.current) {
+            atom.destroy(this.atom)
+        }
         this.current.clear()
     }
 
     destroyUnused() {
-        this.fusty.forEach((_, atom) => atom.destroy())
+        for (const atom of this.fusty) {
+            atom.destroy(this.atom)
+        }
         this.fusty.clear()
     }
 }
