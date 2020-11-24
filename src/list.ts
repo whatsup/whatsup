@@ -1,24 +1,22 @@
 import { Fractal } from './fractal'
-import { Controller } from './controller'
 import { Fraction, FractionOptions } from './fraction'
 
 export interface ListOptions extends FractionOptions {}
 
 export class List<T> extends Fraction<T[]> {
-    *stream(controller: Controller) {
-        for (const items of super.stream(controller)) {
-            const result = [] as T[]
+    *[Symbol.iterator]() {
+        const result = [] as T[]
+        const items = yield* super[Symbol.iterator]()
 
-            for (const item of items) {
-                if (item instanceof Fractal) {
-                    result.push(yield* item)
-                } else {
-                    result.push(item)
-                }
+        for (const item of items) {
+            if (item instanceof Fractal) {
+                result.push(yield* item)
+            } else {
+                result.push(item)
             }
-
-            yield result
         }
+
+        return result
     }
 
     splice(start: number, deleteCount?: number): this
