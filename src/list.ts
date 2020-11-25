@@ -3,20 +3,24 @@ import { Observable } from './observable'
 
 export interface ListOptions {}
 
-export class List<T> extends Observable<T[]> {
-    *spread() {
+class Sequence<T> extends Array<T> {
+    *[Symbol.iterator](): Generator<T> {
         const items = yield* this
-        const result = [] as T[]
 
         for (const item of items) {
             if (item instanceof Stream) {
-                result.push(yield* item)
+                yield yield* item
             } else {
-                result.push(item)
+                yield item
             }
         }
+    }
+}
 
-        return result
+export class List<T> extends Observable<Sequence<T>> {
+    set(items: T[]) {
+        const sequence = new Sequence(...items)
+        super.set(sequence)
     }
 
     splice(start: number, deleteCount?: number): this
@@ -72,5 +76,5 @@ export class List<T> extends Observable<T[]> {
 }
 
 export function list<T>(items: T[] = []) {
-    return new List(items)
+    return new List(new Sequence(...items))
 }
