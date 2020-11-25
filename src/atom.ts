@@ -1,4 +1,4 @@
-import { StreamIterator, Stream, Delegation, Streamable } from './stream'
+import { StreamIterator, Stream, Delegation } from './stream'
 import { Fractal } from './fractal'
 import { Computed } from './computed'
 import { RootContext, Context } from './context'
@@ -11,7 +11,6 @@ import { Stack } from './stack'
 
 export abstract class Atom<T = any> {
     protected abstract readonly context: RootContext
-    protected abstract extract(atom: Atom<T>): undefined | T | Error
 
     private readonly entity: Stream<T>
     private readonly consumers = new Set<Atom>()
@@ -106,7 +105,16 @@ export abstract class Atom<T = any> {
                     continue
                 }
                 if (value instanceof Atom) {
-                    input = this.extract(value)
+                    const cacheValue = value.getCacheValue()
+
+                    if (cacheValue instanceof Delegation) {
+                        const iterator = cacheValue[Symbol.iterator]()
+                        this.stack.push(iterator)
+                        input = undefined
+                    } else {
+                        input = cacheValue
+                    }
+
                     dependencies.add(value)
                     continue
                 }
@@ -132,10 +140,6 @@ export abstract class Atom<T = any> {
 
         return value
     }
-
-    protected pushToStack(iterator: StreamIterator<T>) {
-        this.stack.push(iterator)
-    }
 }
 
 export class ComputedAtom<T = any> extends Atom<T> {
@@ -144,10 +148,6 @@ export class ComputedAtom<T = any> extends Atom<T> {
     constructor(entity: Computed<T>) {
         super(entity)
         this.context = new RootContext(this)
-    }
-
-    protected extract(atom: Atom<T>) {
-        return atom.getCacheValue()
     }
 }
 
@@ -158,18 +158,6 @@ export class FractalAtom<T = any> extends Atom<T | Delegation<T>> {
     constructor(entity: Fractal<T>, parentContext: RootContext | Context) {
         super(entity)
         this.context = new Context(this, parentContext)
-    }
-
-    protected extract(atom: Atom<T>) {
-        const value = atom.getCacheValue()
-
-        if (value instanceof Streamable) {
-            const iterator = value[Symbol.iterator]()
-            this.pushToStack(iterator)
-            return undefined
-        }
-
-        return value
     }
 
     protected prepareNewData(value: T) {
