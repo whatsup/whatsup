@@ -5,7 +5,7 @@ export interface ListOptions {}
 
 class Sequence<T> extends Array<T> {
     *[Symbol.iterator](): Generator<T> {
-        for (const item of this) {
+        for (const item of super[Symbol.iterator]()) {
             if (item instanceof Stream) {
                 yield yield* item
             } else {
