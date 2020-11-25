@@ -7,7 +7,7 @@ export class List<T> extends Observable<T[]> {
     *spread() {
         const results = [] as T[]
 
-        for (const item of this) {
+        for (const item of yield* this) {
             if (item instanceof Stream) {
                 results.push(yield* item)
             } else {
