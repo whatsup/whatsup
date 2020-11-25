@@ -1,4 +1,4 @@
-import { CollectIterator, Stream, Delegation, Streamable } from './stream'
+import { StreamIterator, Stream, Delegation, Streamable } from './stream'
 import { Fractal } from './fractal'
 import { Computed } from './computed'
 import { Controller, ContextController } from './controller'
@@ -15,7 +15,7 @@ export abstract class Atom<T = any> {
 
     private readonly entity: Stream<T>
     private readonly consumers = new Set<Atom>()
-    private readonly stack = new Stack<CollectIterator<T>>()
+    private readonly stack = new Stack<StreamIterator<T>>()
     private readonly dependencies: Dependencies
     private cache: ErrorCache | DataCache<T> | undefined
 
@@ -133,7 +133,7 @@ export abstract class Atom<T = any> {
         return value
     }
 
-    protected pushToStack(iterator: CollectIterator<T>) {
+    protected pushToStack(iterator: StreamIterator<T>) {
         this.stack.push(iterator)
     }
 }

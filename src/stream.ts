@@ -5,11 +5,11 @@ import { Fractal } from './fractal'
 import { ConsumerQuery } from './query'
 
 export type Bubble<T> = T | Atom<any> | ConsumerQuery
-export type CollectIterator<T> = Iterator<Bubble<T>, T, any>
-export type CollectGenerator<T> = Generator<Bubble<T>, any, any>
-export type CollectGeneratorFunc<T, C = Controller> =
-    | ((controller: C) => CollectGenerator<T>)
-    | (() => CollectGenerator<T>)
+export type StreamIterator<T> = Iterator<Bubble<T>, T, any>
+export type StreamGenerator<T> = Generator<Bubble<T>, any, any>
+export type StreamGeneratorFunc<T, C = Controller> =
+    | ((controller: C) => StreamGenerator<T>)
+    | (() => StreamGenerator<T>)
 
 export const CONSUMER_QUERY = new ConsumerQuery()
 
@@ -31,7 +31,7 @@ export interface StreamOptions {
 }
 
 export abstract class Stream<T> extends Streamable<T> {
-    protected abstract stream(controller?: Controller): CollectGenerator<T>
+    protected abstract stream(controller?: Controller): StreamGenerator<T>
     private readonly options: StreamOptions
 
     constructor(options: StreamOptions = {}) {
