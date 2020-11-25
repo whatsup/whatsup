@@ -18,19 +18,10 @@ export abstract class Computed<T> extends Stream<T> {
     }
 }
 
-export class EasyComputed<T> extends Computed<T> {
-    private readonly generator: CollectGeneratorFunc<T>
-
-    constructor(generator: CollectGeneratorFunc<T>, options?: ComputedOptions) {
-        super(options)
-        this.generator = generator
-    }
-
-    stream(controller: Controller) {
-        return this.generator(controller)
-    }
-}
-
-export function computed<T>(generator: CollectGeneratorFunc<T>, options?: ComputedOptions) {
-    return new EasyComputed(generator, options)
+export function computed<T>(generator: CollectGeneratorFunc<T>, options?: ComputedOptions): Computed<T> {
+    return new (class extends Computed<T> {
+        stream(controller: Controller): CollectGenerator<T> {
+            return generator.call(this, controller)
+        }
+    })(options)
 }

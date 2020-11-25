@@ -19,19 +19,10 @@ export abstract class Fractal<T> extends Stream<T> {
     }
 }
 
-export class EasyFractal<T> extends Fractal<T> {
-    private readonly generator: CollectGeneratorFunc<T, ContextController>
-
-    constructor(generator: CollectGeneratorFunc<T, ContextController>, options?: FractalOptions) {
-        super(options)
-        this.generator = generator
-    }
-
-    stream(controller: ContextController) {
-        return this.generator(controller)
-    }
-}
-
-export function fractal<T>(generator: CollectGeneratorFunc<T, ContextController>, options?: FractalOptions) {
-    return new EasyFractal(generator, options)
+export function fractal<T>(generator: CollectGeneratorFunc<T>, options?: FractalOptions): Fractal<T> {
+    return new (class extends Fractal<T> {
+        stream(controller: ContextController): CollectGenerator<T> {
+            return generator.call(this, controller)
+        }
+    })(options)
 }
