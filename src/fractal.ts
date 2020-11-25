@@ -1,13 +1,13 @@
 import { Atom } from './atom'
 import { Atomizer } from './atomizer'
-import { ContextController } from './controller'
+import { Context } from './context'
 import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
 export interface FractalOptions extends StreamOptions {}
 
 export abstract class Fractal<T> extends Stream<T> {
     private readonly atomizer: Atomizer<T>
-    protected abstract stream(controller: ContextController): StreamGenerator<T>
+    protected abstract stream(context: Context): StreamGenerator<T>
 
     constructor(options?: FractalOptions) {
         super(options)
@@ -21,8 +21,8 @@ export abstract class Fractal<T> extends Stream<T> {
 
 export function fractal<T>(generator: StreamGeneratorFunc<T>, options?: FractalOptions): Fractal<T> {
     return new (class extends Fractal<T> {
-        stream(controller: ContextController): StreamGenerator<T> {
-            return generator.call(this, controller)
+        stream(context: Context): StreamGenerator<T> {
+            return generator.call(this, context)
         }
     })(options)
 }

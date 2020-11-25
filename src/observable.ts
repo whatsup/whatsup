@@ -1,4 +1,4 @@
-import { ContextController } from 'controller'
+import { Context } from 'context'
 import { Computed } from './computed'
 
 export class Observable<T> extends Computed<T> {
@@ -9,7 +9,7 @@ export class Observable<T> extends Computed<T> {
         this.value = value
     }
 
-    *stream(ctx: ContextController) {
+    *stream(ctx: Context) {
         ctx
         while (true) yield this.value
     }

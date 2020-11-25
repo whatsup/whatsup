@@ -2,57 +2,21 @@ import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom, FractalAtom } from './atom'
 
-export class Controller {
+export class RootContext {
+    /**@internal */
+    readonly parent: Context | RootContext | null = null
+
     private readonly atom: Atom
+    protected factors!: WeakMap<Factor<any>, any>
+    protected listeners!: WeakMap<EventCtor, Set<EventListener>>
 
     constructor(atom: Atom) {
         this.atom = atom
     }
 
-    update() {
-        this.atom.update()
-    }
-
-    destroy() {}
-}
-
-export class ContextController extends Controller {
-    /**@internal */
-    readonly parent: ContextController | null
-
-    private factors!: WeakMap<Factor<any>, any>
-    private listeners!: WeakMap<EventCtor, Set<EventListener>>
-
-    constructor(atom: FractalAtom, parent: ContextController | null) {
-        super(atom)
-        this.parent = parent
-    }
-
     /**@internal */
     getFactors() {
         return this.factors
-    }
-
-    /**@internal */
-    destroy() {
-        this.factors = undefined!
-        this.listeners = undefined!
-    }
-
-    get<T>(factor: Factor<T>): T | undefined {
-        let { parent } = this
-
-        while (parent) {
-            const factors = parent.getFactors()
-
-            if (factors && factors.has(factor)) {
-                return factors.get(factor)
-            }
-
-            parent = parent.parent
-        }
-
-        return factor.defaultValue
     }
 
     set<T>(factor: Factor<T>, value: T) {
@@ -87,6 +51,41 @@ export class ContextController extends Controller {
         }
     }
 
+    update() {
+        this.atom.update()
+    }
+
+    destroy() {
+        this.factors = undefined!
+        this.listeners = undefined!
+    }
+}
+
+export class Context extends RootContext {
+    /**@internal */
+    readonly parent: Context | RootContext
+
+    constructor(atom: FractalAtom, parent: Context | RootContext) {
+        super(atom)
+        this.parent = parent
+    }
+
+    get<T>(factor: Factor<T>): T | undefined {
+        let parent = this.parent as RootContext | Context | null
+
+        while (parent) {
+            const factors = parent.getFactors()
+
+            if (factors && factors.has(factor)) {
+                return factors.get(factor)
+            }
+
+            parent = parent.parent
+        }
+
+        return factor.defaultValue
+    }
+
     dispath<T extends Event>(event: T) {
         const ctor = event.constructor as EventCtor<T>
 
@@ -102,7 +101,7 @@ export class ContextController extends Controller {
             }
         }
 
-        if (this.parent && !event.isPropagationStopped()) {
+        if (this.parent instanceof Context && !event.isPropagationStopped()) {
             this.parent.dispath(event)
         }
     }

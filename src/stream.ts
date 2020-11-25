@@ -1,15 +1,13 @@
 import { Atom } from './atom'
 import { Atomizer } from './atomizer'
-import { Controller, ContextController } from './controller'
+import { RootContext, Context } from './context'
 import { Fractal } from './fractal'
 import { ConsumerQuery } from './query'
 
 export type Bubble<T> = T | Atom<any> | ConsumerQuery
 export type StreamIterator<T> = Iterator<Bubble<T>, T, any>
 export type StreamGenerator<T> = Generator<Bubble<T>, any, any>
-export type StreamGeneratorFunc<T, C = Controller> =
-    | ((controller: C) => StreamGenerator<T>)
-    | (() => StreamGenerator<T>)
+export type StreamGeneratorFunc<T, C = RootContext> = ((context: C) => StreamGenerator<T>) | (() => StreamGenerator<T>)
 
 export const CONSUMER_QUERY = new ConsumerQuery()
 
@@ -31,7 +29,7 @@ export interface StreamOptions {
 }
 
 export abstract class Stream<T> extends Streamable<T> {
-    protected abstract stream(controller?: Controller): StreamGenerator<T>
+    protected abstract stream(context?: RootContext): StreamGenerator<T>
     private readonly options: StreamOptions
 
     constructor(options: StreamOptions = {}) {
@@ -40,16 +38,16 @@ export abstract class Stream<T> extends Streamable<T> {
         this.options = { thisArg }
     }
 
-    collect(controller: Controller) {
+    iterate(context: RootContext) {
         const { thisArg } = this.options
-        return this.stream.call(thisArg, controller)
+        return this.stream.call(thisArg, context)
     }
 }
 
 export class Delegation<T> extends Streamable<T> {
     private readonly atomizer: Atomizer<T>
 
-    constructor(fractal: Fractal<T>, parentContext: ContextController) {
+    constructor(fractal: Fractal<T>, parentContext: Context) {
         super()
         this.atomizer = new Atomizer(fractal, parentContext)
     }

@@ -1,22 +1,21 @@
 import { Atom, FractalAtom } from './atom'
-import { ContextController } from './controller'
+import { Context, RootContext } from './context'
 import { Fractal } from './fractal'
 
 export class Atomizer<T> {
     private readonly fractal: Fractal<T>
-    private readonly parentController: ContextController | null
+    private readonly parentContext: Context | RootContext | null
     private readonly atoms = new WeakMap<Atom, Atom>()
 
-    constructor(fractal: Fractal<T>, parentController: ContextController | null = null) {
+    constructor(fractal: Fractal<T>, parentContext: Context | RootContext | null = null) {
         this.fractal = fractal
-        this.parentController = parentController
+        this.parentContext = parentContext
     }
 
     get(consumer: Atom) {
         if (!this.atoms.has(consumer)) {
-            const controller = this.parentController || consumer.getController()
-            const parentController = controller instanceof ContextController ? controller : null
-            const atom = new FractalAtom(this.fractal, parentController)
+            const parentContext = this.parentContext || consumer.getContext()
+            const atom = new FractalAtom(this.fractal, parentContext)
 
             this.atoms.set(consumer, atom)
         }

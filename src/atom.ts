@@ -1,7 +1,7 @@
 import { StreamIterator, Stream, Delegation, Streamable } from './stream'
 import { Fractal } from './fractal'
 import { Computed } from './computed'
-import { Controller, ContextController } from './controller'
+import { RootContext, Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
 import { Mutator } from './mutator'
@@ -10,7 +10,7 @@ import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
 
 export abstract class Atom<T = any> {
-    protected abstract readonly controller: Controller
+    protected abstract readonly context: RootContext
     protected abstract extract(atom: Atom<T>): undefined | T | Error
 
     private readonly entity: Stream<T>
@@ -32,8 +32,8 @@ export abstract class Atom<T = any> {
         return this.consumers
     }
 
-    getController() {
-        return this.controller
+    getContext() {
+        return this.context
     }
 
     getCache() {
@@ -57,7 +57,7 @@ export abstract class Atom<T = any> {
         }
         if (this.consumers.size === 0) {
             this.cache = undefined
-            this.controller.destroy()
+            this.context.destroy()
             this.dependencies.destroy()
 
             while (!this.stack.empty) {
@@ -79,12 +79,12 @@ export abstract class Atom<T = any> {
     }
 
     build() {
-        const { stack, dependencies, controller, entity } = this
+        const { stack, dependencies, context, entity } = this
 
         dependencies.swap()
 
         if (stack.empty) {
-            stack.push(entity.collect(controller))
+            stack.push(entity.iterate(context))
         }
 
         let input: any
@@ -139,11 +139,11 @@ export abstract class Atom<T = any> {
 }
 
 export class ComputedAtom<T = any> extends Atom<T> {
-    protected readonly controller: Controller
+    protected readonly context: RootContext
 
     constructor(entity: Computed<T>) {
         super(entity)
-        this.controller = new Controller(this)
+        this.context = new RootContext(this)
     }
 
     protected extract(atom: Atom<T>) {
@@ -152,12 +152,12 @@ export class ComputedAtom<T = any> extends Atom<T> {
 }
 
 export class FractalAtom<T = any> extends Atom<T | Delegation<T>> {
-    protected readonly controller: ContextController
+    protected readonly context: Context
     private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
 
-    constructor(entity: Fractal<T>, parentController: ContextController | null) {
+    constructor(entity: Fractal<T>, parentContext: RootContext | Context) {
         super(entity)
-        this.controller = new ContextController(this, parentController)
+        this.context = new Context(this, parentContext)
     }
 
     protected extract(atom: Atom<T>) {
@@ -182,7 +182,7 @@ export class FractalAtom<T = any> extends Atom<T | Delegation<T>> {
 
     private getDelegation(fractal: Fractal<T>) {
         if (!this.delegations.has(fractal)) {
-            const delegation = new Delegation(fractal, this.controller)
+            const delegation = new Delegation(fractal, this.context)
             this.delegations.set(fractal, delegation)
         }
         return this.delegations.get(fractal)!
