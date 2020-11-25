@@ -1,15 +1,15 @@
-import { Fractal } from './fractal'
+import { Stream } from './stream'
 import { Fraction, FractionOptions } from './fraction'
 
 export interface ListOptions extends FractionOptions {}
 
 export class List<T> extends Fraction<T[]> {
-    *[Symbol.iterator]() {
+    *spread() {
+        const items = yield* this
         const result = [] as T[]
-        const items = yield* super[Symbol.iterator]()
 
         for (const item of items) {
-            if (item instanceof Fractal) {
+            if (item instanceof Stream) {
                 result.push(yield* item)
             } else {
                 result.push(item)
