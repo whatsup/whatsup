@@ -1,12 +1,12 @@
 import { CollectGeneratorFunc, Stream } from './stream'
-import { EasyComputed } from './computed'
+import { computed } from './computed'
 import { Reaction } from './reaction'
 
 function normalizeSource<T>(source: Stream<T> | CollectGeneratorFunc<T>): Stream<T> {
     if (source instanceof Stream) {
         return source
     }
-    return new EasyComputed(source)
+    return computed(source)
 }
 
 export function run<T>(source: Stream<T> | CollectGeneratorFunc<T>) {
