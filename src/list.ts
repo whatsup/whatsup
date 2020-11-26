@@ -1,23 +1,8 @@
-import { Stream } from './stream'
 import { Observable } from './observable'
 
 export interface ListOptions {}
 
 export class List<T> extends Observable<T[]> {
-    *spread() {
-        const results = [] as T[]
-
-        for (const item of yield* this) {
-            if (item instanceof Stream) {
-                results.push(yield* item)
-            } else {
-                results.push(item)
-            }
-        }
-
-        return results
-    }
-
     splice(start: number, deleteCount?: number): this
     splice(start: number, deleteCount: number, ...items: T[]): this
     splice(start: number, ...other: any[]): this {
