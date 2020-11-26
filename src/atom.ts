@@ -12,14 +12,14 @@ import { Stack } from './stack'
 export abstract class Atom<T = any> {
     protected abstract readonly context: RootContext
 
-    private readonly entity: Stream<T>
+    private readonly stream: Stream<T>
     private readonly consumers = new Set<Atom>()
     private readonly stack = new Stack<StreamIterator<T>>()
     private readonly dependencies: Dependencies
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(entity: Stream<T>) {
-        this.entity = entity
+        this.stream = entity
         this.dependencies = new Dependencies(this)
     }
 
@@ -65,20 +65,22 @@ export abstract class Atom<T = any> {
         }
     }
 
-    *[Symbol.iterator]() {
+    *[Symbol.iterator](): Generator<never, T, any> {
+        //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
+        //        really is Generator<Atom<T>, T, any>
         if (!this.cache) {
             this.build()
         }
 
         if (this.cache instanceof ErrorCache) {
-            throw yield this
+            throw yield this as never
         }
 
-        return yield this
+        return yield this as never
     }
 
     build() {
-        const { stack, dependencies, context, entity } = this
+        const { stack, dependencies, context, stream: entity } = this
 
         dependencies.swap()
 
