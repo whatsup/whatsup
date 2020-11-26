@@ -16,7 +16,7 @@ export abstract class Atom<T = any> {
     private readonly consumers = new Set<Atom>()
     private readonly stack = new Stack<StreamIterator<T>>()
     private readonly dependencies: Dependencies
-    private cache: ErrorCache | DataCache<T> | undefined
+    private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(entity: Stream<T>) {
         this.entity = entity
@@ -131,7 +131,7 @@ export abstract class Atom<T = any> {
         }
     }
 
-    protected prepareNewData(value: T) {
+    protected prepareNewData(value: T): T | Delegation<T> {
         if (value instanceof Mutator) {
             const oldValue = this.getCacheValue()
             const newValue = value.mutate(oldValue) as T
@@ -151,7 +151,7 @@ export class ComputedAtom<T = any> extends Atom<T> {
     }
 }
 
-export class FractalAtom<T = any> extends Atom<T | Delegation<T>> {
+export class FractalAtom<T = any> extends Atom<T> {
     protected readonly context: Context
     private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
 
