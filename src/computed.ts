@@ -33,11 +33,7 @@ export abstract class Linqable<T, O extends ComputedOptions = ComputedOptions> e
         this.right = observable(null)
     }
 
-    *stream() {
-        while (true) yield* this
-    }
-
-    chain(this: Sibling<this>, options?: O) {
+    chain(this: Sibling<this>, options?: O): Sibling<this> {
         let sibling: Sibling<this> | null = this
 
         do {
@@ -179,9 +175,16 @@ export type LinqGenerator<T> = () => Generator<never, T[]>
 export interface LinqOptions extends ComputedOptions {}
 
 export class Linq<T, O extends LinqOptions = LinqOptions> extends Computed<T[], O> {
-    static from<T, O extends LinqOptions = LinqOptions>(root: Linqable<T, O>, options: LinqOptions) {
+    static from<T, O extends LinqOptions = LinqOptions>(root: Linqable<T, O> | null, options: LinqOptions) {
         return new Linq<T>(function* () {
-            return yield* root
+            const acc = [] as T[]
+
+            while (root) {
+                acc.push(yield* root)
+                root = yield* root.right
+            }
+
+            return acc
         }, options)
     }
 
