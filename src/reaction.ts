@@ -4,7 +4,7 @@ import { Computed } from './computed'
 type DataHandler<T> = (data: T) => void
 type ErrorHandler = (e: Error) => void
 
-export class Reaction<T> extends Computed<T> {
+export class Reaction<T> extends Computed<void> {
     readonly target: Stream<T>
     readonly onData: DataHandler<T>
     readonly onError: ErrorHandler
@@ -19,10 +19,11 @@ export class Reaction<T> extends Computed<T> {
     *stream() {
         while (true) {
             try {
-                yield this.onData(yield* this.target)
+                this.onData(yield* this.target)
             } catch (e) {
-                yield this.onError(e)
+                this.onError(e)
             }
+            yield
         }
     }
 

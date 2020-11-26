@@ -1,4 +1,3 @@
-import { Context } from 'context'
 import { Computed } from './computed'
 
 export class Observable<T> extends Computed<T> {
@@ -9,8 +8,7 @@ export class Observable<T> extends Computed<T> {
         this.value = value
     }
 
-    *stream(ctx: Context) {
-        ctx
+    *stream() {
         while (true) yield this.value
     }
 

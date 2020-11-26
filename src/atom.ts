@@ -13,13 +13,15 @@ export abstract class Atom<T = any> {
     protected abstract readonly context: RootContext
 
     private readonly stream: Stream<T>
-    private readonly consumers = new Set<Atom>()
-    private readonly stack = new Stack<StreamIterator<T>>()
+    private readonly consumers: Set<Atom>
+    private readonly stack: Stack<StreamIterator<T>>
     private readonly dependencies: Dependencies
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(entity: Stream<T>) {
         this.stream = entity
+        this.consumers = new Set()
+        this.stack = new Stack<StreamIterator<T>>()
         this.dependencies = new Dependencies(this)
     }
 

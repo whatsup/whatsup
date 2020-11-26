@@ -17,7 +17,7 @@ export abstract class Streamable<T> {
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<Bubble<T>, T, any>
-        const consumer = yield CONSUMER_QUERY as never
+        const consumer: Atom = yield CONSUMER_QUERY as never
         const atom = this.getAtom(consumer)
 
         atom.addConsumer(consumer)
