@@ -148,16 +148,14 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
         return acc
     }
 
-    *filter(generator: (v: T) => Generator<never, boolean>) {
-        const acc = [] as T[]
+    *filter(generator: (item: Linqable<T, O>) => Generator<never, boolean>) {
+        const acc = [] as Linqable<T, O>[]
 
         let sibling: Linqable<T, O> | null = this
 
         do {
-            const item = yield* sibling
-
-            if (!(yield* generator(item))) {
-                acc.push(item)
+            if (!(yield* generator(sibling))) {
+                acc.push(sibling)
             }
 
             sibling = yield* sibling.right
@@ -166,27 +164,24 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
         return acc
     }
 
-    *map<U extends T>(generator: (v: T) => Generator<never, U>) {
+    *map<U extends T>(generator: (item: Linqable<T, O>) => Generator<never, U>) {
         const acc = [] as U[]
 
         let sibling: Linqable<T, O> | null = this
 
         do {
-            const item = yield* sibling
-            acc.push(yield* generator(item))
+            acc.push(yield* generator(sibling))
             sibling = yield* sibling.right
         } while (sibling)
 
         return acc
     }
 
-    *every(generator: (v: T) => Generator<never, boolean>) {
+    *every(generator: (item: Linqable<T, O>) => Generator<never, boolean>) {
         let sibling: Linqable<T, O> | null = this
 
         do {
-            const item = yield* sibling
-
-            if (!(yield* generator(item))) {
+            if (!(yield* generator(sibling))) {
                 return false
             }
 
@@ -196,13 +191,11 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
         return true
     }
 
-    *some(generator: (v: T) => Generator<never, boolean>) {
+    *some(generator: (item: Linqable<T, O>) => Generator<never, boolean>) {
         let sibling: Linqable<T, O> | null = this
 
         do {
-            const item = yield* sibling
-
-            if (yield* generator(item)) {
+            if (yield* generator(sibling)) {
                 return true
             }
 
@@ -245,16 +238,16 @@ export class LinqFactory<T> {
     slice(start?: number, end?: number) {
         return Linq.slice(this.root, start, end)
     }
-    filter(generator: (v: T) => Generator<never, boolean>) {
+    filter(generator: (item: Linqable<T>) => Generator<never, boolean>) {
         return Linq.filter(this.root, generator)
     }
-    map<U extends T>(generator: (v: T) => Generator<never, U>) {
+    map<U extends T>(generator: (item: Linqable<T>) => Generator<never, U>) {
         return Linq.map<T, U>(this.root, generator)
     }
-    every(generator: (v: T) => Generator<never, boolean>) {
+    every(generator: (item: Linqable<T>) => Generator<never, boolean>) {
         return Linq.every(this.root, generator)
     }
-    some(generator: (v: T) => Generator<never, boolean>) {
+    some(generator: (item: Linqable<T>) => Generator<never, boolean>) {
         return Linq.some(this.root, generator)
     }
     count() {
@@ -287,7 +280,7 @@ export abstract class Linq<T, O extends LinqOptions = LinqOptions> extends Compu
         })
     }
 
-    static filter<T>(root: Linqable<T>, generator: (v: T) => Generator<never, boolean>) {
+    static filter<T>(root: Linqable<T>, generator: (item: Linqable<T>) => Generator<never, boolean>) {
         return linq(function* () {
             while (true) {
                 yield yield* root.filter(generator)
@@ -295,7 +288,7 @@ export abstract class Linq<T, O extends LinqOptions = LinqOptions> extends Compu
         })
     }
 
-    static map<T, U extends T>(root: Linqable<T>, generator: (v: T) => Generator<never, U>) {
+    static map<T, U extends T>(root: Linqable<T>, generator: (item: Linqable<T>) => Generator<never, U>) {
         return linq(function* () {
             while (true) {
                 yield yield* root.map(generator)
@@ -303,7 +296,7 @@ export abstract class Linq<T, O extends LinqOptions = LinqOptions> extends Compu
         })
     }
 
-    static every<T>(root: Linqable<T>, generator: (v: T) => Generator<never, boolean>) {
+    static every<T>(root: Linqable<T>, generator: (item: Linqable<T>) => Generator<never, boolean>) {
         return computed(function* () {
             while (true) {
                 yield yield* root.every(generator)
@@ -311,7 +304,7 @@ export abstract class Linq<T, O extends LinqOptions = LinqOptions> extends Compu
         })
     }
 
-    static some<T>(root: Linqable<T>, generator: (v: T) => Generator<never, boolean>) {
+    static some<T>(root: Linqable<T>, generator: (item: Linqable<T>) => Generator<never, boolean>) {
         return computed(function* () {
             while (true) {
                 yield yield* root.some(generator)
