@@ -6,7 +6,7 @@ import { ConsumerQuery } from './query'
 
 export type Bubble<T> = T | Atom<any> | ConsumerQuery
 export type StreamIterator<T> = Iterator<Bubble<T>, T, any>
-export type StreamGenerator<T> = Generator<Bubble<T>, any, any>
+export type StreamGenerator<T> = Generator<T, T | void, any>
 export type StreamGeneratorFunc<T, C = RootContext> = ((context: C) => StreamGenerator<T>) | (() => StreamGenerator<T>)
 
 export const CONSUMER_QUERY = new ConsumerQuery()
@@ -14,8 +14,10 @@ export const CONSUMER_QUERY = new ConsumerQuery()
 export abstract class Streamable<T> {
     protected abstract getAtom(consumer: Atom): Atom<T>
 
-    *[Symbol.iterator](): Generator<any, T, any> {
-        const consumer = yield* CONSUMER_QUERY
+    *[Symbol.iterator](): Generator<never, T, any> {
+        //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
+        //        really is Generator<Bubble<T>, T, any>
+        const consumer: Atom = yield CONSUMER_QUERY as never
         const atom = this.getAtom(consumer)
 
         atom.addConsumer(consumer)
@@ -29,7 +31,7 @@ export interface StreamOptions {
 }
 
 export abstract class Stream<T> extends Streamable<T> {
-    protected abstract stream(context?: RootContext): StreamGenerator<T>
+    protected abstract stream(context?: RootContext): StreamGenerator<any>
     private readonly options: StreamOptions
 
     constructor(options: StreamOptions = {}) {
