@@ -24,15 +24,15 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
 
     chain(options?: O): Linqable<T, O> {
         return transaction(() => {
-            let sibling: Linqable<T, O> | null = this
+            let end: Linqable<T, O> = this
 
-            do {
-                sibling = sibling.right.get()
-            } while (sibling)
+            while (end.right.get()) {
+                end = end.right.get()!
+            }
 
             const instance = new this.constructor(options)
 
-            this.right.set(instance)
+            end.right.set(instance)
 
             return instance
         })
