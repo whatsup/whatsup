@@ -59,11 +59,6 @@ class Transaction {
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new WeakMap<Atom, number>()
-    private runned = false
-
-    isRunned() {
-        return this.runned
-    }
 
     add(atom: Atom) {
         if (!this.queue.includes(atom)) {
