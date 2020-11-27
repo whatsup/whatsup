@@ -82,12 +82,12 @@ export abstract class Atom<T = any> {
     }
 
     build() {
-        const { stack, dependencies, context, stream: entity } = this
+        const { stack, dependencies, context, stream } = this
 
         dependencies.swap()
 
         if (stack.empty) {
-            stack.push(entity.iterate(context))
+            stack.push(stream.iterate(context))
         }
 
         let input: any
