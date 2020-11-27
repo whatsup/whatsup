@@ -44,8 +44,10 @@ class Transaction {
     }
 
     add(atom: Atom) {
-        this.queue.push(atom)
-        this.addConsumers(atom.getConsumers())
+        if (!this.queue.includes(atom)) {
+            this.queue.push(atom)
+            this.addConsumers(atom.getConsumers())
+        }
     }
 
     run(key: symbol) {
