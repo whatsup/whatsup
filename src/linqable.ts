@@ -154,7 +154,7 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
         let sibling: Linqable<T, O> | null = this
 
         do {
-            if (!(yield* generator(sibling))) {
+            if (yield* generator(sibling)) {
                 acc.push(sibling)
             }
 
