@@ -5,7 +5,7 @@ import { RootContext, Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
 import { Mutator } from './mutator'
-import { initTransaction, createTransactionKey } from './transaction'
+import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
 
@@ -46,10 +46,7 @@ export abstract class Atom<T = any> {
     }
 
     update() {
-        const key = createTransactionKey()
-        const transaction = initTransaction(key)
-        transaction.add(this)
-        transaction.run(key)
+        SCHEDULER.run((transaction) => transaction.add(this))
     }
 
     destroy(initiator?: Atom) {

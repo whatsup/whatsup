@@ -1,43 +1,65 @@
 import { Atom } from './atom'
 
-let CURRENT_TRANSACTION: Transaction | null = null
+class Scheduler {
+    readonly queue = [] as Transaction[]
+    private key!: symbol | null
 
-export function createTransactionKey() {
-    return Symbol('Transaction key')
-}
+    run<T>(action: (transaction: Transaction) => T): T {
+        let transaction: Transaction | null = null
 
-export function initTransaction(key: symbol) {
-    if (!CURRENT_TRANSACTION) {
-        CURRENT_TRANSACTION = new Transaction(key)
-    } else if (CURRENT_TRANSACTION.isRunned()) {
-        throw 'Do not start a new transaction inside a transaction'
+        for (const trn of this.queue) {
+            if (trn.state === State.Initialization) {
+                transaction = trn
+            }
+        }
+
+        if (!transaction) {
+            transaction = new Transaction()
+            this.queue.push(transaction)
+        }
+
+        if (!this.key) {
+            this.key = transaction.key
+        }
+
+        const result = action(transaction)
+
+        while (true) {
+            transaction.run(this.key)
+
+            if (transaction.state === State.Completed) {
+                this.key = null
+                this.queue.splice(this.queue.indexOf(transaction), 1)
+
+                if (this.queue.length) {
+                    transaction = this.queue[0]
+                    this.key = transaction.key
+                    continue
+                }
+            }
+
+            break
+        }
+
+        return result
     }
-
-    return CURRENT_TRANSACTION
 }
 
-export function transaction<T>(cb: () => T) {
-    const key = createTransactionKey()
-    const transaction = initTransaction(key)
-    const result = cb.call(undefined)
+export const SCHEDULER = new Scheduler()
 
-    transaction.run(key)
-
-    return result
+enum State {
+    Initialization,
+    Executing,
+    Completed,
 }
-
-export const action = transaction
 
 class Transaction {
-    private readonly key: symbol
+    state = State.Initialization
+    readonly key = Symbol()
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new WeakMap<Atom, number>()
     private runned = false
-
-    constructor(key: symbol) {
-        this.key = key
-    }
 
     isRunned() {
         return this.runned
@@ -52,7 +74,7 @@ class Transaction {
 
     run(key: symbol) {
         if (key === this.key) {
-            this.runned = true
+            this.state = State.Executing
 
             const { queue } = this
 
@@ -76,7 +98,7 @@ class Transaction {
                 this.updateQueue(consumers)
             }
 
-            CURRENT_TRANSACTION = null
+            this.state = State.Completed
         }
     }
 
@@ -124,3 +146,9 @@ class Transaction {
         return counter
     }
 }
+
+export function transaction<T>(cb: () => T) {
+    return SCHEDULER.run(() => cb())
+}
+
+export const action = transaction

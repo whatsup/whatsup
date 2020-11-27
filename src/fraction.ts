@@ -1,6 +1,6 @@
 import { Fractal, FractalOptions } from './fractal'
 import { Context } from './context'
-import { transaction } from './transaction'
+import { SCHEDULER } from './scheduler'
 
 export interface FractionOptions extends FractalOptions {}
 
@@ -32,7 +32,7 @@ export class Fraction<T> extends Fractal<T> {
     set(value: T | Fractal<T>) {
         this.value = value
 
-        transaction(() => {
+        SCHEDULER.run(() => {
             for (const context of this.contexts) {
                 context.update()
             }
