@@ -111,7 +111,7 @@ export abstract class Linqable<T, O extends ComputedOptions = ComputedOptions> e
         return this
     }
 
-    *all(this: Sibling<this>, limit: number) {
+    *all(this: Sibling<this>, limit = 0) {
         const acc = [] as T[]
 
         let sibling: Sibling<this> | null = this
@@ -164,6 +164,22 @@ export abstract class Linqable<T, O extends ComputedOptions = ComputedOptions> e
             if (!(yield* generator(item))) {
                 acc.push(item)
             }
+
+            sibling = yield* sibling.right
+        } while (sibling)
+
+        return acc
+    }
+
+    *map<U extends T>(this: Sibling<this>, generator: (v: T) => Generator<never, U>) {
+        const acc = [] as U[]
+
+        let sibling: Sibling<this> | null = this
+
+        do {
+            const item = yield* sibling
+            acc.push(yield* generator(item))
+            sibling = yield* sibling.right
         } while (sibling)
 
         return acc
@@ -175,17 +191,13 @@ export type LinqGenerator<T> = () => Generator<never, T[]>
 export interface LinqOptions extends ComputedOptions {}
 
 export class Linq<T, O extends LinqOptions = LinqOptions> extends Computed<T[], O> {
-    static from<T, O extends LinqOptions = LinqOptions>(root: Linqable<T, O> | null, options: LinqOptions) {
-        return new Linq<T>(function* () {
-            const acc = [] as T[]
-
-            while (root) {
-                acc.push(yield* root)
-                root = yield* root.right
-            }
-
-            return acc
-        }, options)
+    static from<T, O extends LinqOptions = LinqOptions>(root: Linqable<T, O>, options: LinqOptions) {
+        return new Linq<T>(
+            function* () {
+                return yield* root.all()
+            } as LinqGenerator<T>,
+            options
+        )
     }
 
     readonly generator: LinqGenerator<T>
