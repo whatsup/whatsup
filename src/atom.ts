@@ -66,7 +66,7 @@ export abstract class Atom<T = any> {
 
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //        really is Generator<Atom<T>, T, any>
+        //        really is Generator<this, T, any>
         if (!this.cache) {
             this.build()
         }
