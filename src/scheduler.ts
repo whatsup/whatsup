@@ -1,39 +1,37 @@
 import { Atom } from './atom'
 
 class Scheduler {
-    readonly queue = [] as Transaction[]
-    private key!: symbol | null
+    private master: Transaction | null = null
+    private slave: Transaction | null = null
 
     run<T>(action: (transaction: Transaction) => T): T {
-        let transaction: Transaction | null = null
+        let key = suid()
+        let transaction: Transaction
 
-        for (const trn of this.queue) {
-            if (trn.state === State.Initialization) {
-                transaction = trn
-            }
-        }
-
-        if (!transaction) {
-            transaction = new Transaction()
-            this.queue.push(transaction)
-        }
-
-        if (!this.key) {
-            this.key = transaction.key
+        if (!this.master) {
+            transaction = this.master = new Transaction(key)
+        } else if (this.master.state === State.Initial) {
+            transaction = this.master
+        } else if (!this.slave) {
+            transaction = this.slave = new Transaction(key)
+        } else if (this.slave.state === State.Initial) {
+            transaction = this.slave
+        } else {
+            throw 'Transaction error'
         }
 
         const result = action(transaction)
 
-        while (true) {
-            transaction.run(this.key)
+        while (transaction === this.master) {
+            transaction.run(key)
 
             if (transaction.state === State.Completed) {
-                this.key = null
-                this.queue.splice(this.queue.indexOf(transaction), 1)
+                this.master = this.slave
+                this.slave = null
 
-                if (this.queue.length) {
-                    transaction = this.queue[0]
-                    this.key = transaction.key
+                if (this.master) {
+                    transaction = this.master
+                    key = transaction.key
                     continue
                 }
             }
@@ -45,20 +43,28 @@ class Scheduler {
     }
 }
 
+function suid() {
+    return Symbol((~~(Math.random() * 1e8)).toString(16))
+}
+
 export const SCHEDULER = new Scheduler()
 
 enum State {
-    Initialization,
+    Initial,
     Executing,
     Completed,
 }
 
 class Transaction {
-    state = State.Initialization
-    readonly key = Symbol()
+    state = State.Initial
+    readonly key: symbol
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new WeakMap<Atom, number>()
+
+    constructor(key: symbol) {
+        this.key = key
+    }
 
     add(atom: Atom) {
         if (!this.queue.includes(atom)) {
