@@ -22,6 +22,20 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
         return new (this.constructor as new (o: O) => this)(options)
     }
 
+    jump(length: number): this | null {
+        if (length <= 0) {
+            return this
+        }
+
+        const right = this.right.get()
+
+        if (right) {
+            return right.jump(length - 1)
+        }
+
+        return null
+    }
+
     chain(options: O): this {
         return transaction(() => {
             let end: this = this
@@ -33,6 +47,7 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
             const instance = this.construct(options)
 
             end.right.set(instance)
+            instance.left.set(this)
 
             return instance
         })
@@ -77,14 +92,14 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
     cut() {
         return transaction(() => {
             const left = this.left.get()
-            if (left) {
-                left.right.set(this.right.get())
-            }
-
             const right = this.right.get()
 
+            if (left) {
+                left.right.set(right)
+            }
+
             if (right) {
-                right.left.set(this.left.get())
+                right.left.set(left)
             }
 
             this.left.set(null)
@@ -101,8 +116,22 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
             const instLeft = instance.left.get()
             const instRight = instance.right.get()
 
+            if (selfLeft) {
+                selfLeft.right.set(instance)
+            }
+            if (selfRight) {
+                selfRight.left.set(instance)
+            }
+            if (instLeft) {
+                instLeft.right.set(this)
+            }
+            if (instRight) {
+                instRight.left.set(this)
+            }
+
             this.left.set(instLeft)
             this.right.set(instRight)
+
             instance.left.set(selfLeft)
             instance.right.set(selfRight)
 
@@ -111,12 +140,12 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
     }
 
     *all() {
-        const acc = [] as T[]
+        const acc = [] as this[]
 
         let sibling: this | null = this
 
         do {
-            acc.push(yield* sibling!)
+            acc.push(sibling)
             sibling = yield* sibling.right
         } while (sibling)
 
@@ -128,13 +157,13 @@ export abstract class Linqable<T, O extends LinqableOptions = LinqableOptions> e
     }
 
     *slice(start = 0, length = 0) {
-        const acc = [] as T[]
+        const acc = [] as this[]
 
         let sibling: this | null = this
 
         do {
             if (start-- <= 0) {
-                acc.push(yield* sibling!)
+                acc.push(sibling)
 
                 if (length-- === 0) {
                     break
@@ -425,6 +454,27 @@ export abstract class Linq<T, O extends LinqOptions = LinqOptions> extends Compu
             { thisArg: this }
         )
     }
+
+    out<U = T>(generator: (item: T) => Generator<never, U> = defaultOutGenerator) {
+        const self = this
+
+        return {
+            *[Symbol.iterator]() {
+                const items = yield* self
+                const acc = [] as U[]
+
+                for (const item of items) {
+                    acc.push(yield* generator(item))
+                }
+
+                return acc
+            },
+        }
+    }
+}
+
+function* defaultOutGenerator<T, U>(item: T): Generator<never, U> {
+    return yield* (item as any) as Generator<never, U>
 }
 
 export function linq<T>(generator: StreamGeneratorFunc<T[]>, options?: LinqOptions): Linq<T> {
