@@ -1,13 +1,13 @@
-import { observable } from '../src/observable'
-import { computed } from '../src/computed'
-import { reaction } from '../src/reaction'
+import { hole } from '../src/hole'
+import { sing } from '../src/singularity'
+import { watch } from '../src/watcher'
 
 describe('Reactions', () => {
     it(`should return 1, 2`, async () => {
         const mock = jest.fn()
-        const a = observable(1)
+        const a = hole(1)
 
-        reaction(a, mock)
+        watch(a, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith(1)
@@ -20,19 +20,19 @@ describe('Reactions', () => {
 
     it(`should return 1 odd, 2 even, 3 odd`, async () => {
         const mock = jest.fn()
-        const a = observable(1)
-        const b = computed(function* () {
+        const a = hole(1)
+        const b = sing(function* () {
             while (true) {
                 yield (yield* a) % 2 === 0 ? 'even' : 'odd'
             }
         })
-        const c = computed(function* () {
+        const c = sing(function* () {
             while (true) {
                 yield `${yield* a} ${yield* b}`
             }
         })
 
-        reaction(c, mock)
+        watch(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('1 odd')
@@ -53,7 +53,7 @@ describe('Reactions', () => {
         const mockA = jest.fn()
         const mockB = jest.fn()
         const mockC = jest.fn()
-        const a = computed(function* () {
+        const a = sing(function* () {
             try {
                 while (true) {
                     yield 'A'
@@ -62,7 +62,7 @@ describe('Reactions', () => {
                 mockA()
             }
         })
-        const b = computed(function* () {
+        const b = sing(function* () {
             try {
                 while (true) {
                     yield `${yield* a}B`
@@ -71,7 +71,7 @@ describe('Reactions', () => {
                 mockB()
             }
         })
-        const c = computed(function* () {
+        const c = sing(function* () {
             try {
                 while (true) {
                     yield `${yield* a}${yield* b}C`
@@ -81,7 +81,7 @@ describe('Reactions', () => {
             }
         })
 
-        const destroy = reaction(c, mock)
+        const destroy = watch(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('AABC')

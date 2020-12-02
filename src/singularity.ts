@@ -1,10 +1,10 @@
+import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { CommunalAtomizer } from './atomizer'
 import { Context } from './context'
-import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
-export interface ComputedOptions extends StreamOptions {}
+export interface SingularityOptions extends StreamOptions {}
 
-export abstract class Computed<T, O extends ComputedOptions = ComputedOptions> extends Stream<T> {
+export abstract class Singularity<T, O extends SingularityOptions = SingularityOptions> extends Stream<T> {
     readonly delegator = false
     protected readonly atomizer: CommunalAtomizer<T>
 
@@ -18,8 +18,8 @@ export abstract class Computed<T, O extends ComputedOptions = ComputedOptions> e
     }
 }
 
-export function computed<T>(generator: StreamGeneratorFunc<T>, options?: ComputedOptions): Computed<T> {
-    return new (class extends Computed<T> {
+export function sing<T>(generator: StreamGeneratorFunc<T>, options?: SingularityOptions): Singularity<T> {
+    return new (class extends Singularity<T> {
         stream(context: Context): StreamGenerator<T> {
             return generator.call(this, context)
         }

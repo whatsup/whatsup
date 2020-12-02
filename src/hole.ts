@@ -1,6 +1,6 @@
-import { Computed } from './computed'
+import { Singularity } from './singularity'
 
-export class Observable<T> extends Computed<T> {
+export class Hole<T> extends Singularity<T> {
     private value: T
 
     constructor(value: T) {
@@ -22,6 +22,6 @@ export class Observable<T> extends Computed<T> {
     }
 }
 
-export function observable<T>(value: T) {
-    return new Observable(value)
+export function hole<T>(value: T) {
+    return new Hole(value)
 }
