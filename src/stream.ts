@@ -1,5 +1,5 @@
 import { Atom } from './atom'
-import { Atomizer } from './atomizer'
+import { Atomizer, ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
 import { ConsumerQuery } from './query'
 
@@ -11,13 +11,13 @@ export type StreamGeneratorFunc<T> = ((context: Context) => StreamGenerator<T>) 
 export const CONSUMER_QUERY = new ConsumerQuery()
 
 export abstract class Streamable<T> {
-    protected abstract getAtom(consumer: Atom): Atom<T>
+    protected abstract readonly atomizer: Atomizer<T>
 
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<Bubble<T>, T, any>
         const consumer: Atom = yield CONSUMER_QUERY as never
-        const atom = this.getAtom(consumer)
+        const atom = this.atomizer.get(consumer)
 
         atom.addConsumer(consumer)
 
@@ -47,11 +47,11 @@ export abstract class Stream<T> extends Streamable<T> {
 }
 
 export class Delegation<T> extends Streamable<T> {
-    private readonly atomizer: Atomizer<T>
+    protected readonly atomizer: ExclusiveAtomizer<T>
 
     constructor(stream: Stream<T>, parentContext: Context) {
         super()
-        this.atomizer = new Atomizer(stream, parentContext)
+        this.atomizer = new ExclusiveAtomizer(stream, parentContext)
     }
 
     protected getAtom(consumer: Atom) {

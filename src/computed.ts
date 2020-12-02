@@ -1,4 +1,4 @@
-import { Atom } from './atom'
+import { CommunalAtomizer } from './atomizer'
 import { Context } from './context'
 import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
@@ -6,15 +6,15 @@ export interface ComputedOptions extends StreamOptions {}
 
 export abstract class Computed<T, O extends ComputedOptions = ComputedOptions> extends Stream<T> {
     readonly delegator = false
-    protected readonly atom: Atom
+    protected readonly atomizer: CommunalAtomizer<T>
 
     constructor(options?: O) {
         super(options)
-        this.atom = new Atom(this)
+        this.atomizer = new CommunalAtomizer(this)
     }
 
-    protected getAtom() {
-        return this.atom
+    get atom() {
+        return this.atomizer.get()
     }
 }
 

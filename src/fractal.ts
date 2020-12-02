@@ -1,5 +1,4 @@
-import { Atom } from './atom'
-import { Atomizer } from './atomizer'
+import { ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
 import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
@@ -7,16 +6,12 @@ export interface FractalOptions extends StreamOptions {}
 
 export abstract class Fractal<T> extends Stream<T> {
     readonly delegator = true
-    private readonly atomizer: Atomizer<T>
+    protected readonly atomizer: ExclusiveAtomizer<T>
     protected abstract stream(context: Context): StreamGenerator<T | Fractal<T>>
 
     constructor(options?: FractalOptions) {
         super(options)
-        this.atomizer = new Atomizer(this)
-    }
-
-    protected getAtom(consumer: Atom) {
-        return this.atomizer.get(consumer)
+        this.atomizer = new ExclusiveAtomizer(this)
     }
 }
 
