@@ -1,7 +1,5 @@
 import { StreamIterator, Stream, Delegation } from './stream'
-import { Fractal } from './fractal'
-import { Computed } from './computed'
-import { RootContext, Context } from './context'
+import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
 import { Mutator } from './mutator'
@@ -9,20 +7,22 @@ import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
 
-export abstract class Atom<T = any> {
-    protected abstract readonly context: RootContext
-
+export class Atom<T = any> {
+    private readonly context: Context
     private readonly stream: Stream<T>
     private readonly consumers: Set<Atom>
     private readonly stack: Stack<StreamIterator<T>>
     private readonly dependencies: Dependencies
+    private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
-    constructor(entity: Stream<T>) {
-        this.stream = entity
+    constructor(stream: Stream<T>, parentContext: Context | null = null) {
+        this.stream = stream
+        this.context = new Context(this, parentContext)
         this.consumers = new Set()
         this.stack = new Stack<StreamIterator<T>>()
         this.dependencies = new Dependencies(this)
+        this.delegations = new WeakMap<Stream<any>, Delegation<T>>()
     }
 
     addConsumer(consumer: Atom) {
@@ -139,41 +139,18 @@ export abstract class Atom<T = any> {
             return newValue
         }
 
-        return value
-    }
-}
-
-export class ComputedAtom<T = any> extends Atom<T> {
-    protected readonly context: RootContext
-
-    constructor(entity: Computed<T>) {
-        super(entity)
-        this.context = new RootContext(this)
-    }
-}
-
-export class FractalAtom<T = any> extends Atom<T> {
-    protected readonly context: Context
-    private readonly delegations = new WeakMap<Fractal<any>, Delegation<T>>()
-
-    constructor(entity: Fractal<T>, parentContext: RootContext | Context) {
-        super(entity)
-        this.context = new Context(this, parentContext)
-    }
-
-    protected prepareNewData(value: T) {
-        if (value instanceof Fractal) {
+        if (value instanceof Stream && this.stream.delegator) {
             return this.getDelegation(value)
         }
 
-        return super.prepareNewData(value)
+        return value
     }
 
-    private getDelegation(fractal: Fractal<T>) {
-        if (!this.delegations.has(fractal)) {
-            const delegation = new Delegation(fractal, this.context)
-            this.delegations.set(fractal, delegation)
+    private getDelegation(stream: Stream<any>) {
+        if (!this.delegations.has(stream)) {
+            const delegation = new Delegation(stream, this.context)
+            this.delegations.set(stream, delegation)
         }
-        return this.delegations.get(fractal)!
+        return this.delegations.get(stream)!
     }
 }

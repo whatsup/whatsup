@@ -6,6 +6,7 @@ import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './s
 export interface FractalOptions extends StreamOptions {}
 
 export abstract class Fractal<T> extends Stream<T> {
+    readonly delegator = true
     private readonly atomizer: Atomizer<T>
     protected abstract stream(context: Context): StreamGenerator<T | Fractal<T>>
 
