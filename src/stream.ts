@@ -11,6 +11,7 @@ export type StreamGeneratorFunc<T> = ((context: Context) => StreamGenerator<T>) 
 export const CONSUMER_QUERY = new ConsumerQuery()
 
 export abstract class Streamable<T> {
+    /**@internal */
     protected abstract readonly atomizer: Atomizer<T>
 
     *[Symbol.iterator](): Generator<never, T, any> {
@@ -40,6 +41,7 @@ export abstract class Stream<T> extends Streamable<T> {
         this.options = { thisArg }
     }
 
+    /**@internal */
     iterate(context: Context) {
         const { thisArg } = this.options
         return this.stream.call(thisArg, context)
@@ -52,9 +54,5 @@ export class Delegation<T> extends Streamable<T> {
     constructor(stream: Stream<T>, parentContext: Context) {
         super()
         this.atomizer = new ExclusiveAtomizer(stream, parentContext)
-    }
-
-    protected getAtom(consumer: Atom) {
-        return this.atomizer.get(consumer)
     }
 }

@@ -13,7 +13,7 @@ export abstract class Singularity<T, O extends SingularityOptions = SingularityO
         this.atomizer = new CommunalAtomizer(this)
     }
 
-    get atom() {
+    protected get atom() {
         return this.atomizer.get()
     }
 }

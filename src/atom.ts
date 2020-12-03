@@ -8,8 +8,8 @@ import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
 
 export class Atom<T = any> {
-    private readonly context: Context
     private readonly stream: Stream<T>
+    private readonly context: Context
     private readonly consumers: Set<Atom>
     private readonly stack: Stack<StreamIterator<T>>
     private readonly dependencies: Dependencies
@@ -66,7 +66,7 @@ export class Atom<T = any> {
 
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //        really is Generator<this, T, any>
+        //        really is Generator<this | Query, T, any>
         if (!this.cache) {
             this.build()
         }
@@ -139,7 +139,7 @@ export class Atom<T = any> {
             return newValue
         }
 
-        if (value instanceof Stream && this.stream.delegator) {
+        if (this.stream.delegator && value instanceof Stream) {
             return this.getDelegation(value)
         }
 

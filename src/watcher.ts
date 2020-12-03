@@ -1,8 +1,8 @@
 import { Stream } from './stream'
 import { Singularity } from './singularity'
 
-type DataHandler<T> = (data: T) => void
-type ErrorHandler = (e: Error) => void
+export type DataHandler<T> = (data: T) => void
+export type ErrorHandler = (e: Error) => void
 
 export class Watcher<T> extends Singularity<void> {
     readonly target: Stream<T>

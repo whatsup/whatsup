@@ -9,7 +9,9 @@ export class Hole<T> extends Singularity<T> {
     }
 
     *stream() {
-        while (true) yield this.value
+        while (true) {
+            yield this.value
+        }
     }
 
     get() {
