@@ -1,4 +1,4 @@
-![](https://habrastorage.org/webt/be/j4/hv/bej4hv3g2qxp8vgwoex-2knhcoo.png)
+![](https://hsto.org/webt/be/j4/hv/bej4hv3g2qxp8vgwoex-2knhcoo.png)
 
 <div align="center">
 <img src="https://img.shields.io/travis/fract/core" alt="travis" />
@@ -10,12 +10,6 @@
 <img src="https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore" alt="tweet">
 </a> 
 </div>
- 
-## Idea
-
-The idea is to divide the application not horizontally into models, views, controllers, etc., but deeper into a fractal-tree structure, where each node is an independent complete application. The result of the work of each such application is a flow of information reflecting its internal state.
-
-![](https://hsto.org/webt/zw/yu/4c/zwyu4cb736of4iyuvslgzcplgxg.jpeg)
 
 ## Install
 
@@ -23,8 +17,288 @@ The idea is to divide the application not horizontally into models, views, contr
 npm i @fract/core
 ```
 
+## First look
+
+### `Hole` (it's like observable)
+
 ```ts
-import { fractal, fraction } from '@fract/core'
+const name = hole('Natali')
+```
+
+### `Singularity` (it's like computed)
+
+```ts
+const user = sing(function* () {
+    while (true) {
+        yield {
+            name: yield* name,
+        }
+    }
+})
+```
+
+### `Watcher` (it's like observer)
+
+```ts
+const onData = (data) => console.log(data)
+const onError = (err) => console.error(err)
+
+watch(user, onData, onError)
+//> {name: 'Natali'}
+
+name.set('Aria')
+//> {name: 'Aria'}
+```
+
+## Extended example
+
+```ts
+interface UserData {
+    name: string
+}
+
+class Name extends Hole<string> {}
+
+class User extends Singularity<UserData> {
+    readonly name: Name
+
+    constructor(name: string) {
+        super()
+        this.name = new Name(name)
+    }
+
+    protected *stream() {
+        while (true) {
+            yield {
+                name: yield* this.name,
+            }
+        }
+    }
+}
+
+const user = new User('Natali')
+
+watch(user, (data) => console.log(data))
+//> {name: 'Natali'}
+
+name.set('Aria')
+//> {name: 'Aria'}
+```
+
+## They have access to context with useful methods
+
+```ts
+class Timer extends Singularity<number> {
+    constructor(readonly delay: number) {
+        super()
+    }
+
+    protected *stream(ctx: Context) {
+        let i = 0
+
+        while (true) {
+            setTimeout(() => ctx.update(), this.delay)
+            yield i++
+        }
+    }
+}
+
+const timer = new Timer(1000)
+
+watch(timer, (data) => console.log(data))
+//> 1
+//> 2
+//> 3 ...
+```
+
+## ...and cherry on the cake - `Fractal`
+
+it's like Singularity, but he knows how to branch context within a singularity
+
+```ts
+const COUNTRY = factor<string>()
+
+class Capital extends Fractal<string> {
+    protected *stream(ctx: Context) {
+        let i = 0
+
+        while (true) {
+            switch (ctx.get(COUNTRY)) {
+                case 'Russia':
+                    yield 'Moskow'
+                    continue
+                case 'USA':
+                    yield 'Washington'
+                    continue
+            }
+        }
+    }
+}
+
+class Sity extends Fractal<string> {
+    protected *stream(ctx: Context) {
+        let i = 0
+
+        while (true) {
+            setTimeout(() => ctx.update(), this.delay)
+            yield i++
+        }
+    }
+}
+
+class Timer extends Singularity<number> {
+    constructor(readonly delay: number) {
+        super()
+    }
+
+    protected *stream(ctx: Context) {
+        let i = 0
+
+        while (true) {
+            setTimeout(() => ctx.update(), this.delay)
+            yield i++
+        }
+    }
+}
+
+const timer = new Timer(1000)
+
+watch(timer, (data) => console.log(data))
+//> 1
+//> 2
+//> 3 ...
+```
+
+## They have context & make the most of native language constructs
+
+```ts
+class Timer extends Singularity {
+    constructor(readonly delay: number) {
+        super()
+    }
+
+    *stream(ctx: Context) {
+        let i = 0
+        let timeoutId: number
+
+        try {
+            while (true) {
+                timeoutId = setTimeout(() => ctx.update(), this.delay)
+                yield i++
+            }
+        } finally {
+            clearTimeout(timeoutId)
+            console.log(')
+        }
+    }
+}
+```
+
+## And the cherry on the cake
+
+## Glitch-free
+
+All dependencies are updated synchronously in a topological sequence without unnecessary calculations.
+
+```ts
+const num = hole(1)
+const evenOrOdd = sing(function* () {
+    while (true) {
+        yield (yield* a) % 2 === 0 ? 'even' : 'odd'
+    }
+})
+const output = sing(function* () {
+    while (true) {
+        yield `${yield* num} is ${yield* evenOrOdd}`
+    }
+})
+
+watch(output, (data) => console.log(data))
+//> 1 is odd
+num.set(2)
+//> 2 is even
+num.set(3)
+//> 3 is odd
+```
+
+/
+/
+/
+/
+/
+/
+/
+/
+/
+
+## Lifecycle
+
+Inside the generator, the keyword `yield` push data to stream, and `yield*` pull data from stream.
+
+![](https://hsto.org/webt/pv/tm/gz/pvtmgzvnerzt4sns6nuha-fmkgy.jpeg)
+
+The life cycle consists of three steps:
+
+1. create a new iterator using a generator
+2. the iterator starts executing and stops after `yield` or `return`, during this operation, all calls to `yield*` automatically establish the observed dependencies; as soon as a new data is generated, the stream reports this to the parent and goes into standby mode for updates
+3. having received the update message, the stream clears the list of dependencies and, if in the previous step the data was obtained using `yield`, the stream continues its work from the second step; if there was a `return`, the work continues from the first step
+
+The `return` statement does the same as the `yield` statement, but it does the iterator reset, and the stream starts its life anew.
+
+/
+/
+/
+/
+/
+/
+/
+/
+/
+
+## Key components
+
+### `Hole` (alias `Observable`)
+
+```ts
+import { hole, Hole } from '@fract/core'
+
+const name = hole('Natali')
+// or
+class Name extends Hole {}
+const name = new Name('Natali')
+```
+
+### `Singularity` (alias `Computed`)
+
+```ts
+import { sign, Singularity } from '@fract/core'
+
+const user = sing(function* () {
+    while (true) {
+        yield {
+            name: yield* name,
+        }
+    }
+})
+// or
+class User extends Singularity {
+    *stream() {
+        while (true) {
+            yield {
+                name: yield* name,
+            }
+        }
+    }
+}
+const user = new User()
+```
+
+### `Watcher` (alias `Observer`)
+
+```ts
+import { watch } from '@fract/core'
+
+watch(user, (data) => console.log(data))
 ```
 
 ## Two key components
@@ -419,6 +693,12 @@ export const App = fractal(async function* () {
 ```
 
 No hidden magic, special downloaders and other things, everything is solved by native means, with IntelliSense saved in the editor.
+
+## Idea
+
+The idea is to divide the application not horizontally into models, views, controllers, etc., but deeper into a fractal-tree structure, where each node is an independent complete application. The result of the work of each such application is a flow of information reflecting its internal state.
+
+![](https://hsto.org/webt/zw/yu/4c/zwyu4cb736of4iyuvslgzcplgxg.jpeg)
 
 ## Examples
 
