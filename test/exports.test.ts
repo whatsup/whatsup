@@ -13,7 +13,7 @@ import { Event } from '../src/event'
 import { transaction as action } from '../src/scheduler'
 import { sing as computed, Singularity as Computed } from '../src/singularity'
 import { hole as observable, Hole as Observable } from '../src/hole'
-import { watch as reaction, Watcher as Reaction } from '../src/watcher'
+import { watch as observe, Watcher as Observer } from '../src/watcher'
 
 import {
     Stream as _Stream,
@@ -39,8 +39,8 @@ import {
     Computed as _Computed,
     observable as _observable,
     Observable as _Observable,
-    reaction as _reaction,
-    Reaction as _Reaction,
+    observe as _observe,
+    Observer as _Observer,
 } from '../src/index'
 
 it('Exports', () => {
@@ -67,6 +67,6 @@ it('Exports', () => {
     expect(Computed).toBe(_Computed)
     expect(observable).toBe(_observable)
     expect(Observable).toBe(_Observable)
-    expect(reaction).toBe(_reaction)
-    expect(Reaction).toBe(_Reaction)
+    expect(observe).toBe(_observe)
+    expect(Observer).toBe(_Observer)
 })
