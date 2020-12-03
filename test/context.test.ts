@@ -1,23 +1,41 @@
 import { Factor, factor } from '../src/factor'
 import { Event } from '../src/event'
-import { Atom } from '../src/atom'
-import { Fractal } from '../src/fractal'
+import { fractal } from '../src/fractal'
+import { Context } from '../src/context'
+import { watch } from '../src/watcher'
 
 describe('Context', () => {
-    class TestFractal extends Fractal<any> {
-        async *collector() {}
-    }
+    let context1: Context
+    let context2: Context
+    let context3: Context
+    let context4: Context
 
-    const testFractal = new TestFractal()
-    const atom = new Atom(testFractal)
-    const atom2 = atom.getSubatom(testFractal)
-    const atom3 = atom2.getSubatom(testFractal)
-    const atom4 = atom3.getSubatom(testFractal)
+    const test1 = fractal(function* (ctx) {
+        context1 = ctx
+        while (true) {
+            yield yield* test2
+        }
+    })
+    const test2 = fractal(function* (ctx) {
+        context2 = ctx
+        while (true) {
+            yield yield* test3
+        }
+    })
+    const test3 = fractal(function* (ctx) {
+        context3 = ctx
+        while (true) {
+            yield yield* test4
+        }
+    })
+    const test4 = fractal(function* (ctx) {
+        context4 = ctx
+        while (true) {
+            yield 'Hello'
+        }
+    })
 
-    const context1 = atom.context
-    const context2 = atom2.context
-    const context3 = atom3.context
-    const context4 = atom4.context
+    watch(test1, () => {})
 
     describe('Factors', () => {
         const testFactor = new Factor('default')
