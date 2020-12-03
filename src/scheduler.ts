@@ -151,5 +151,3 @@ class Transaction {
 export function transaction<T>(cb: () => T) {
     return SCHEDULER.run(() => cb())
 }
-
-export const action = transaction

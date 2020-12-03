@@ -1,40 +1,72 @@
-import { Atom } from '../src/atom'
+import { Stream } from '../src/stream'
 import { fractal, Fractal } from '../src/fractal'
 import { fraction, Fraction } from '../src/fraction'
+import { sing, Singularity } from '../src/singularity'
+import { hole, Hole } from '../src/hole'
 import { list, List } from '../src/list'
+import { watch, Watcher } from '../src/watcher'
 import { factor } from '../src/factor'
-import { tmp } from '../src/temporary'
+import { transaction } from '../src/scheduler'
+import { run } from '../src/run'
 import { Mutator } from '../src/mutator'
 import { Event } from '../src/event'
-import { stream, live } from '../src/runners'
+import { transaction as action } from '../src/scheduler'
+import { sing as computed, Singularity as Computed } from '../src/singularity'
+import { hole as observable, Hole as Observable } from '../src/hole'
+import { watch as reaction, Watcher as Reaction } from '../src/watcher'
+
 import {
-    Atom as _Atom,
+    Stream as _Stream,
     fractal as _fractal,
     Fractal as _Fractal,
     fraction as _fraction,
     Fraction as _Fraction,
+    sing as _sing,
+    Singularity as _Singularity,
+    hole as _hole,
+    Hole as _Hole,
     list as _list,
     List as _List,
+    watch as _watch,
+    Watcher as _Watcher,
     factor as _factor,
-    tmp as _tmp,
+    transaction as _transaction,
+    run as _run,
     Mutator as _Mutator,
     Event as _Event,
-    stream as _stream,
-    live as _live,
+    action as _action,
+    computed as _computed,
+    Computed as _Computed,
+    observable as _observable,
+    Observable as _Observable,
+    reaction as _reaction,
+    Reaction as _Reaction,
 } from '../src/index'
 
 it('Exports', () => {
-    expect(Atom).toBe(_Atom)
+    expect(Stream).toBe(_Stream)
     expect(fractal).toBe(_fractal)
     expect(Fractal).toBe(_Fractal)
     expect(fraction).toBe(_fraction)
     expect(Fraction).toBe(_Fraction)
+    expect(sing).toBe(_sing)
+    expect(Singularity).toBe(_Singularity)
+    expect(hole).toBe(_hole)
+    expect(Hole).toBe(_Hole)
     expect(list).toBe(_list)
     expect(List).toBe(_List)
+    expect(watch).toBe(_watch)
+    expect(Watcher).toBe(_Watcher)
     expect(factor).toBe(_factor)
-    expect(tmp).toBe(_tmp)
+    expect(transaction).toBe(_transaction)
+    expect(run).toBe(_run)
     expect(Mutator).toBe(_Mutator)
     expect(Event).toBe(_Event)
-    expect(stream).toBe(_stream)
-    expect(live).toBe(_live)
+    expect(action).toBe(_action)
+    expect(computed).toBe(_computed)
+    expect(Computed).toBe(_Computed)
+    expect(observable).toBe(_observable)
+    expect(Observable).toBe(_Observable)
+    expect(reaction).toBe(_reaction)
+    expect(Reaction).toBe(_Reaction)
 })

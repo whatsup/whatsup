@@ -10,7 +10,7 @@ export class Context {
     private factors!: WeakMap<Factor<any>, any>
     private listeners!: WeakMap<EventCtor, Set<EventListener>>
 
-    constructor(atom: Atom, parent: Context | null = null) {
+    constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
         this.parent = parent
     }
