@@ -1,28 +1,22 @@
-import { Fractal, FractalOptions, Atom } from '@fract/core'
+import { run, Stream } from '@fract/core'
 import { reconcile, placeElements, removeUnreconciledElements } from './mutator'
 import { ReconcileMap } from './reconcile_map'
 import { FractalJSX } from './types'
 
-interface RendererOptions extends FractalOptions {}
+type Source = FractalJSX.Child | Stream<Source>
 
-class Renderer<T> extends Fractal<T> {
-    readonly root: Fractal<FractalJSX.Child>
-    readonly container: HTMLElement | SVGElement
+function* extract(source: Stream<Source>): Generator<any, FractalJSX.Child, any> {
+    const result = yield* source
+    return result instanceof Stream ? yield* extract(result) : result
+}
 
-    constructor(root: Fractal<FractalJSX.Child>, container: HTMLElement | SVGElement, options?: RendererOptions) {
-        super(options)
-        this.root = root
-        this.container = container
-    }
-
-    async *collector() {
+export function render(source: Stream<FractalJSX.Child>, container: HTMLElement | SVGElement = document.body) {
+    return run(function* () {
         try {
-            const { root, container } = this
-
             let oldReconcileMap = new ReconcileMap()
 
             while (true) {
-                const result = yield* root
+                const result = yield* extract(source)
                 const children = Array.isArray(result) ? result : [result]
                 const elements = [] as (HTMLElement | SVGElement | Text)[]
                 const reconcileMap = new ReconcileMap()
@@ -38,12 +32,5 @@ class Renderer<T> extends Fractal<T> {
         } catch (e) {
             console.error(e)
         }
-    }
-}
-
-export async function render(root: Fractal<FractalJSX.Child>, container: HTMLElement | SVGElement = document.body) {
-    const renderer = new Renderer(root, container)
-    const atom = new Atom(renderer)
-
-    await atom.activate()
+    })
 }

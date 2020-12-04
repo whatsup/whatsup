@@ -8,7 +8,7 @@ import { component, html } from '../src/factories'
 import { render } from '../src/render'
 
 describe('refs', function () {
-    it('should return {current: null}', async function () {
+    it('should return {current: null}', function () {
         expect(createRef()).toMatchObject({ current: null })
     })
 
@@ -16,18 +16,18 @@ describe('refs', function () {
         document.body.innerHTML = ''
 
         const ref = createRef()
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 yield html('div', '', '', ref)
             }
         })
 
-        await render(Root)
+        render(Root)
 
         expect(ref.current).toBe(document.body.children[0])
     })
 
-    it('should define single child as ref', async function () {
+    it('should define single child as ref', function () {
         document.body.innerHTML = ''
 
         const ref = createRef()
@@ -36,18 +36,18 @@ describe('refs', function () {
             return html('div', '', undefined, undefined)
         }
 
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 yield component(Component, '', undefined, ref)
             }
         })
 
-        await render(Root)
+        render(Root)
 
         expect(ref.current).toBe(document.body.children[0])
     })
 
-    it('should define children array as ref', async function () {
+    it('should define children array as ref', function () {
         document.body.innerHTML = ''
 
         const ref = createRef()
@@ -56,13 +56,13 @@ describe('refs', function () {
             return [html('div', '', undefined, undefined), html('div', '', undefined, undefined)]
         }
 
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 yield component(Component, '', undefined, ref)
             }
         })
 
-        await render(Root)
+        render(Root)
 
         expect(ref.current).toBeInstanceOf(Array)
         expect(ref.current.length).toBe(2)

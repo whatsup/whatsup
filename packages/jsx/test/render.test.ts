@@ -7,56 +7,56 @@ import { component, html } from '../src/factories'
 import { render } from '../src/render'
 
 describe('render', function () {
-    it('should render single child', async function () {
+    it('should render single child', function () {
         const container = document.createElement('div')
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 yield html('div', '', '', undefined)
             }
         })
 
-        await render(Root, container)
+        render(Root, container)
 
         expect(container.childNodes.length).toBe(1)
         expect(container.children[0].tagName).toBe('DIV')
     })
 
-    it('should render many children', async function () {
+    it('should render many children', function () {
         const container = document.createElement('div')
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 yield [html('div', '', '', undefined), html('div', '', '', undefined)]
             }
         })
 
-        await render(Root, container)
+        render(Root, container)
 
         expect(container.childNodes.length).toBe(2)
         expect(container.children[0].tagName).toBe('DIV')
         expect(container.children[1].tagName).toBe('DIV')
     })
 
-    it('should render component', async function () {
+    it('should render component', function () {
         function Component() {
             return [html('div', '', '', undefined), html('div', '', '', undefined)]
         }
         const container = document.createElement('div')
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 yield component(Component, '', '', undefined)
             }
         })
 
-        await render(Root, container)
+        render(Root, container)
 
         expect(container.childNodes.length).toBe(2)
         expect(container.children[0].tagName).toBe('DIV')
         expect(container.children[1].tagName).toBe('DIV')
     })
 
-    it('should print error to console log', async function () {
+    it('should print error to console log', function () {
         const container = document.createElement('div')
-        const Root = fractal(async function* () {
+        const Root = fractal(function* () {
             while (true) {
                 throw 'wtf'
             }
@@ -67,7 +67,7 @@ describe('render', function () {
 
         console.error = mock
 
-        await render(Root, container)
+        render(Root, container)
 
         console.error = original
 
@@ -75,14 +75,14 @@ describe('render', function () {
         expect(mock).lastCalledWith('wtf')
     })
 
-    it('should render default to document.body', async function () {
-        const Root = fractal(async function* () {
+    it('should render default to document.body', function () {
+        const Root = fractal(function* () {
             while (true) {
                 yield html('div', '', '', undefined)
             }
         })
 
-        await render(Root)
+        render(Root)
 
         expect(document.body.childNodes.length).toBe(1)
         expect(document.body.children[0].tagName).toBe('DIV')

@@ -1,7 +1,7 @@
 {
     "name": "@fract/jsx",
     "description": "Jsx mutator and renderer",
-    "version": "0.2.0-beta.9",
+    "version": "0.2.0",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -20,7 +20,7 @@
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "@fract/core": "0.2.0-beta.3",
+        "@fract/core": "0.2.0",
         "csstype": "^3.0.3"
     },
     "peerDependencies": {},
