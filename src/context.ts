@@ -92,7 +92,7 @@ export class Context {
         this.atom.update()
     }
 
-    destroy() {
+    dispose() {
         this.factors = undefined!
         this.listeners = undefined!
     }

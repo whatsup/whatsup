@@ -147,7 +147,7 @@ describe('Situations', () => {
 
     describe('test mutators', () => {
         let result: any
-        const destroyMock = jest.fn()
+        const disposeMock = jest.fn()
         const Kickstarter = observable(1)
         class Increment extends Mutator<number> {
             mutate(prev = 0) {
@@ -161,11 +161,11 @@ describe('Situations', () => {
                     yield new Increment()
                 }
             } finally {
-                destroyMock()
+                disposeMock()
             }
         })
 
-        const destroy = watch(Output, (r) => (result = r))
+        const dispose = watch(Output, (r) => (result = r))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)
@@ -181,9 +181,9 @@ describe('Situations', () => {
             expect(result).toBe(3)
         })
 
-        it(`should destroy & mock call`, () => {
-            destroy()
-            expect(destroyMock).toBeCalledTimes(1)
+        it(`should dispose & mock call`, () => {
+            dispose()
+            expect(disposeMock).toBeCalledTimes(1)
         })
     })
 

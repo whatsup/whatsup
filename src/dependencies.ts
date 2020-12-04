@@ -20,16 +20,16 @@ export class Dependencies {
         this.fusty = current
     }
 
-    destroy() {
+    dispose() {
         for (const atom of this.current) {
-            atom.destroy(this.atom)
+            atom.dispose(this.atom)
         }
         this.current.clear()
     }
 
-    destroyUnused() {
+    disposeUnused() {
         for (const atom of this.fusty) {
-            atom.destroy(this.atom)
+            atom.dispose(this.atom)
         }
         this.fusty.clear()
     }

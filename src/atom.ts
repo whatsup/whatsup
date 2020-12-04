@@ -49,14 +49,14 @@ export class Atom<T = any> {
         SCHEDULER.run((transaction) => transaction.add(this))
     }
 
-    destroy(initiator?: Atom) {
+    dispose(initiator?: Atom) {
         if (initiator) {
             this.consumers.delete(initiator)
         }
         if (this.consumers.size === 0) {
             this.cache = undefined
-            this.context.destroy()
-            this.dependencies.destroy()
+            this.context.dispose()
+            this.dependencies.dispose()
 
             while (!this.stack.empty) {
                 this.stack.pop()!.return!()
@@ -127,7 +127,7 @@ export class Atom<T = any> {
                 this.cache = new ErrorCache(error)
             }
 
-            dependencies.destroyUnused()
+            dependencies.disposeUnused()
             return
         }
     }

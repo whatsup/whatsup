@@ -29,7 +29,7 @@ export class Watcher<T> extends Computed<void> {
 
     run() {
         this.atom.update()
-        return () => this.atom.destroy()
+        return () => this.atom.dispose()
     }
 }
 

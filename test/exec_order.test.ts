@@ -84,7 +84,7 @@ describe('Execution order', () => {
         expect(mock).lastCalledWith('3 odd')
     })
 
-    it(`should destroy deps`, async () => {
+    it(`should dispose deps`, async () => {
         const mock = jest.fn()
         const mockA = jest.fn()
         const mockB = jest.fn()
@@ -117,12 +117,12 @@ describe('Execution order', () => {
             }
         })
 
-        const destroy = watch(c, mock)
+        const dispose = watch(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('AABC')
 
-        destroy()
+        dispose()
 
         expect(mockA).toBeCalledTimes(1)
         expect(mockB).toBeCalledTimes(1)
