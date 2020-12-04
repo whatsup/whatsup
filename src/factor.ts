@@ -1,32 +1,11 @@
-import { ContextQuery } from './queries'
+export class Factor<T = unknown> {
+    readonly defaultValue?: T
 
-export interface Factor<T> {
-    (value?: T): AsyncGenerator<any, void, any>
-    is(value: T): AsyncGenerator<any, boolean, any>
-    [Symbol.asyncIterator](): AsyncGenerator<any, T, any>
+    constructor(defaultValue?: T) {
+        this.defaultValue = defaultValue
+    }
 }
 
-export function factor<T>(defaultValue?: T): Factor<T> {
-    const sym = Symbol('Factor')
-
-    async function* mrFactor(value?: T) {
-        const ctx = yield ContextQuery
-        ctx[sym] = value
-    }
-
-    return Object.defineProperties(mrFactor, {
-        is: {
-            async *value(value: T) {
-                return (yield* this) === value
-            },
-        },
-        [Symbol.asyncIterator]: {
-            async *value() {
-                const ctx = yield ContextQuery
-                const parent = Object.getPrototypeOf(ctx)
-                const value = parent[sym]
-                return value === undefined ? defaultValue : value
-            },
-        },
-    })
+export function factor<T>(defaultValue?: T) {
+    return new Factor(defaultValue)
 }

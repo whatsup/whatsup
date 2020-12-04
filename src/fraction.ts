@@ -1,45 +1,45 @@
-import { fractal, Fractal, FractalOptions } from './fractal'
-import { tmp } from './helpers'
-import { Projection } from './typings'
-
-export type IsFraction = typeof IsFraction
-export const IsFraction = Symbol('This is fraction')
-
-export interface Fraction<T> extends Fractal<T> {
-    readonly [IsFraction]: IsFraction
-    use(data: Projection<T>): void
-}
+import { Fractal, FractalOptions } from './fractal'
+import { Context } from './context'
+import { SCHEDULER } from './scheduler'
 
 export interface FractionOptions extends FractalOptions {}
 
-export function fraction<T>(current: Projection<T>, options: FractionOptions = {}): Fraction<T> {
-    let use: (data: Projection<T>) => void
-    let next = function promise(): Promise<T | Fractal<T>> {
-        return new Promise<T | Fractal<T>>((r) => (use = (v) => ((next = promise()), r(v))))
-    }.call(void 0)
+export class Fraction<T> extends Fractal<T> {
+    private contexts = new Set<Context>()
+    protected value: T | Fractal<T>
 
-    return Object.defineProperties(
-        fractal(async function* Fraction() {
-            let data = current
+    constructor(value: T | Fractal<T>, options: FractionOptions = {}) {
+        super(options)
+        this.value = value
+    }
 
+    *stream(context: Context) {
+        this.contexts.add(context)
+
+        try {
             while (true) {
-                yield tmp(data)
-                data = next
+                yield this.value
             }
-        }, options),
-        {
-            use: {
-                value(data: Projection<T>) {
-                    if (data !== current) use((current = data))
-                },
-            },
-            [IsFraction]: {
-                value: IsFraction,
-            },
+        } finally {
+            this.contexts.delete(context)
         }
-    )
+    }
+
+    get() {
+        return this.value
+    }
+
+    set(value: T | Fractal<T>) {
+        this.value = value
+
+        SCHEDULER.run(() => {
+            for (const context of this.contexts) {
+                context.update()
+            }
+        })
+    }
 }
 
-export function isFraction<T>(arg: any): arg is Fraction<T> {
-    return arg != null && Object.hasOwnProperty.call(arg, IsFraction)
+export function fraction<T>(value: T | Fractal<T>, options?: FractionOptions) {
+    return new Fraction(value, options)
 }
