@@ -11,8 +11,6 @@
 </a> 
 </div>
 
-> Fractal - it's more than just state management.
-
 ## Install
 
 ```bash
