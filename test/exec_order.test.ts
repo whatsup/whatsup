@@ -1,7 +1,7 @@
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
-import { hole } from '../src/hole'
-import { sing } from '../src/singularity'
+import { observable } from '../src/observable'
+import { computed } from '../src/computed'
 import { watch } from '../src/watcher'
 
 describe('Execution order', () => {
@@ -41,7 +41,7 @@ describe('Execution order', () => {
 
     it(`should return 1, 2`, async () => {
         const mock = jest.fn()
-        const a = hole(1)
+        const a = observable(1)
 
         watch(a, mock)
 
@@ -56,13 +56,13 @@ describe('Execution order', () => {
 
     it(`should return 1 odd, 2 even, 3 odd`, async () => {
         const mock = jest.fn()
-        const a = hole(1)
-        const b = sing(function* () {
+        const a = observable(1)
+        const b = computed(function* () {
             while (true) {
                 yield (yield* a) % 2 === 0 ? 'even' : 'odd'
             }
         })
-        const c = sing(function* () {
+        const c = computed(function* () {
             while (true) {
                 yield `${yield* a} ${yield* b}`
             }
@@ -89,7 +89,7 @@ describe('Execution order', () => {
         const mockA = jest.fn()
         const mockB = jest.fn()
         const mockC = jest.fn()
-        const a = sing(function* () {
+        const a = computed(function* () {
             try {
                 while (true) {
                     yield 'A'
@@ -98,7 +98,7 @@ describe('Execution order', () => {
                 mockA()
             }
         })
-        const b = sing(function* () {
+        const b = computed(function* () {
             try {
                 while (true) {
                     yield `${yield* a}B`
@@ -107,7 +107,7 @@ describe('Execution order', () => {
                 mockB()
             }
         })
-        const c = sing(function* () {
+        const c = computed(function* () {
             try {
                 while (true) {
                     yield `${yield* a}${yield* b}C`

@@ -1,10 +1,10 @@
 import { Stream } from './stream'
-import { Singularity } from './singularity'
+import { Computed } from './computed'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
 
-export class Watcher<T> extends Singularity<void> {
+export class Watcher<T> extends Computed<void> {
     readonly target: Stream<T>
     readonly onData: DataHandler<T>
     readonly onError: ErrorHandler
@@ -38,6 +38,6 @@ function defaultErrorHandler(e: Error) {
 }
 
 export function watch<T>(target: Stream<T>, onData: DataHandler<T>, onError?: ErrorHandler) {
-    const reaction = new Watcher(target, onData, onError)
-    return reaction.run()
+    const watcher = new Watcher(target, onData, onError)
+    return watcher.run()
 }

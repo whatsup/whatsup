@@ -1,4 +1,4 @@
-import { hole } from '../src'
+import { observable } from '../src/observable'
 import { factor } from '../src/factor'
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
@@ -148,7 +148,7 @@ describe('Situations', () => {
     describe('test mutators', () => {
         let result: any
         const destroyMock = jest.fn()
-        const Kickstarter = hole(1)
+        const Kickstarter = observable(1)
         class Increment extends Mutator<number> {
             mutate(prev = 0) {
                 return prev + 1

@@ -1,14 +1,14 @@
 import { transaction } from '../src/scheduler'
-import { hole } from '../src/hole'
-import { sing } from '../src/singularity'
+import { observable } from '../src/observable'
+import { computed } from '../src/computed'
 import { watch } from '../src'
 
 describe('Scheduler', () => {
     it(`Should run every change in personal transaction`, () => {
         const mock = jest.fn()
-        const a = hole('a')
-        const b = hole('b')
-        const c = sing(function* () {
+        const a = observable('a')
+        const b = observable('b')
+        const c = computed(function* () {
             while (true) {
                 yield `${yield* a}${yield* b}c`
             }
@@ -28,9 +28,9 @@ describe('Scheduler', () => {
 
     it(`Should run all changes in single transaction`, () => {
         const mock = jest.fn()
-        const a = hole('a')
-        const b = hole('b')
-        const c = sing(function* () {
+        const a = observable('a')
+        const b = observable('b')
+        const c = computed(function* () {
             while (true) {
                 yield `${yield* a}${yield* b}c`
             }
@@ -51,14 +51,14 @@ describe('Scheduler', () => {
     it(`Should create slave transaction when call 'transaction' inside transaction`, () => {
         const mockB = jest.fn()
         const mockC = jest.fn()
-        const a = hole('a')
-        const b = sing(function* () {
+        const a = observable('a')
+        const b = computed(function* () {
             while (true) {
                 c.set(`${yield* a}b`)
                 yield `${yield* a}b`
             }
         })
-        const c = hole('c')
+        const c = observable('c')
 
         watch(c, mockC)
 
@@ -82,16 +82,16 @@ describe('Scheduler', () => {
         const mockB = jest.fn()
         const mockC = jest.fn()
         const mockD = jest.fn()
-        const a = hole('a')
-        const b = sing(function* () {
+        const a = observable('a')
+        const b = computed(function* () {
             while (true) {
                 c.set(`${yield* a}b`)
                 d.set(`${yield* a}b`)
                 yield `${yield* a}b`
             }
         })
-        const c = hole('c')
-        const d = hole('d')
+        const c = observable('c')
+        const d = observable('d')
 
         watch(d, mockD)
 

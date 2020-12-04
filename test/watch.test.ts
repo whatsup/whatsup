@@ -1,13 +1,13 @@
-import { hole } from '../src/hole'
-import { sing } from '../src/singularity'
+import { observable } from '../src/observable'
+import { computed } from '../src/computed'
 import { watch } from '../src/watcher'
 
 describe('Watcher', () => {
     it(`should call onError when error`, () => {
         const dataMock = jest.fn()
         const errMock = jest.fn()
-        const Num = hole(1)
-        const Err = sing(function* () {
+        const Num = observable(1)
+        const Err = computed(function* () {
             while (true) {
                 const n = yield* Num
                 if (n < 0) {

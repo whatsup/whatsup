@@ -1,8 +1,8 @@
-import { Hole } from './hole'
+import { Observable } from './observable'
 
 export interface ListOptions {}
 
-export class List<T> extends Hole<T[]> {
+export class List<T> extends Observable<T[]> {
     splice(start: number, deleteCount?: number): this
     splice(start: number, deleteCount: number, ...items: T[]): this
     splice(start: number, ...other: any[]): this {
