@@ -4,7 +4,7 @@ import { ReconcileMap } from './reconcile_map'
 import { FractalJSX } from './types'
 
 export function Fragment(props: FractalJSX.ComponentProps) {
-    return props.children
+    return props.children!
 }
 
 const JSX_MUTATOR_ATTACH_KEY = Symbol('Jsx mutator attach key')

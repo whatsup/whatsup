@@ -1532,7 +1532,7 @@ export namespace FractalJSX {
     export interface Attributes {
         key?: Key
         ref?: Ref
-        children?: Child | any
+        children?: Child
     }
 
     export interface ElementProps extends Attributes {
