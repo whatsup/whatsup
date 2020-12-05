@@ -1,4 +1,4 @@
-![](https://hsto.org/webt/be/j4/hv/bej4hv3g2qxp8vgwoex-2knhcoo.png)
+![](https://hsto.org/webt/7u/82/rc/7u82rcfrurytc0gvyels2j9ut_u.png)
 
 <div align="center">
 <img src="https://img.shields.io/travis/fract/core/master" alt="travis" />
