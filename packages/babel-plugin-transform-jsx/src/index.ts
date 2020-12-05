@@ -172,11 +172,20 @@ function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExp
 
 function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpressionContainer | JSXSpreadChild)[]) {
     const members = [] as (NullLiteral | Expression | SpreadElement)[]
+    const { length } = children
 
-    for (const child of children) {
+    for (let i = 0; i < length; i++) {
+        const child = children[i]
+
         if (isJSXText(child)) {
-            const value = child.value.replace(/\s+/g, ' ').trim()
+            let value = child.value.replace(/\s+/g, ' ')
 
+            if (i === 0) {
+                value = value.trimLeft()
+            }
+            if (i === length - 1) {
+                value = value.trimRight()
+            }
             if (value !== '') {
                 members.push(stringLiteral(value))
             }

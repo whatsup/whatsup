@@ -43,3 +43,21 @@ exports[`transform children Should transform without children 1`] = `
 
 _html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, undefined);"
 `;
+
+exports[`transform children Should trim whitespaces and create empty children 1`] = `
+"import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, undefined);"
+`;
+
+exports[`transform children Should trim whitespaces left only 1`] = `
+"import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, [\\"items \\", count]);"
+`;
+
+exports[`transform children Should trim whitespaces right only 1`] = `
+"import { html as _html } from \\"@fract/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, [count, \\" items\\"]);"
+`;
