@@ -360,7 +360,7 @@ class Todo extends Fractal<JSX.Element> {
 
     *stream(ctx: Context) {
         const theme = ctx.get(Theme)
-        // set value of Theme factor
+        //   get value of ^^^ Theme factor
         const onClick = () => ctx.dispatch(new RemoveEvent(this))
         //   start event bubbling ^^^^^^^^
 
@@ -389,9 +389,9 @@ class Todos extends Fractal<JSX.Element> {
 
     *stream(ctx: Context) {
         ctx.set(Theme, 'dark')
-        // set value of Theme factor for children contexts
+        //  ^^^ set value of Theme factor for children contexts
         ctx.on(RemoveEvent, (e) => this.remove(e.todo))
-        // start event listening
+        //  ^^ start event listening
 
         while (true) {
             const acc = []
