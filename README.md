@@ -337,7 +337,7 @@ The mutator gets the old DOMNode and mutates it into a new DOMNode the shortest 
 It looks like a computed, but for each consumer, the fractal creates a new iterator and context. Contexts bind to the consumer context like a parent-child relation and form a context tree. This allows you to organize the transfer of factors down the tree, as well as the bubbling of events up. A computed, unlike a fractal, creates one iterator for all consumers, and one context without a reference to the parent (root context).
 
 ```tsx
-import { Fractal, Event, Context } from '@fract/core'
+import { Fractal, Event, Context, factor } from '@fract/core'
 import { render } from '@fract/jsx'
 
 const Theme = factor<'light' | 'dark'>('light')
