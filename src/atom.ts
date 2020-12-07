@@ -1,4 +1,4 @@
-import { StreamIterator, Stream, Delegation } from './stream'
+import { StreamIterator, Stream, DelegatingStream, Delegation } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { ConsumerQuery } from './query'
@@ -10,8 +10,8 @@ import { Stack } from './stack'
 export class Atom<T = any> {
     private readonly stream: Stream<T>
     private readonly context: Context
-    private readonly consumers: Set<Atom>
     private readonly stack: Stack<StreamIterator<T>>
+    private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
     private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
@@ -132,14 +132,14 @@ export class Atom<T = any> {
         }
     }
 
-    protected prepareNewData(value: T): T | Delegation<T> {
+    private prepareNewData(value: T): T | Delegation<T> {
         if (value instanceof Mutator) {
             const oldValue = this.getCacheValue()
             const newValue = value.mutate(oldValue) as T
             return newValue
         }
 
-        if (this.stream.delegator && value instanceof Stream) {
+        if (value instanceof Stream && this.stream instanceof DelegatingStream) {
             return this.getDelegation(value)
         }
 

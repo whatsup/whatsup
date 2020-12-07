@@ -1,11 +1,10 @@
 import { ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
-import { StreamOptions, Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
+import { StreamOptions, DelegatingStream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
 export interface FractalOptions extends StreamOptions {}
 
-export abstract class Fractal<T> extends Stream<T> {
-    readonly delegator = true
+export abstract class Fractal<T> extends DelegatingStream<T> {
     protected readonly atomizer: ExclusiveAtomizer<T>
     protected abstract stream(context: Context): StreamGenerator<T | Fractal<T>>
 

@@ -5,7 +5,6 @@ import { Context } from './context'
 export interface ComputedOptions extends StreamOptions {}
 
 export abstract class Computed<T, O extends ComputedOptions = ComputedOptions> extends Stream<T> {
-    readonly delegator = false
     protected readonly atomizer: CommunalAtomizer<T>
 
     constructor(options?: O) {

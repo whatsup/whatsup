@@ -31,7 +31,6 @@ export interface StreamOptions {
 }
 
 export abstract class Stream<T> extends Streamable<T> {
-    abstract readonly delegator: boolean
     protected abstract stream(context?: Context): StreamGenerator<any>
     private readonly options: StreamOptions
 
@@ -47,6 +46,8 @@ export abstract class Stream<T> extends Streamable<T> {
         return this.stream.call(thisArg, context)
     }
 }
+
+export abstract class DelegatingStream<T> extends Stream<T> {}
 
 export class Delegation<T> extends Streamable<T> {
     protected readonly atomizer: ExclusiveAtomizer<T>
