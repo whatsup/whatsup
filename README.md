@@ -17,7 +17,7 @@
 npm i @fract/core
 ```
 
-## Key components
+## Streams
 
 ### `Observable`
 
@@ -75,22 +75,21 @@ const evenOrOdd = computed(function* () {
         yield (yield* a) % 2 === 0 ? 'even' : 'odd'
     }
 })
-const relativeToZero = computed(function* () {
-    while (true) {
-        const n = yield* num
-        yield n === 0 ? 'zero' : n > 0 ? 'positive' : 'negative'
-    }
-})
-const aboutNum = computed(function* () {
+const isEven = computed(function* () {
     while (true) {
         yield `${yield* num} is ${yield* evenOrOdd}`
     }
 })
+const isZero = computed(function* () {
+    while (true) {
+        yield (yield* num) === 0 ? 'zero' : 'not zero'
+    }
+})
 
-watch(aboutNum, (data) => console.log(data))
-watch(relativeToZero, (data) => console.log(data))
+watch(isEven, (data) => console.log(data))
+watch(isZero, (data) => console.log(data))
 //> 1 is odd
-//> positive
+//> not zero
 num.set(2)
 //> 2 is even
 num.set(3)
