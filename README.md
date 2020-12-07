@@ -11,6 +11,10 @@
 </a> 
 </div>
 
+# What is it?
+
+Fractal is a front-end framework based on the ideas of streams and fractals. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
+
 ## Install
 
 ```bash
