@@ -354,7 +354,7 @@ class Todo extends Fractal<JSX.Element> {
     readonly name: Observable<string>
 
     constructor(name: string) {
-        tihs.name = observable(name)
+        this.name = observable(name)
     }
 
     *stream(ctx: Context) {
