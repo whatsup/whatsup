@@ -3,9 +3,8 @@ import { Atomizer, ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
 import { ConsumerQuery } from './query'
 
-export type Bubble<T> = T | Atom<any> | ConsumerQuery
-export type StreamIterator<T> = Iterator<Bubble<T>, T, any>
-export type StreamGenerator<T> = Generator<T, T | void, any>
+export type StreamIterator<T> = Iterator<T | ConsumerQuery | Atom<any>, T, any>
+export type StreamGenerator<T> = Generator<T, T | void | never, any>
 export type StreamGeneratorFunc<T> = ((context: Context) => StreamGenerator<T>) | (() => StreamGenerator<T>)
 
 export const CONSUMER_QUERY = new ConsumerQuery()
@@ -16,7 +15,7 @@ export abstract class Streamable<T> {
 
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //        really is Generator<Bubble<T>, T, any>
+        //        really is Generator<T | ConsumerQuery | Atom<any>, T, any>
         const consumer: Atom = yield CONSUMER_QUERY as never
         const atom = this.atomizer.get(consumer)
 
