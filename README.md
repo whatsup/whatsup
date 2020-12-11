@@ -49,6 +49,12 @@ const user = computed(function* () {
 
 These are the cherries on the cake. We will cover this below :)
 
+## Simple rules
+
+`yield` - send to stream
+
+`yield*` - get from stream
+
 ## Watching
 
 ```ts
@@ -278,8 +284,8 @@ class EvenOnly extends Mutator<number> {
 
     mutate(prev = 0) {
         return this.next % 2 === 0 ? this.next : prev
-        // We skip the new value only if it is even,
-        // otherwise we return the old one
+        // We allow the new value only if it is even,
+        // otherwise we return the old value
         // Having received the previous value,
         // the App will stop updates propagation
     }
