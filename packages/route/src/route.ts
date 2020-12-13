@@ -25,9 +25,14 @@ abstract class Route<T> extends Fractal<T> {
     ): Fractal<T>
     private readonly regexp: RegExp
 
-    constructor(regexp: RegExp) {
+    constructor(pattern: string | RegExp) {
         super()
-        this.regexp = regexp
+
+        if (typeof pattern === 'string') {
+            pattern = new RegExp(`^${pattern}`)
+        }
+
+        this.regexp = pattern
     }
 
     protected *stream(ctx: Context) {
@@ -81,8 +86,8 @@ abstract class Route<T> extends Fractal<T> {
 class FromFractalRoute<T> extends Route<T> {
     private readonly target: Fractal<T>
 
-    constructor(regexp: RegExp, target: Fractal<T>) {
-        super(regexp)
+    constructor(pattern: string | RegExp, target: Fractal<T>) {
+        super(pattern)
         this.target = target
     }
 
@@ -95,8 +100,8 @@ class FromGeneratorRoute<T> extends Route<T> {
     private readonly target: RouteGeneratorFunc<T>
     private readonly targetOptions: FractalOptions
 
-    constructor(regexp: RegExp, target: RouteGeneratorFunc<T>, targetOptions: FractalOptions) {
-        super(regexp)
+    constructor(pattern: string | RegExp, target: RouteGeneratorFunc<T>, targetOptions: FractalOptions) {
+        super(pattern)
         this.target = target
         this.targetOptions = targetOptions
     }
@@ -123,15 +128,19 @@ class FromGeneratorRoute<T> extends Route<T> {
     }
 }
 
-export function route<T>(regexp: RegExp, target: Fractal<T>): Route<T>
-export function route<T>(regexp: RegExp, target: RouteGeneratorFunc<T>, targetOptions?: FractalOptions): Route<T>
+export function route<T>(pattern: string | RegExp, target: Fractal<T>): Route<T>
 export function route<T>(
-    regexp: RegExp,
+    pattern: string | RegExp,
+    target: RouteGeneratorFunc<T>,
+    targetOptions?: FractalOptions
+): Route<T>
+export function route<T>(
+    pattern: string | RegExp,
     target: Fractal<T> | RouteGeneratorFunc<T>,
     targetOptions: FractalOptions = {}
 ) {
     if (target instanceof Fractal) {
-        return new FromFractalRoute(regexp, target)
+        return new FromFractalRoute(pattern, target)
     }
-    return new FromGeneratorRoute(regexp, target, targetOptions)
+    return new FromGeneratorRoute(pattern, target, targetOptions)
 }
