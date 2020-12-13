@@ -1,4 +1,4 @@
-# Route stream for organize routing in fractal app
+# Routing stream for organizing routing in a fractal application
 
 <div align="center">
 <img src="https://img.shields.io/travis/fract/route" alt="travis" />

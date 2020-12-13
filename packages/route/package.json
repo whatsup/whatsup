@@ -1,6 +1,6 @@
 {
     "name": "@fract/route",
-    "description": "Route stream for organize routing in fractal app",
+    "description": "Routing stream for organizing routing in a fractal application",
     "version": "0.2.0",
     "author": "Denis Churbanov",
     "license": "MIT",
