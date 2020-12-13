@@ -1,0 +1,25 @@
+{
+    "include": ["src"],
+    "compilerOptions": {
+        "module": "esnext",
+        "target": "ES2019",
+        "lib": ["esnext", "dom"],
+        "importHelpers": true,
+        "declaration": true,
+        "sourceMap": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "declarationDir": "./dist",
+        "rootDir": "./src",
+        "baseUrl": "./",
+        "jsx": "preserve",
+        "paths": {
+            "*": ["src/*", "node_modules/*"]
+        }
+    }
+}

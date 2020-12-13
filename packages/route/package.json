@@ -1,0 +1,47 @@
+{
+    "name": "@fract/route",
+    "description": "Route stream for organize routing in fractal app",
+    "version": "0.1.0",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fract/router.git"
+    },
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "typings": "dist/index.d.ts",
+    "scripts": {
+        "start": "rollup -c -w",
+        "build": "rollup -c",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "test:uncache": "jest --clearCache",
+        "prepublishOnly": "npm run build"
+    },
+    "dependencies": {
+        "@fract/browser-pathname": "^0.3.0"
+    },
+    "peerDependencies": {
+        "@fract/core": "^0.2.2"
+    },
+    "devDependencies": {
+        "@fract/core": "^0.2.2",
+        "@rollup/plugin-commonjs": "^13.0.0",
+        "@rollup/plugin-node-resolve": "^8.1.0",
+        "@types/jest": "^26.0.4",
+        "husky": "^4.2.5",
+        "jest": "^26.1.0",
+        "prettier": "^2.0.5",
+        "rollup": "^2.21.0",
+        "rollup-plugin-auto-external": "^2.0.0",
+        "rollup-plugin-delete": "^2.0.0",
+        "rollup-plugin-typescript2": "^0.27.1",
+        "ts-jest": "^26.1.1",
+        "typescript": "^3.9.6"
+    },
+    "files": [
+        "dist",
+        "src"
+    ]
+}
