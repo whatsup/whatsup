@@ -22,7 +22,8 @@ import { redirect } from '@fract/browser-pathname'
 import { route } from '@fract/route'
 
 const app = fractal(function* () {
-    const aboutRoute = route(/\/about/, aboutPage)
+    const aboutRoute = route('/about', aboutPage)
+    //pattern must be string  ↑↑↑↑↑↑ ↓↓↓↓↓↓ or RegExp
     const userRoute = route(/\/user([0-9]+)/, function* (ctx: Context, id: Computed<string>) {
         //               this match ^^^^^^ - will be available here  - ^^^^^^^^^^^^^^^^^^^^
         while (true) {
