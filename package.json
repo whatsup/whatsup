@@ -1,12 +1,12 @@
 {
-    "name": "@fract/core",
-    "description": "Fractal is a pattern for building asynchronous applications",
+    "name": "whatsup-js",
+    "description": "Whats Up framework for buildinds web applications",
     "version": "0.2.2",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/fract/core.git"
+        "url": "https://github.com/iminside/whatsup.git"
     },
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
