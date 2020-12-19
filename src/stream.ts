@@ -25,24 +25,12 @@ export abstract class Streamable<T> {
     }
 }
 
-export interface StreamOptions {
-    thisArg?: any
-}
-
 export abstract class Stream<T> extends Streamable<T> {
     protected abstract stream(context?: Context): StreamGenerator<any>
-    private readonly options: StreamOptions
-
-    constructor(options: StreamOptions = {}) {
-        super()
-        const { thisArg = this } = options
-        this.options = { thisArg }
-    }
 
     /**@internal */
     iterate(context: Context) {
-        const { thisArg } = this.options
-        return this.stream.call(thisArg, context)
+        return this.stream(context)
     }
 }
 
