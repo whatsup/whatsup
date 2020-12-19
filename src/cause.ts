@@ -19,7 +19,7 @@ export abstract class Cause<T> extends Stream<T> {
     }
 }
 
-export function computed<T>(generator: StreamGeneratorFunc<T>, { thisArg }: CauseOptions = {}): Cause<T> {
+export function cause<T>(generator: StreamGeneratorFunc<T>, { thisArg }: CauseOptions = {}): Cause<T> {
     return new (class extends Cause<T> {
         stream(context: Context): StreamGenerator<T> {
             return generator.call(thisArg || this, context)

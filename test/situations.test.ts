@@ -1,4 +1,4 @@
-import { observable } from '../src/observable'
+import { conse } from '../src/conse'
 import { factor } from '../src/factor'
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
@@ -148,7 +148,7 @@ describe('Situations', () => {
     describe('test mutators', () => {
         let result: any
         const disposeMock = jest.fn()
-        const Kickstarter = observable(1)
+        const Kickstarter = conse(1)
         class Increment extends Mutator<number> {
             mutate(prev = 0) {
                 return prev + 1

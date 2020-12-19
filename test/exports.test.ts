@@ -1,8 +1,8 @@
 import { Stream } from '../src/stream'
 import { fractal, Fractal } from '../src/fractal'
 import { fraction, Fraction } from '../src/fraction'
-import { computed, Computed } from '../src/computed'
-import { observable, Observable } from '../src/observable'
+import { cause, Cause } from '../src/cause'
+import { conse, Conse } from '../src/conse'
 import { list, List } from '../src/list'
 import { watch, Watcher } from '../src/watcher'
 import { factor } from '../src/factor'
@@ -49,8 +49,8 @@ it('Exports', () => {
     expect(run).toBe(_run)
     expect(Mutator).toBe(_Mutator)
     expect(Event).toBe(_Event)
-    expect(computed).toBe(_computed)
-    expect(Computed).toBe(_Computed)
-    expect(observable).toBe(_observable)
-    expect(Observable).toBe(_Observable)
+    expect(cause).toBe(_computed)
+    expect(Cause).toBe(_Computed)
+    expect(conse).toBe(_observable)
+    expect(Conse).toBe(_Observable)
 })

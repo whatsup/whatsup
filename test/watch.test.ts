@@ -1,13 +1,13 @@
-import { observable } from '../src/observable'
-import { computed } from '../src/computed'
+import { conse } from '../src/conse'
+import { cause } from '../src/cause'
 import { watch } from '../src/watcher'
 
 describe('Watcher', () => {
     it(`should call onError when error`, () => {
         const dataMock = jest.fn()
         const errMock = jest.fn()
-        const Num = observable(1)
-        const Err = computed(function* () {
+        const Num = conse(1)
+        const Err = cause(function* () {
             while (true) {
                 const n = yield* Num
                 if (n < 0) {

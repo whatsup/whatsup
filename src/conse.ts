@@ -24,6 +24,6 @@ export class Conse<T> extends Cause<T> {
     }
 }
 
-export function observable<T>(value: T) {
+export function conse<T>(value: T) {
     return new Conse(value)
 }
