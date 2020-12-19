@@ -1,4 +1,4 @@
-export const JSX_LIBRARY_NAME = '@fract/jsx'
+export const JSX_LIBRARY_NAME = '@whatsup-js/jsx'
 
 export const FRAGMENT_COMPONENT_NAME = 'Fragment'
 

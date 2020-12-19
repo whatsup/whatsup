@@ -1,6 +1,6 @@
 {
-    "name": "@fract/babel-plugin-transform-jsx",
-    "description": "Babel plugin for transform jsx to fractal mutator factories",
+    "name": "@whatsup-js/babel-plugin-transform-jsx",
+    "description": "Babel plugin for transform jsx to Whats Up mutator factories",
     "version": "0.2.1",
     "author": "Denis Churbanov",
     "license": "MIT",
