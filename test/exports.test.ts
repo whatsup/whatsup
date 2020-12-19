@@ -27,10 +27,10 @@ import {
     run as _run,
     Mutator as _Mutator,
     Event as _Event,
-    computed as _computed,
-    Computed as _Computed,
-    observable as _observable,
-    Observable as _Observable,
+    cause as _cause,
+    Cause as _Cause,
+    conse as _conse,
+    Conse as _Conse,
 } from '../src/index'
 
 it('Exports', () => {
@@ -49,8 +49,8 @@ it('Exports', () => {
     expect(run).toBe(_run)
     expect(Mutator).toBe(_Mutator)
     expect(Event).toBe(_Event)
-    expect(cause).toBe(_computed)
-    expect(Cause).toBe(_Computed)
-    expect(conse).toBe(_observable)
-    expect(Conse).toBe(_Observable)
+    expect(cause).toBe(_cause)
+    expect(Cause).toBe(_Cause)
+    expect(conse).toBe(_conse)
+    expect(Conse).toBe(_Conse)
 })
