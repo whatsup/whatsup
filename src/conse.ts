@@ -1,6 +1,6 @@
-import { Computed } from './computed'
+import { Cause } from './cause'
 
-export class Observable<T> extends Computed<T> {
+export class Conse<T> extends Cause<T> {
     private value: T
 
     constructor(value: T) {
@@ -25,5 +25,5 @@ export class Observable<T> extends Computed<T> {
 }
 
 export function observable<T>(value: T) {
-    return new Observable(value)
+    return new Conse(value)
 }

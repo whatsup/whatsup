@@ -1,8 +1,8 @@
-import { Observable } from './observable'
+import { Conse } from './conse'
 
 export interface ListOptions {}
 
-export class List<T> extends Observable<T[]> {
+export class List<T> extends Conse<T[]> {
     splice(start: number, deleteCount?: number): this
     splice(start: number, deleteCount: number, ...items: T[]): this
     splice(start: number, ...other: any[]): this {

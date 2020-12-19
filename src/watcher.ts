@@ -1,10 +1,10 @@
 import { Stream } from './stream'
-import { Computed } from './computed'
+import { Cause } from './cause'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
 
-export class Watcher<T> extends Computed<void> {
+export class Watcher<T> extends Cause<void> {
     readonly target: Stream<T>
     readonly onData: DataHandler<T>
     readonly onError: ErrorHandler
