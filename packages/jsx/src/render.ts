@@ -1,4 +1,4 @@
-import { run, Stream } from '@fract/core'
+import { run, Stream } from 'whatsup-js'
 import { reconcile, placeElements, removeUnreconciledElements } from './mutator'
 import { ReconcileMap } from './reconcile_map'
 import { FractalJSX } from './types'

@@ -1,4 +1,4 @@
-import { Mutator } from '@fract/core'
+import { Mutator } from 'whatsup-js'
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE } from './constants'
 import { ReconcileMap } from './reconcile_map'
 import { FractalJSX } from './types'
