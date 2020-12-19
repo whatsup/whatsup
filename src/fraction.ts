@@ -11,7 +11,7 @@ export class Fraction<T> extends Fractal<T> {
         this.value = value
     }
 
-    *stream(context: Context) {
+    *whatsUp(context: Context) {
         this.contexts.add(context)
 
         try {

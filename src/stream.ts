@@ -26,11 +26,11 @@ export abstract class Streamable<T> {
 }
 
 export abstract class Stream<T> extends Streamable<T> {
-    protected abstract stream(context?: Context): StreamGenerator<any>
+    protected abstract whatsUp(context?: Context): StreamGenerator<any>
 
     /**@internal */
     iterate(context: Context) {
-        return this.stream(context)
+        return this.whatsUp(context)
     }
 }
 

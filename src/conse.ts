@@ -8,7 +8,7 @@ export class Conse<T> extends Cause<T> {
         this.value = value
     }
 
-    *stream() {
+    *whatsUp() {
         while (true) {
             yield this.value
         }

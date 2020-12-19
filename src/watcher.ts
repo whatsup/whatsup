@@ -16,7 +16,7 @@ export class Watcher<T> extends Cause<void> {
         this.onError = onError
     }
 
-    *stream() {
+    *whatsUp() {
         while (true) {
             try {
                 this.onData(yield* this.target)

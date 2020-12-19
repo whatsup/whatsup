@@ -8,7 +8,7 @@ export interface FractalOptions {
 
 export abstract class Fractal<T> extends DelegatingStream<T> {
     protected readonly atomizer: ExclusiveAtomizer<T>
-    protected abstract stream(context: Context): StreamGenerator<T | Fractal<T>>
+    protected abstract whatsUp(context: Context): StreamGenerator<T | Fractal<T>>
 
     constructor() {
         super()
@@ -21,7 +21,7 @@ export function fractal<T>(
     { thisArg }: FractalOptions = {}
 ): Fractal<T> {
     return new (class extends Fractal<T> {
-        stream(context: Context): StreamGenerator<T | Fractal<T>> {
+        whatsUp(context: Context): StreamGenerator<T | Fractal<T>> {
             return generator.call(thisArg || this, context)
         }
     })()
