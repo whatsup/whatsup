@@ -1,4 +1,4 @@
-# Fractal JSX Mutator and Renderer
+# Whats Up Jsx mutator and renderer
 
 <div align="center">
 <img src="https://img.shields.io/travis/fract/jsx" alt="travis" />
