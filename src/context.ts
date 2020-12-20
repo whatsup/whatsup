@@ -1,6 +1,7 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
-import { Atom, DefGenerator } from './atom'
+import { Atom } from './atom'
+import { DefGenerator } from './defer'
 
 export class Context {
     /**@internal */

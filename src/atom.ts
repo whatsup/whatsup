@@ -6,55 +6,7 @@ import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
-
-export interface DeferActor<A> {
-    (arg: A): void
-    break(): void
-}
-
-export type DefGenerator<T, A> = (context: Context, arg: A) => Generator<T>
-export type Resolver<T, A> = (arg: A) => T
-
-class Defer<T, A> {
-    private readonly resolver: Resolver<T, A>
-    private result!: T
-    private resolved = false
-    private breaked = false
-
-    constructor(resolver: Resolver<T, A>) {
-        this.resolver = resolver
-    }
-
-    actor() {
-        const fn = (arg: A) => this.resolve(arg)
-
-        Object.defineProperties(fn, {
-            break: {
-                value: () => this.break(),
-            },
-        })
-
-        return (fn as any) as DeferActor<A>
-    }
-
-    resolve(arg: A) {
-        if (this.resolved || this.breaked) {
-            return this.result
-        }
-
-        this.resolved = true
-
-        return (this.result = this.resolver(arg))
-    }
-
-    break() {
-        if (this.breaked) {
-            throw 'Already'
-        }
-
-        this.breaked = true
-    }
-}
+import { DefGenerator, DeferActor, Defer } from './defer'
 
 export class Atom<T = any> {
     private readonly stream: Stream<T>
@@ -105,7 +57,7 @@ export class Atom<T = any> {
             return this.deferred.get(generator)!
         }
 
-        const defer = new Defer<U, A>((arg: A) => this.once(generator, arg))
+        const defer = new Defer<U, A>((arg: A) => this.exec(generator, arg))
         const actor = defer.actor()
 
         this.deferred.set(generator, actor)
@@ -113,7 +65,7 @@ export class Atom<T = any> {
         return actor
     }
 
-    once<U, A>(generator: DefGenerator<U, A>, arg: A): U {
+    exec<U, A>(generator: DefGenerator<U, A>, arg: A): U {
         this.deferred.delete(generator)
 
         const { context } = this
@@ -131,8 +83,11 @@ export class Atom<T = any> {
                     stack.pop()
 
                     if (!stack.empty) {
-                        return value as U
+                        input = value
+                        continue
                     }
+
+                    return value as U
                 }
                 if (value instanceof ConsumerQuery) {
                     input = this
@@ -141,7 +96,7 @@ export class Atom<T = any> {
                 if (value instanceof Atom) {
                     const { stream } = value
 
-                    input = value.once(function* () {
+                    input = value.exec(function* () {
                         const iterator = stream.iterate(context)
                         let input: any
 
