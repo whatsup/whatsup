@@ -1,43 +1,40 @@
 import { Delegation } from './stream'
 import { Context } from './context'
 
-export type DeferActor<T, A> = ((arg: A) => T) & { break(): void }
+export type DeferActor<T, A> = ((arg: A) => T) & { dispose(): void }
 export type DeferGenerator<T, A> = (context: Context, arg: A) => Generator<T, T>
 export type DeferResolver<T, A> = (arg: A) => T | Delegation<T>
 
 export class Defer<T, A> {
     private readonly resolver: DeferResolver<T, A>
-    private readonly onBreak: () => void
-    private breaked = false
+    private readonly onDispose: () => void
+    private disposed = false
 
-    constructor(resolver: DeferResolver<T, A>, onBreak: () => void) {
+    constructor(resolver: DeferResolver<T, A>, onDispose: () => void) {
         this.resolver = resolver
-        this.onBreak = onBreak
+        this.onDispose = onDispose
     }
 
     actor() {
-        const fn = (arg: A) => this.resolve(arg)
+        const actor = (arg: A) => this.resolve(arg)
 
-        Object.defineProperties(fn, {
-            break: {
-                value: () => this.break(),
+        return Object.defineProperties(actor, {
+            dispose: {
+                value: () => this.dispose(),
             },
-        })
-
-        return (fn as any) as DeferActor<T, A>
+        }) as DeferActor<T, A>
     }
 
     resolve(arg: A) {
-        if (this.breaked) {
+        if (this.disposed) {
             throw 'Already breaked'
         }
 
         return this.resolver(arg)
     }
 
-    /* @internal */
-    break() {
-        this.breaked = true
-        this.onBreak()
+    dispose() {
+        this.disposed = true
+        this.onDispose()
     }
 }

@@ -33,7 +33,7 @@ describe('Defer', () => {
         expect(result).toBe('HelloWorld')
         expect(mock).lastCalledWith('HelloWorld')
 
-        change!.break()
+        change!.dispose()
 
         expect(() => change!('Double')).toThrow()
     })
@@ -179,7 +179,7 @@ describe('Defer', () => {
 
             change = ctx.defer(function* (_, arg: string) {
                 one.set(arg)
-                change.break()
+                change.dispose()
             })
 
             while (true) {

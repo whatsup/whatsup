@@ -144,7 +144,7 @@ export class Atom<T = any> {
             }
 
             for (const [_, actor] of this.deferred) {
-                actor.break()
+                actor.dispose()
             }
 
             this.deferred.clear()
