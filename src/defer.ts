@@ -11,8 +11,6 @@ export type Resolver<T, A> = (arg: A) => T | Delegation<T>
 
 export class Defer<T, A> {
     private readonly resolver: Resolver<T, A>
-    private result!: T | Delegation<T>
-    private resolved = false
     private breaked = false
 
     constructor(resolver: Resolver<T, A>) {
@@ -32,20 +30,14 @@ export class Defer<T, A> {
     }
 
     resolve(arg: A) {
-        if (this.resolved || this.breaked) {
-            return this.result
+        if (this.breaked) {
+            throw 'Already breaked'
         }
 
-        this.resolved = true
-
-        return (this.result = this.resolver(arg))
+        return this.resolver(arg)
     }
 
     break() {
-        if (this.breaked) {
-            throw 'Already'
-        }
-
         this.breaked = true
     }
 }

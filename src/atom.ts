@@ -66,12 +66,10 @@ export class Atom<T = any> {
     }
 
     exec<U, A>(generator: DefGenerator<U, A>, arg: A): U | Delegation<U> {
-        this.deferred.delete(generator)
-
-        const { context } = this
+        const { context, stream } = this
         const stack = new Stack<StreamIterator<U>>()
 
-        stack.push(generator(context, arg))
+        stack.push(generator.call(stream, context, arg))
 
         let input: any
 
