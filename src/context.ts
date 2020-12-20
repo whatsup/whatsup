@@ -93,10 +93,6 @@ export class Context {
         return this.atom.defer(generator)
     }
 
-    break<T, A>(generator: DefGenerator<T, A>) {
-        return this.atom.break(generator)
-    }
-
     update() {
         this.atom.update()
     }

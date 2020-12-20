@@ -57,7 +57,10 @@ export class Atom<T = any> {
             return this.deferred.get(generator)!
         }
 
-        const defer = new Defer<U, A>((arg: A) => this.exec(generator, arg))
+        const defer = new Defer<U, A>(
+            (arg: A) => this.exec(generator, arg),
+            () => this.deferred.delete(generator)
+        )
         const actor = defer.actor()
 
         this.deferred.set(generator, actor)
@@ -74,75 +77,57 @@ export class Atom<T = any> {
         let input: any
 
         while (true) {
-            try {
-                const { done, value } = stack.last.next(input)
+            const { done, value } = stack.last.next(input)
 
-                if (done) {
-                    stack.pop()
+            if (done) {
+                stack.pop()
 
-                    if (!stack.empty) {
-                        input = value
-                        continue
-                    }
-
-                    return (this.prepareNewData(value as any) as any) as U | Delegation<U>
-                }
-                if (value instanceof ConsumerQuery) {
-                    input = this
+                if (!stack.empty) {
+                    input = value
                     continue
                 }
-                if (value instanceof Atom) {
-                    const { stream } = value
 
-                    const result = value.exec(function* () {
-                        const iterator = stream.iterate(context)
-                        let input: any
+                return (this.prepareNewData(value as any) as any) as U | Delegation<U>
+            }
+            if (value instanceof ConsumerQuery) {
+                input = this
+                continue
+            }
+            if (value instanceof Atom) {
+                const { stream } = value
 
-                        while (true) {
-                            const { done, value } = iterator.next(input)
+                const result = value.exec(function* () {
+                    const iterator = stream.iterate(context)
+                    let input: any
 
-                            if (done) {
-                                return value
-                            }
-                            if (value instanceof Query || value instanceof Atom) {
-                                input = yield value
-                                continue
-                            }
+                    while (true) {
+                        const { done, value } = iterator.next(input)
 
+                        if (done) {
                             return value
                         }
-                    }, null)
+                        if (value instanceof Query || value instanceof Atom) {
+                            input = yield value
+                            continue
+                        }
 
-                    if (result instanceof Delegation) {
-                        const iterator = result[Symbol.iterator]() as StreamIterator<U>
-                        stack.push(iterator)
-                        input = undefined
-                    } else {
-                        input = result
+                        return value
                     }
+                }, null)
 
-                    continue
+                if (result instanceof Delegation) {
+                    const iterator = result[Symbol.iterator]() as StreamIterator<U>
+                    stack.push(iterator)
+                    input = undefined
+                } else {
+                    input = result
                 }
 
-                throw 'Unknown value'
-            } catch (error) {
-                stack.pop()!.return!()
-                throw error
+                continue
             }
+
+            throw 'Unknown value'
         }
-    }
-
-    break<U, A>(generator: DefGenerator<U, A>) {
-        if (this.deferred.has(generator)) {
-            const defer = this.deferred.get(generator)!
-
-            defer.break()
-
-            this.deferred.delete(generator)
-
-            return true
-        }
-        return false
     }
 
     dispose(initiator?: Atom) {
