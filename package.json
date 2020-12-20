@@ -18,7 +18,7 @@
         "test:coverage": "jest --coverage",
         "test:uncache": "jest --clearCache",
         "prepublishOnly": "npm run build",
-        "postinstall": "if [ ! -d \"./dist\" ]; then npm run build; fi"
+        "postinstall": "if [ ! -d \"./dist\" ]; then npm i && npm run build; fi"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^13.0.0",
