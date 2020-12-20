@@ -1,6 +1,7 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { DeferActor, DefGenerator } from '../src/defer'
+import { Stream } from '../src/stream'
 import { watch } from '../src/watcher'
 
 describe('Defer', () => {
@@ -66,5 +67,71 @@ describe('Defer', () => {
 
         expect(mock).lastCalledWith('HelloWorld')
         expect(def!).toBe(old)
+    })
+
+    it(`should extract from nested`, () => {
+        const mock = jest.fn()
+        let def: DeferActor<any>
+
+        const ups = cause(function* (ctx) {
+            const one = conse('one')
+            const two = cause(function* () {
+                while (true) {
+                    yield '[' + (yield* one) + ']'
+                }
+            })
+
+            def = ctx.defer(function* (_, arg) {
+                const newValue = yield* two
+                one.set(newValue + arg)
+                return newValue
+            })
+
+            while (true) {
+                yield yield* one
+            }
+        })
+
+        watch(ups, mock)
+
+        expect(mock).lastCalledWith('one')
+
+        def!('thr')
+
+        expect(mock).lastCalledWith('[one]thr')
+    })
+
+    it(`should keep context`, () => {
+        const mock = jest.fn()
+        let sourceThis: Stream<any>
+        let deferThis: Stream<any>
+        let def: DeferActor<any>
+
+        const ups = cause(function* (this: Stream<any>, ctx) {
+            const one = conse('one')
+
+            sourceThis = this
+
+            def = ctx.defer(function* (this: Stream<any>, _, arg) {
+                deferThis = this
+
+                const newValue = yield* one
+                one.set(newValue + arg)
+                return newValue
+            })
+
+            while (true) {
+                yield yield* one
+            }
+        })
+
+        watch(ups, mock)
+
+        expect(mock).lastCalledWith('one')
+
+        def!('thr')
+
+        expect(mock).lastCalledWith('onethr')
+        expect(sourceThis!).toBe(deferThis!)
     })
 })
