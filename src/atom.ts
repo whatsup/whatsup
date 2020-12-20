@@ -65,7 +65,7 @@ export class Atom<T = any> {
         return actor
     }
 
-    exec<U, A>(generator: DefGenerator<U, A>, arg: A): U {
+    exec<U, A>(generator: DefGenerator<U, A>, arg: A): U | Delegation<U> {
         this.deferred.delete(generator)
 
         const { context } = this
@@ -87,7 +87,7 @@ export class Atom<T = any> {
                         continue
                     }
 
-                    return value as U
+                    return (this.prepareNewData(value as any) as any) as U | Delegation<U>
                 }
                 if (value instanceof ConsumerQuery) {
                     input = this
@@ -96,7 +96,7 @@ export class Atom<T = any> {
                 if (value instanceof Atom) {
                     const { stream } = value
 
-                    input = value.exec(function* () {
+                    const result = value.exec(function* () {
                         const iterator = stream.iterate(context)
                         let input: any
 
@@ -114,6 +114,15 @@ export class Atom<T = any> {
                             return value
                         }
                     }, null)
+
+                    if (result instanceof Delegation) {
+                        const iterator = result[Symbol.iterator]() as StreamIterator<U>
+                        stack.push(iterator)
+                        input = undefined
+                    } else {
+                        input = result
+                    }
+
                     continue
                 }
 

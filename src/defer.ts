@@ -1,3 +1,4 @@
+import { Delegation } from './stream'
 import { Context } from './context'
 
 export interface DeferActor<A> {
@@ -6,10 +7,11 @@ export interface DeferActor<A> {
 }
 
 export type DefGenerator<T, A> = (context: Context, arg: A) => Generator<T>
-export type Resolver<T, A> = (arg: A) => T
+export type Resolver<T, A> = (arg: A) => T | Delegation<T>
+
 export class Defer<T, A> {
     private readonly resolver: Resolver<T, A>
-    private result!: T
+    private result!: T | Delegation<T>
     private resolved = false
     private breaked = false
 
