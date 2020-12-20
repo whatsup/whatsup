@@ -1,20 +1,16 @@
 import { Delegation } from './stream'
 import { Context } from './context'
 
-export interface DeferActor<A> {
-    (arg: A): void
-    break(): void
-}
-
-export type DefGenerator<T, A> = (context: Context, arg: A) => Generator<T>
-export type Resolver<T, A> = (arg: A) => T | Delegation<T>
+export type DeferActor<T, A> = ((arg: A) => T) & { break(): void }
+export type DeferGenerator<T, A> = (context: Context, arg: A) => Generator<T, T>
+export type DeferResolver<T, A> = (arg: A) => T | Delegation<T>
 
 export class Defer<T, A> {
-    private readonly resolver: Resolver<T, A>
+    private readonly resolver: DeferResolver<T, A>
     private readonly onBreak: () => void
     private breaked = false
 
-    constructor(resolver: Resolver<T, A>, onBreak: () => void) {
+    constructor(resolver: DeferResolver<T, A>, onBreak: () => void) {
         this.resolver = resolver
         this.onBreak = onBreak
     }
@@ -28,7 +24,7 @@ export class Defer<T, A> {
             },
         })
 
-        return (fn as any) as DeferActor<A>
+        return (fn as any) as DeferActor<T, A>
     }
 
     resolve(arg: A) {

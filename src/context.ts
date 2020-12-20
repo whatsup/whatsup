@@ -1,7 +1,7 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
-import { DefGenerator } from './defer'
+import { DeferGenerator } from './defer'
 
 export class Context {
     /**@internal */
@@ -89,7 +89,7 @@ export class Context {
         }
     }
 
-    defer<T, A>(generator: DefGenerator<T, A>) {
+    defer<T, A>(generator: DeferGenerator<T, A>) {
         return this.atom.defer(generator)
     }
 

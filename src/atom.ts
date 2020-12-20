@@ -6,7 +6,7 @@ import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
-import { DefGenerator, DeferActor, Defer } from './defer'
+import { DeferGenerator, DeferActor, Defer } from './defer'
 
 export class Atom<T = any> {
     private readonly stream: Stream<T>
@@ -15,7 +15,7 @@ export class Atom<T = any> {
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
     private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
-    private readonly deferred: Map<DefGenerator<any, any>, DeferActor<any>>
+    private readonly deferred: Map<DeferGenerator<any, any>, DeferActor<any, any>>
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(stream: Stream<T>, parentContext: Context | null = null) {
@@ -52,7 +52,7 @@ export class Atom<T = any> {
         SCHEDULER.run((transaction) => transaction.add(this))
     }
 
-    defer<U, A>(generator: DefGenerator<U, A>) {
+    defer<U, A>(generator: DeferGenerator<U, A>): DeferActor<U, A> {
         if (this.deferred.has(generator)) {
             return this.deferred.get(generator)!
         }
@@ -68,7 +68,7 @@ export class Atom<T = any> {
         return actor
     }
 
-    exec<U, A>(generator: DefGenerator<U, A>, arg: A): U | Delegation<U> {
+    exec<U, A>(generator: DeferGenerator<U, A>, arg: A): U | Delegation<U> {
         const { context, stream } = this
         const stack = new Stack<StreamIterator<U>>()
 

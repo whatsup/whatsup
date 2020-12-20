@@ -1,14 +1,14 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { DeferActor, DefGenerator } from '../src/defer'
+import { DeferActor, DeferGenerator } from '../src/defer'
 import { Stream } from '../src/stream'
 import { watch } from '../src/watcher'
 
 describe('Defer', () => {
     it(`defer current value`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any>
+        let change: DeferActor<any, any>
 
         const f = cause(function* (ctx) {
             const value = conse('Hello')
@@ -40,12 +40,12 @@ describe('Defer', () => {
 
     it(`should return some actor on sem sem generator`, () => {
         const mock = jest.fn()
-        let def: DeferActor<any>
+        let def: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             const value = conse('Hello')
 
-            const define: DefGenerator<never, any> = function* (_, arg) {
+            const define: DeferGenerator<string, string> = function* (_, arg) {
                 const newValue = (yield* value) + arg
                 value.set(newValue)
                 return newValue
@@ -72,7 +72,7 @@ describe('Defer', () => {
 
     it(`should extract from nested`, () => {
         const mock = jest.fn()
-        let def: DeferActor<any>
+        let def: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -82,7 +82,7 @@ describe('Defer', () => {
                 }
             })
 
-            def = ctx.defer(function* (_, arg) {
+            def = ctx.defer(function* (_, arg: string) {
                 const newValue = yield* two
                 one.set(newValue + arg)
                 return newValue
@@ -106,7 +106,7 @@ describe('Defer', () => {
         const mock = jest.fn()
         let sourceThis: Stream<any>
         let deferThis: Stream<any>
-        let def: DeferActor<any>
+        let def: DeferActor<any, any>
 
         const ups = cause(function* (this: Stream<any>, ctx) {
             const one = conse('one')
@@ -142,11 +142,11 @@ describe('Defer', () => {
 
     it(`should extract delegation`, () => {
         const mock = jest.fn()
-        let def: DeferActor<any>
+        let def: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
-            const two = fractal(function* () {
+            const two = fractal<string>(function* () {
                 return one
             } as any)
 
@@ -172,12 +172,12 @@ describe('Defer', () => {
 
     it(`should throw already breaked`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any>
+        let change: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
 
-            change = ctx.defer(function* (_, arg) {
+            change = ctx.defer(function* (_, arg: string) {
                 one.set(arg)
                 change.break()
             })
@@ -200,13 +200,13 @@ describe('Defer', () => {
     it(`should break when atom dispose`, () => {
         const mock = jest.fn()
         const disposeMock = jest.fn()
-        let change: DeferActor<any>
+        let change: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             try {
                 const one = conse('one')
 
-                change = ctx.defer(function* (_, arg) {
+                change = ctx.defer(function* (_, arg: string) {
                     one.set(arg)
                 })
 
@@ -235,13 +235,13 @@ describe('Defer', () => {
 
     it(`should throw unknown value`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any>
+        let change: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
 
-            change = ctx.defer(function* (_, arg) {
-                yield Symbol('WoW')
+            change = ctx.defer(function* (_, arg: string) {
+                yield Symbol('WoW') as any
                 one.set(arg)
             })
 
@@ -259,7 +259,7 @@ describe('Defer', () => {
 
     it(`should catch exception`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any>
+        let change: DeferActor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -282,7 +282,7 @@ describe('Defer', () => {
 
     it(`should catch nested exception`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any>
+        let change: DeferActor<any, any>
 
         const nested = cause(function* () {
             throw 'WoW'
