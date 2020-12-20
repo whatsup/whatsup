@@ -1,7 +1,7 @@
 {
     "name": "whatsup-js",
     "description": "Whats Up framework for buildinds web applications",
-    "version": "0.2.3-defer-1",
+    "version": "0.2.3-defer.1",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
