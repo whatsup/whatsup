@@ -1,6 +1,6 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
-import { DeferActor } from '../src/defer'
+import { DeferActor, DefGenerator } from '../src/defer'
 import { watch } from '../src/watcher'
 
 describe('Defer', () => {
@@ -30,5 +30,41 @@ describe('Defer', () => {
 
         expect(result).toBe('HelloWorld')
         expect(mock).lastCalledWith('HelloWorld')
+
+        def!.break()
+
+        expect(() => def!('Double')).toThrow()
+    })
+
+    it(`should return some actor on sem sem generator`, () => {
+        const mock = jest.fn()
+        let def: DeferActor<any>
+
+        const ups = cause(function* (ctx) {
+            const value = conse('Hello')
+
+            const define: DefGenerator<never, any> = function* (_, arg) {
+                const newValue = (yield* value) + arg
+                value.set(newValue)
+                return newValue
+            }
+
+            while (true) {
+                def = ctx.defer(define)
+
+                yield yield* value
+            }
+        })
+
+        watch(ups, mock)
+
+        expect(mock).lastCalledWith('Hello')
+
+        const old = def!
+
+        def!('World')
+
+        expect(mock).lastCalledWith('HelloWorld')
+        expect(def!).toBe(old)
     })
 })
