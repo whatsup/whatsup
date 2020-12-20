@@ -1,11 +1,60 @@
 import { StreamIterator, Stream, DelegatingStream, Delegation } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { ConsumerQuery } from './query'
+import { ConsumerQuery, Query } from './query'
 import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
+
+export interface DeferActor<A> {
+    (arg: A): void
+    break(): void
+}
+
+export type DefGenerator<T, A> = (context: Context, arg: A) => Generator<T>
+export type Resolver<T, A> = (arg: A) => T
+
+class Defer<T, A> {
+    private readonly resolver: Resolver<T, A>
+    private result!: T
+    private resolved = false
+    private breaked = false
+
+    constructor(resolver: Resolver<T, A>) {
+        this.resolver = resolver
+    }
+
+    actor() {
+        const fn = (arg: A) => this.resolve(arg)
+
+        Object.defineProperties(fn, {
+            break: {
+                value: () => this.break(),
+            },
+        })
+
+        return (fn as any) as DeferActor<A>
+    }
+
+    resolve(arg: A) {
+        if (this.resolved || this.breaked) {
+            return this.result
+        }
+
+        this.resolved = true
+
+        return (this.result = this.resolver(arg))
+    }
+
+    break() {
+        if (this.breaked) {
+            throw 'Already'
+        }
+
+        this.breaked = true
+    }
+}
 
 export class Atom<T = any> {
     private readonly stream: Stream<T>
@@ -14,15 +63,17 @@ export class Atom<T = any> {
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
     private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
+    private readonly deferred: Map<DefGenerator<any, any>, DeferActor<any>>
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(stream: Stream<T>, parentContext: Context | null = null) {
         this.stream = stream
         this.context = new Context(this, parentContext)
         this.consumers = new Set()
-        this.stack = new Stack<StreamIterator<T>>()
+        this.stack = new Stack()
         this.dependencies = new Dependencies(this)
-        this.delegations = new WeakMap<Stream<any>, Delegation<T>>()
+        this.delegations = new WeakMap()
+        this.deferred = new Map()
     }
 
     addConsumer(consumer: Atom) {
@@ -49,6 +100,89 @@ export class Atom<T = any> {
         SCHEDULER.run((transaction) => transaction.add(this))
     }
 
+    defer<U, A>(generator: DefGenerator<U, A>) {
+        if (this.deferred.has(generator)) {
+            return this.deferred.get(generator)!
+        }
+
+        const defer = new Defer<U, A>((arg: A) => this.once(generator, arg))
+        const actor = defer.actor()
+
+        this.deferred.set(generator, actor)
+
+        return actor
+    }
+
+    once<U, A>(generator: DefGenerator<U, A>, arg: A): U {
+        this.deferred.delete(generator)
+
+        const { context } = this
+        const stack = new Stack<StreamIterator<U>>()
+
+        stack.push(generator(context, arg))
+
+        let input: any
+
+        while (true) {
+            try {
+                const { done, value } = stack.last.next(input)
+
+                if (done) {
+                    stack.pop()
+
+                    if (!stack.empty) {
+                        return value as U
+                    }
+                }
+                if (value instanceof ConsumerQuery) {
+                    input = this
+                    continue
+                }
+                if (value instanceof Atom) {
+                    const { stream } = value
+
+                    input = value.once(function* () {
+                        const iterator = stream.iterate(context)
+                        let input: any
+
+                        while (true) {
+                            const { done, value } = iterator.next(input)
+
+                            if (done) {
+                                return value
+                            }
+                            if (value instanceof Query || value instanceof Atom) {
+                                input = yield value
+                                continue
+                            }
+
+                            return value
+                        }
+                    }, null)
+                    continue
+                }
+
+                throw 'Unknown value'
+            } catch (error) {
+                stack.pop()!.return!()
+                throw error
+            }
+        }
+    }
+
+    break<U, A>(generator: DefGenerator<U, A>) {
+        if (this.deferred.has(generator)) {
+            const defer = this.deferred.get(generator)!
+
+            defer.break()
+
+            this.deferred.delete(generator)
+
+            return true
+        }
+        return false
+    }
+
     dispose(initiator?: Atom) {
         if (initiator) {
             this.consumers.delete(initiator)
@@ -61,21 +195,30 @@ export class Atom<T = any> {
             while (!this.stack.empty) {
                 this.stack.pop()!.return!()
             }
+
+            for (const [_, actor] of this.deferred) {
+                actor.break()
+            }
+
+            this.deferred.clear()
         }
     }
 
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<this | Query, T, any>
-        if (!this.cache) {
-            this.build()
-        }
 
         if (this.cache instanceof ErrorCache) {
             throw yield this as never
         }
 
         return yield this as never
+    }
+
+    buildIfNeeded() {
+        if (!this.cache) {
+            this.build()
+        }
     }
 
     build() {
@@ -106,6 +249,8 @@ export class Atom<T = any> {
                     continue
                 }
                 if (value instanceof Atom) {
+                    value.buildIfNeeded()
+
                     const cacheValue = value.getCacheValue()
 
                     if (cacheValue instanceof Delegation) {

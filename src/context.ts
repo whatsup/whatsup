@@ -1,6 +1,6 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
-import { Atom } from './atom'
+import { Atom, DefGenerator } from './atom'
 
 export class Context {
     /**@internal */
@@ -86,6 +86,14 @@ export class Context {
         if (this.parent instanceof Context && !event.isPropagationStopped()) {
             this.parent.dispath(event)
         }
+    }
+
+    defer<T, A>(generator: DefGenerator<T, A>) {
+        return this.atom.defer(generator)
+    }
+
+    break<T, A>(generator: DefGenerator<T, A>) {
+        return this.atom.break(generator)
     }
 
     update() {
