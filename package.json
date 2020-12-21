@@ -1,12 +1,12 @@
 {
-    "name": "whatsup-js",
+    "name": "whatsup",
     "description": "Whats Up framework for application development like a Superman",
     "version": "0.2.3-defer.2",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "https://github.com/iminside/whatsup.git"
+        "url": "https://github.com/whatsup/whatsup.git"
     },
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
@@ -17,8 +17,7 @@
         "test": "jest",
         "test:coverage": "jest --coverage",
         "test:uncache": "jest --clearCache",
-        "prepublishOnly": "npm run build",
-        "postinstall": "if [ ! -f \"./postinstalling\" ]; then (echo \"\" >> postinstalling) && npm i; fi; if [ ! -d \"./dist\" ]; then npm run build; fi"
+        "prepublishOnly": "npm run build"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^13.0.0",
