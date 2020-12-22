@@ -6,7 +6,7 @@ import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
-import { DeferGenerator, DeferActor, Defer } from './defer'
+import { ActorGenerator, ActorController, Actor } from './actor'
 
 export class Atom<T = any> {
     private readonly stream: Stream<T>
@@ -15,7 +15,7 @@ export class Atom<T = any> {
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
     private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
-    private readonly deferred: Map<DeferGenerator<any, any>, DeferActor<any, any>>
+    private readonly actors: Map<ActorGenerator<any, any>, ActorController<any, any>>
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(stream: Stream<T>, parentContext: Context | null = null) {
@@ -25,7 +25,7 @@ export class Atom<T = any> {
         this.stack = new Stack()
         this.dependencies = new Dependencies(this)
         this.delegations = new WeakMap()
-        this.deferred = new Map()
+        this.actors = new Map()
     }
 
     addConsumer(consumer: Atom) {
@@ -52,23 +52,22 @@ export class Atom<T = any> {
         SCHEDULER.run((transaction) => transaction.add(this))
     }
 
-    defer<U, A>(generator: DeferGenerator<U, A>): DeferActor<U, A> {
-        if (this.deferred.has(generator)) {
-            return this.deferred.get(generator)!
+    actor<U, A>(generator: ActorGenerator<U, A>): ActorController<U, A> {
+        if (this.actors.has(generator)) {
+            return this.actors.get(generator)!
         }
 
-        const defer = new Defer<U, A>(
+        const { controller } = new Actor<U, A>(
             (arg: A) => this.exec(generator, arg),
-            () => this.deferred.delete(generator)
+            () => this.actors.delete(generator)
         )
-        const actor = defer.actor()
 
-        this.deferred.set(generator, actor)
+        this.actors.set(generator, controller)
 
-        return actor
+        return controller
     }
 
-    exec<U, A>(generator: DeferGenerator<U, A>, arg: A): U | Delegation<U> {
+    exec<U, A>(generator: ActorGenerator<U, A>, arg: A): U | Delegation<U> {
         const { context, stream } = this
         const stack = new Stack<StreamIterator<U>>()
 
@@ -143,11 +142,11 @@ export class Atom<T = any> {
                 this.stack.pop()!.return!()
             }
 
-            for (const [_, actor] of this.deferred) {
+            for (const [_, actor] of this.actors) {
                 actor.dispose()
             }
 
-            this.deferred.clear()
+            this.actors.clear()
         }
     }
 

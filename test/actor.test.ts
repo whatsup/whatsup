@@ -1,20 +1,20 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { DeferActor, DeferGenerator } from '../src/defer'
+import { ActorController, ActorGenerator } from '../src/actor'
 import { Stream } from '../src/stream'
 import { watch } from '../src/watcher'
 
-describe('Defer', () => {
-    it(`defer current value`, () => {
+describe('Actor', () => {
+    it(`should extract current value`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any, any>
+        let change: ActorController<any, any>
 
         const f = cause(function* (ctx) {
             const value = conse('Hello')
 
             while (true) {
-                change = ctx.defer(function* (_, arg) {
+                change = ctx.actor(function* (_, arg) {
                     const newValue = (yield* value) + arg
                     value.set(newValue)
                     return newValue
@@ -40,19 +40,19 @@ describe('Defer', () => {
 
     it(`should return some actor on sem sem generator`, () => {
         const mock = jest.fn()
-        let def: DeferActor<any, any>
+        let def: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             const value = conse('Hello')
 
-            const define: DeferGenerator<string, string> = function* (_, arg) {
+            const define: ActorGenerator<string, string> = function* (_, arg) {
                 const newValue = (yield* value) + arg
                 value.set(newValue)
                 return newValue
             }
 
             while (true) {
-                def = ctx.defer(define)
+                def = ctx.actor(define)
 
                 yield yield* value
             }
@@ -72,7 +72,7 @@ describe('Defer', () => {
 
     it(`should extract from nested`, () => {
         const mock = jest.fn()
-        let def: DeferActor<any, any>
+        let def: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -82,7 +82,7 @@ describe('Defer', () => {
                 }
             })
 
-            def = ctx.defer(function* (_, arg: string) {
+            def = ctx.actor(function* (_, arg: string) {
                 const newValue = yield* two
                 one.set(newValue + arg)
                 return newValue
@@ -105,16 +105,16 @@ describe('Defer', () => {
     it(`should keep context`, () => {
         const mock = jest.fn()
         let sourceThis: Stream<any>
-        let deferThis: Stream<any>
-        let def: DeferActor<any, any>
+        let actorThis: Stream<any>
+        let def: ActorController<any, any>
 
         const ups = cause(function* (this: Stream<any>, ctx) {
             const one = conse('one')
 
             sourceThis = this
 
-            def = ctx.defer(function* (this: Stream<any>, _, arg) {
-                deferThis = this
+            def = ctx.actor(function* (this: Stream<any>, _, arg) {
+                actorThis = this
 
                 const newValue = yield* one
                 one.set(newValue + arg)
@@ -137,12 +137,12 @@ describe('Defer', () => {
         def!('thr')
 
         expect(mock).lastCalledWith('onethr')
-        expect(sourceThis!).toBe(deferThis!)
+        expect(sourceThis!).toBe(actorThis!)
     })
 
     it(`should extract delegation`, () => {
         const mock = jest.fn()
-        let def: DeferActor<any, any>
+        let def: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -150,7 +150,7 @@ describe('Defer', () => {
                 return one
             } as any)
 
-            def = ctx.defer(function* (_, arg) {
+            def = ctx.actor(function* (_, arg) {
                 const newValue = yield* two
                 one.set(newValue + arg)
                 return newValue
@@ -172,12 +172,12 @@ describe('Defer', () => {
 
     it(`should throw already breaked`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any, any>
+        let change: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
 
-            change = ctx.defer(function* (_, arg: string) {
+            change = ctx.actor(function* (_, arg: string) {
                 one.set(arg)
                 change.dispose()
             })
@@ -200,13 +200,13 @@ describe('Defer', () => {
     it(`should break when atom dispose`, () => {
         const mock = jest.fn()
         const disposeMock = jest.fn()
-        let change: DeferActor<any, any>
+        let change: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             try {
                 const one = conse('one')
 
-                change = ctx.defer(function* (_, arg: string) {
+                change = ctx.actor(function* (_, arg: string) {
                     one.set(arg)
                 })
 
@@ -235,12 +235,12 @@ describe('Defer', () => {
 
     it(`should throw unknown value`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any, any>
+        let change: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
 
-            change = ctx.defer(function* (_, arg: string) {
+            change = ctx.actor(function* (_, arg: string) {
                 yield Symbol('WoW') as any
                 one.set(arg)
             })
@@ -259,12 +259,12 @@ describe('Defer', () => {
 
     it(`should catch exception`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any, any>
+        let change: ActorController<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
 
-            change = ctx.defer(function* () {
+            change = ctx.actor(function* () {
                 throw 'WoW'
             })
 
@@ -282,7 +282,7 @@ describe('Defer', () => {
 
     it(`should catch nested exception`, () => {
         const mock = jest.fn()
-        let change: DeferActor<any, any>
+        let change: ActorController<any, any>
 
         const nested = cause(function* () {
             throw 'WoW'
@@ -290,7 +290,7 @@ describe('Defer', () => {
         const ups = cause(function* (ctx) {
             const one = conse('one')
 
-            change = ctx.defer(function* () {
+            change = ctx.actor(function* () {
                 return yield* nested
             })
 
