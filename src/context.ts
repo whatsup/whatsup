@@ -93,6 +93,56 @@ export class Context {
         return this.atom.defer(generator)
     }
 
+    asyncCurrent: Promise<any> | null = null
+
+    /* 
+                    здесь 
+    ctx.defer(()=>                          а здесь 
+                    будет идти
+    ctx.defer(()=>                          пойдет
+                    ветка синхронного
+    ctx.defer(()=>                          ветка 
+                    кода
+    ctx.defer(()=>                          асинхронного кода)
+                    все
+    ctx.defer(()=>                          контексты )
+                    будут в правильном
+    ctx.defer(()=>                          порядке)
+    */
+    // TODO rename to defer
+    async<T>(deffered: () => Promise<T>) {
+        // if (this.asyncCurrent) {
+        //     this.asyncCurrent = this.asyncCurrent.then(deffered)
+        // } else {
+        //     this.asyncCurrent = Promise.resolve(deffered()).then((r) => (result.value = r))
+        //     this.asyncCurrent.then(() => {
+        //         this.asyncCurrent = null
+        //         this.update()
+        //     })
+        // }
+
+        // return {
+        //     promise: this.asyncCurrent,
+        //     value: undefined,
+        // } as { promise: Promise<T>; value: T | undefined }
+
+        const promise = this.asyncCurrent ? this.asyncCurrent.then(deffered) : deffered()
+        const result = { value: undefined } as { value: T | undefined }
+
+        promise.then((r) => {
+            result.value = r
+
+            if (this.asyncCurrent === promise) {
+                this.asyncCurrent = null
+                this.update()
+            }
+        })
+
+        this.asyncCurrent = promise
+
+        return result
+    }
+
     update() {
         this.atom.update()
     }
