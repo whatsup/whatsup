@@ -3,7 +3,7 @@ import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
 import { ActorController, ActorGenerator } from '../src/actor'
 import { Stream } from '../src/stream'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Actor', () => {
     it(`should extract current value`, () => {
@@ -24,7 +24,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(f, mock)
+        whatsUp(f, mock)
 
         expect(mock).lastCalledWith('Hello')
 
@@ -58,7 +58,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('Hello')
 
@@ -93,7 +93,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -130,7 +130,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -161,7 +161,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -187,7 +187,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -218,7 +218,7 @@ describe('Actor', () => {
             }
         })
 
-        const dispose = watch(ups, mock)
+        const dispose = whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -250,7 +250,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -273,7 +273,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 
@@ -299,7 +299,7 @@ describe('Actor', () => {
             }
         })
 
-        watch(ups, mock)
+        whatsUp(ups, mock)
 
         expect(mock).lastCalledWith('one')
 

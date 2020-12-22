@@ -1,6 +1,6 @@
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
@@ -27,7 +27,7 @@ describe('Errors', () => {
             }
         })
 
-        watch(App, mock)
+        whatsUp(App, mock)
 
         it(`mock called with "User Wallet Balance 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -76,7 +76,7 @@ describe('Errors', () => {
             }
         })
 
-        watch(App, mock)
+        whatsUp(App, mock)
 
         it(`mock called with "Parent User Wallet Balance 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -121,7 +121,7 @@ describe('Errors', () => {
             }
         })
 
-        watch(App, mock)
+        whatsUp(App, mock)
 
         it(`mock called with "User Wallet Balance 10"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -173,7 +173,7 @@ describe('Errors', () => {
             }
         })
 
-        watch(App, mock)
+        whatsUp(App, mock)
 
         it(`mock called with "User Wallet Balance 100"`, () => {
             expect(mock).toBeCalledTimes(1)

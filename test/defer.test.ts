@@ -1,5 +1,5 @@
 import { cause } from '../src/cause'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Defer', () => {
     const delay = <T>(t: number, v?: T) => new Promise<T>((r) => setTimeout(() => r(v), t))
@@ -13,7 +13,7 @@ describe('Defer', () => {
             yield 'World'
         })
 
-        watch(cau, mock)
+        whatsUp(cau, mock)
 
         expect(mock).lastCalledWith('Hello')
 
@@ -31,7 +31,7 @@ describe('Defer', () => {
             yield result.value
         })
 
-        watch(cau, mock)
+        whatsUp(cau, mock)
 
         expect(mock).lastCalledWith('Hello')
 
@@ -69,7 +69,7 @@ describe('Defer', () => {
             yield result.value
         })
 
-        watch(cau, mock)
+        whatsUp(cau, mock)
 
         expect(mock).lastCalledWith('this is sync flow ')
 
@@ -100,7 +100,7 @@ describe('Defer', () => {
             yield ''
         })
 
-        watch(cau, mock)
+        whatsUp(cau, mock)
 
         expect(mock).lastCalledWith('this is sync flow ')
 

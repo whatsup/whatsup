@@ -1,11 +1,11 @@
-import { watch } from '../src'
+import { whatsUp } from '../src/observer'
 import { list } from '../src/list'
 
 describe('List', () => {
     let result: number[]
     const li = list<number>()
 
-    watch(li, (r) => (result = r))
+    whatsUp(li, (r) => (result = r))
 
     it(`should return 1, 2, 3`, async () => {
         li.insert(1, 2, 3)

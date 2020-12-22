@@ -2,7 +2,7 @@ import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Execution order', () => {
     it('normal updating from bottom to up', async () => {
@@ -28,7 +28,7 @@ describe('Execution order', () => {
         const Hub = fraction(1)
         const mock = jest.fn()
 
-        watch(App, mock)
+        whatsUp(App, mock)
 
         expect(mock).lastCalledWith(1)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3]))
@@ -43,7 +43,7 @@ describe('Execution order', () => {
         const mock = jest.fn()
         const a = conse(1)
 
-        watch(a, mock)
+        whatsUp(a, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith(1)
@@ -68,7 +68,7 @@ describe('Execution order', () => {
             }
         })
 
-        watch(c, mock)
+        whatsUp(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('1 odd')
@@ -117,7 +117,7 @@ describe('Execution order', () => {
             }
         })
 
-        const dispose = watch(c, mock)
+        const dispose = whatsUp(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('AABC')

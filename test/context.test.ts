@@ -2,7 +2,7 @@ import { Factor, factor } from '../src/factor'
 import { Event } from '../src/event'
 import { fractal } from '../src/fractal'
 import { Context } from '../src/context'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Context', () => {
     let context1: Context
@@ -35,7 +35,7 @@ describe('Context', () => {
         }
     })
 
-    watch(test1, () => {})
+    whatsUp(test1, () => {})
 
     describe('Factors', () => {
         const testFactor = new Factor('default')

@@ -1,7 +1,7 @@
 import { transaction } from '../src/scheduler'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { watch } from '../src'
+import { whatsUp } from '../src/observer'
 
 describe('Scheduler', () => {
     it(`Should run every change in personal transaction`, () => {
@@ -13,7 +13,7 @@ describe('Scheduler', () => {
                 yield `${yield* a}${yield* b}c`
             }
         })
-        watch(c, mock)
+        whatsUp(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
@@ -35,7 +35,7 @@ describe('Scheduler', () => {
                 yield `${yield* a}${yield* b}c`
             }
         })
-        watch(c, mock)
+        whatsUp(c, mock)
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
@@ -60,12 +60,12 @@ describe('Scheduler', () => {
         })
         const c = conse('c')
 
-        watch(c, mockC)
+        whatsUp(c, mockC)
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
 
-        watch(b, mockB)
+        whatsUp(b, mockB)
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')
@@ -93,17 +93,17 @@ describe('Scheduler', () => {
         const c = conse('c')
         const d = conse('d')
 
-        watch(d, mockD)
+        whatsUp(d, mockD)
 
         expect(mockD).toBeCalledTimes(1)
         expect(mockD).lastCalledWith('d')
 
-        watch(c, mockC)
+        whatsUp(c, mockC)
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
 
-        watch(b, mockB)
+        whatsUp(b, mockB)
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')

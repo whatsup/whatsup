@@ -1,6 +1,6 @@
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Watcher', () => {
     it(`should call onError when error`, () => {
@@ -17,7 +17,7 @@ describe('Watcher', () => {
             }
         })
 
-        watch(Err, dataMock, errMock)
+        whatsUp(Err, dataMock, errMock)
 
         expect(dataMock).toBeCalledTimes(1)
         expect(errMock).toBeCalledTimes(0)

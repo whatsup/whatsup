@@ -4,7 +4,7 @@ import { fraction, Fraction } from '../src/fraction'
 import { cause, Cause } from '../src/cause'
 import { conse, Conse } from '../src/conse'
 import { list, List } from '../src/list'
-import { watch, Watcher } from '../src/watcher'
+import { whatsUp, Observer } from '../src/observer'
 import { factor } from '../src/factor'
 import { transaction } from '../src/scheduler'
 import { run } from '../src/run'
@@ -41,8 +41,8 @@ it('Exports', () => {
     expect(Fraction).toBe(_Fraction)
     expect(list).toBe(_list)
     expect(List).toBe(_List)
-    expect(watch).toBe(_watch)
-    expect(Watcher).toBe(_Watcher)
+    expect(whatsUp).toBe(_watch)
+    expect(Observer).toBe(_Watcher)
     expect(factor).toBe(_factor)
     expect(transaction).toBe(_transaction)
     expect(transaction).toBe(_action)

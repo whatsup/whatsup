@@ -3,7 +3,7 @@ import { factor } from '../src/factor'
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
 import { Mutator } from '../src/mutator'
-import { watch } from '../src/watcher'
+import { whatsUp } from '../src/observer'
 
 describe('Situations', () => {
     describe('test reactions with initial values', () => {
@@ -14,7 +14,7 @@ describe('Situations', () => {
             while (true) yield `User ${yield* Name} ${yield* Age}`
         })
 
-        watch(User, mock)
+        whatsUp(User, mock)
 
         it(`mock called 1 time with "User John 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -32,7 +32,7 @@ describe('Situations', () => {
             }
         })
 
-        watch(User, mock)
+        whatsUp(User, mock)
 
         it(`mock called with "User John"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -70,7 +70,7 @@ describe('Situations', () => {
             while (true) yield `User ${yield* Name}`
         })
 
-        watch(User, mock)
+        whatsUp(User, mock)
 
         it(`mock to be called 1 time with "User John"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -112,7 +112,7 @@ describe('Situations', () => {
             return mock2(yield* One)
         })
 
-        watch(App, () => {})
+        whatsUp(App, () => {})
 
         it(`mock1 to be called with "1" mock2 to be called with "2"`, () => {
             expect(mock1).toBeCalledTimes(1)
@@ -165,7 +165,7 @@ describe('Situations', () => {
             }
         })
 
-        const dispose = watch(Output, (r) => (result = r))
+        const dispose = whatsUp(Output, (r) => (result = r))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)
@@ -216,7 +216,7 @@ describe('Situations', () => {
             }
         })
 
-        watch(One, () => {})
+        whatsUp(One, () => {})
 
         it(`should mock1 to be called with "default"`, () => {
             expect(mock1).toBeCalledTimes(1)
