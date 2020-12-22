@@ -37,6 +37,7 @@ function defaultErrorHandler(e: Error) {
     throw e
 }
 
+// TODO rename to whatsUp()
 export function watch<T>(target: Stream<T>, onData: DataHandler<T>, onError?: ErrorHandler) {
     const watcher = new Watcher(target, onData, onError)
     return watcher.run()
