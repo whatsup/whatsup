@@ -93,8 +93,6 @@ export class Context {
         return this.atom.defer(generator)
     }
 
-    asyncCurrent: Promise<any> | null = null
-
     /* 
                     здесь 
     ctx.defer(()=>                          а здесь 
@@ -109,23 +107,12 @@ export class Context {
                     будут в правильном
     ctx.defer(()=>                          порядке)
     */
+
     // TODO rename to defer
+
+    private asyncCurrent: Promise<any> | null = null
+
     async<T>(deffered: () => Promise<T>) {
-        // if (this.asyncCurrent) {
-        //     this.asyncCurrent = this.asyncCurrent.then(deffered)
-        // } else {
-        //     this.asyncCurrent = Promise.resolve(deffered()).then((r) => (result.value = r))
-        //     this.asyncCurrent.then(() => {
-        //         this.asyncCurrent = null
-        //         this.update()
-        //     })
-        // }
-
-        // return {
-        //     promise: this.asyncCurrent,
-        //     value: undefined,
-        // } as { promise: Promise<T>; value: T | undefined }
-
         const promise = this.asyncCurrent ? this.asyncCurrent.then(deffered) : deffered()
         const result = { value: undefined } as { value: T | undefined }
 
