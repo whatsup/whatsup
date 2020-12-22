@@ -6,7 +6,7 @@ import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
-import { ActorGenerator, ActorController, Actor } from './actor'
+import { ActorGenerator } from './actor'
 
 export class Atom<T = any> {
     private readonly stream: Stream<T>
@@ -15,7 +15,6 @@ export class Atom<T = any> {
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
     private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
-    private readonly actors: Map<ActorGenerator<any, any>, ActorController<any, any>>
     private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
 
     constructor(stream: Stream<T>, parentContext: Context | null = null) {
@@ -25,7 +24,6 @@ export class Atom<T = any> {
         this.stack = new Stack()
         this.dependencies = new Dependencies(this)
         this.delegations = new WeakMap()
-        this.actors = new Map()
     }
 
     addConsumer(consumer: Atom) {
@@ -50,21 +48,6 @@ export class Atom<T = any> {
 
     update() {
         SCHEDULER.run((transaction) => transaction.add(this))
-    }
-
-    actor<U, A>(generator: ActorGenerator<U, A>): ActorController<U, A> {
-        if (this.actors.has(generator)) {
-            return this.actors.get(generator)!
-        }
-
-        const { controller } = new Actor<U, A>(
-            (arg: A) => this.exec(generator, arg),
-            () => this.actors.delete(generator)
-        )
-
-        this.actors.set(generator, controller)
-
-        return controller
     }
 
     exec<U, A>(generator: ActorGenerator<U, A>, arg: A): U | Delegation<U> {
@@ -141,12 +124,6 @@ export class Atom<T = any> {
             while (!this.stack.empty) {
                 this.stack.pop()!.return!()
             }
-
-            for (const [_, actor] of this.actors) {
-                actor.dispose()
-            }
-
-            this.actors.clear()
         }
     }
 

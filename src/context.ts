@@ -1,19 +1,21 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
-import { ActorGenerator } from './actor'
+import { Actor, ActorController, ActorGenerator } from './actor'
 
 export class Context {
     /**@internal */
     readonly parent: Context | null
 
     private readonly atom: Atom
+    private readonly actors: Map<ActorGenerator<any, any>, ActorController<any, any>>
     private factors!: WeakMap<Factor<any>, any>
     private listeners!: WeakMap<EventCtor, Set<EventListener>>
 
     constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
         this.parent = parent
+        this.actors = new Map()
     }
 
     /**@internal */
@@ -90,7 +92,20 @@ export class Context {
     }
 
     actor<T, A>(generator: ActorGenerator<T, A>) {
-        return this.atom.actor(generator)
+        const { atom, actors } = this
+
+        if (actors.has(generator)) {
+            return actors.get(generator)!
+        }
+
+        const { controller } = new Actor<T, A>(
+            (arg: A) => atom.exec(generator, arg),
+            () => actors.delete(generator)
+        )
+
+        actors.set(generator, controller)
+
+        return controller
     }
 
     /* 
@@ -137,5 +152,11 @@ export class Context {
     dispose() {
         this.factors = undefined!
         this.listeners = undefined!
+
+        for (const [_, actor] of this.actors) {
+            actor.dispose()
+        }
+
+        this.actors.clear()
     }
 }
