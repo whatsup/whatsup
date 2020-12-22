@@ -116,11 +116,11 @@ export class Context {
                     ветка синхронного
     ctx.defer(()=>                          ветка 
                     кода
-    ctx.defer(()=>                          асинхронного кода)
+    ctx.defer(()=>                          асинхронного кода )
                     все
-    ctx.defer(()=>                          контексты )
-                    будут в правильном
-    ctx.defer(()=>                          порядке)
+    ctx.defer(()=>                          будут в правильном 
+                    контексты 
+    ctx.defer(()=>                          порядке )
     */
 
     private deferred: Promise<any> | null = null
