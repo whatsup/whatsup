@@ -123,8 +123,6 @@ export class Context {
     ctx.defer(()=>                          порядке)
     */
 
-    // TODO rename to defer
-
     private deferred: Promise<any> | null = null
 
     defer<T>(deffered: () => Promise<T>) {
