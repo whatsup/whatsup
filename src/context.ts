@@ -110,22 +110,22 @@ export class Context {
 
     // TODO rename to defer
 
-    private asyncCurrent: Promise<any> | null = null
+    private deferred: Promise<any> | null = null
 
-    async<T>(deffered: () => Promise<T>) {
-        const promise = this.asyncCurrent ? this.asyncCurrent.then(deffered) : deffered()
+    defer<T>(deffered: () => Promise<T>) {
+        const promise = this.deferred ? this.deferred.then(deffered) : deffered()
         const result = { value: undefined } as { value: T | undefined }
 
         promise.then((r) => {
             result.value = r
 
-            if (this.asyncCurrent === promise) {
-                this.asyncCurrent = null
+            if (this.deferred === promise) {
+                this.deferred = null
                 this.update()
             }
         })
 
-        this.asyncCurrent = promise
+        this.deferred = promise
 
         return result
     }

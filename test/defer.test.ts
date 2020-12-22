@@ -8,7 +8,7 @@ describe('Defer', () => {
         const mock = jest.fn()
 
         const cau = cause(function* (ctx) {
-            ctx.async(() => delay(300))
+            ctx.defer(() => delay(300))
             yield 'Hello'
             yield 'World'
         })
@@ -26,7 +26,7 @@ describe('Defer', () => {
         const mock = jest.fn()
 
         const cau = cause(function* (ctx) {
-            const result = ctx.async(() => new Promise((r) => setTimeout(() => r('World'), 300)))
+            const result = ctx.defer(() => new Promise((r) => setTimeout(() => r('World'), 300)))
             yield 'Hello'
             yield result.value
         })
@@ -55,15 +55,15 @@ describe('Defer', () => {
             //
             let str = ''
             str += 'this '
-            ctx.async(async () => delay(0).then(() => (str += 'and this ')))
+            ctx.defer(async () => delay(0).then(() => (str += 'and this ')))
             str += 'is '
-            ctx.async(async () => delay(0).then(() => (str += 'is ')))
+            ctx.defer(async () => delay(0).then(() => (str += 'is ')))
             str += 'sync '
-            ctx.async(async () => delay(0).then(() => (str += 'async ')))
+            ctx.defer(async () => delay(0).then(() => (str += 'async ')))
             str += 'flow '
-            ctx.async(async () => delay(0).then(() => (str += 'flow ')))
+            ctx.defer(async () => delay(0).then(() => (str += 'flow ')))
 
-            const result = ctx.async(async () => str)
+            const result = ctx.defer(async () => str)
 
             yield str
             yield result.value
@@ -88,13 +88,13 @@ describe('Defer', () => {
             let str = ''
 
             a0 = str += 'this '
-            ctx.async(async () => delay(0).then(() => (b0 = str += 'and this ')))
+            ctx.defer(async () => delay(0).then(() => (b0 = str += 'and this ')))
             a1 = str += 'is '
-            ctx.async(async () => delay(0).then(() => (b1 = str += 'is ')))
+            ctx.defer(async () => delay(0).then(() => (b1 = str += 'is ')))
             a2 = str += 'sync '
-            ctx.async(async () => delay(0).then(() => (b2 = str += 'async ')))
+            ctx.defer(async () => delay(0).then(() => (b2 = str += 'async ')))
             a3 = str += 'flow '
-            ctx.async(async () => delay(0).then(() => (b3 = str += 'flow ')))
+            ctx.defer(async () => delay(0).then(() => (b3 = str += 'flow ')))
 
             yield str
             yield ''
