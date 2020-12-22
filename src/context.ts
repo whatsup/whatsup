@@ -99,7 +99,15 @@ export class Context {
         }
 
         const { controller } = new Actor<T, A>(
-            (arg: A) => atom.exec(generator, arg),
+            (arg: A) => {
+                const { error, result } = (atom.exec(generator, arg) as any) as { error: boolean; result: T }
+
+                if (error) {
+                    throw result
+                }
+
+                return result
+            },
             () => actors.delete(generator)
         )
 

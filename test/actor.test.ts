@@ -15,7 +15,8 @@ describe('Actor', () => {
 
             while (true) {
                 change = ctx.actor(function* (_, arg) {
-                    const newValue = (yield* value) + arg
+                    const oldValue = yield* value
+                    const newValue = oldValue + arg
                     value.set(newValue)
                     return newValue
                 })

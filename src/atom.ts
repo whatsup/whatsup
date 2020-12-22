@@ -8,6 +8,10 @@ import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
 import { ActorGenerator } from './actor'
 
+function isr(arg: any): boolean {
+    return typeof arg === 'object' && 'result' in arg
+}
+
 export class Atom<T = any> {
     private readonly stream: Stream<T>
     private readonly context: Context
@@ -59,56 +63,75 @@ export class Atom<T = any> {
         let input: any
 
         while (true) {
-            const { done, value } = stack.last.next(input)
+            try {
+                const { done, value } = stack.last.next(input)
 
-            if (done) {
-                stack.pop()
+                if (done) {
+                    stack.pop()
 
-                if (!stack.empty) {
-                    input = value
+                    if (!stack.empty) {
+                        input = value
+                        continue
+                    }
+
+                    const result = this.prepareNewData(value as any)
+
+                    return ({ error: false, result } as any) as U | Delegation<U>
+                }
+                if (value instanceof ConsumerQuery) {
+                    input = this
+                    continue
+                }
+                if (value instanceof Atom) {
+                    const { stream } = value
+
+                    const executed = value.exec(function* () {
+                        const iterator = stream.iterate(context)
+                        let input: any
+
+                        while (true) {
+                            const { done, value } = iterator.next(input)
+
+                            if (done) {
+                                return value
+                            }
+                            if (value instanceof Query || value instanceof Atom) {
+                                input = yield value
+                                continue
+                            }
+
+                            return value
+                        }
+                    }, null)
+
+                    if (executed.result instanceof Delegation) {
+                        this.stack.push(
+                            function* () {
+                                try {
+                                    const result = yield* executed.result
+
+                                    return { error: false, result } as any
+                                } catch (result) {
+                                    return { error: true, result } as any
+                                }
+                            }.call(undefined)
+                        )
+                        input = undefined
+                    } else {
+                        input = executed
+
+                        if (isr(executed.result)) {
+                            debugger
+                        }
+                    }
+
                     continue
                 }
 
-                return (this.prepareNewData(value as any) as any) as U | Delegation<U>
+                throw 'Unknown value'
+            } catch (e) {
+                return ({ error: true, result: e } as any) as U | Delegation<U>
             }
-            if (value instanceof ConsumerQuery) {
-                input = this
-                continue
-            }
-            if (value instanceof Atom) {
-                const { stream } = value
-
-                const result = value.exec(function* () {
-                    const iterator = stream.iterate(context)
-                    let input: any
-
-                    while (true) {
-                        const { done, value } = iterator.next(input)
-
-                        if (done) {
-                            return value
-                        }
-                        if (value instanceof Query || value instanceof Atom) {
-                            input = yield value
-                            continue
-                        }
-
-                        return value
-                    }
-                }, null)
-
-                if (result instanceof Delegation) {
-                    const iterator = result[Symbol.iterator]() as StreamIterator<U>
-                    stack.push(iterator)
-                    input = undefined
-                } else {
-                    input = result
-                }
-
-                continue
-            }
-
-            throw 'Unknown value'
         }
     }
 
@@ -130,12 +153,14 @@ export class Atom<T = any> {
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<this | Query, T, any>
+        const r = (yield this as never) as { error: boolean; result: T }
+        const { error, result } = r
 
-        if (this.cache instanceof ErrorCache) {
-            throw yield this as never
+        if (error) {
+            throw result
         }
 
-        return yield this as never
+        return result
     }
 
     buildIfNeeded() {
@@ -174,14 +199,30 @@ export class Atom<T = any> {
                 if (value instanceof Atom) {
                     value.buildIfNeeded()
 
-                    const cacheValue = value.getCacheValue()
+                    const cache = value.cache!
 
-                    if (cacheValue instanceof Delegation) {
-                        const iterator = cacheValue[Symbol.iterator]()
-                        this.stack.push(iterator)
+                    if (cache.value instanceof Delegation) {
+                        this.stack.push(
+                            function* () {
+                                const error = cache instanceof ErrorCache
+
+                                let result
+
+                                try {
+                                    result = yield* cache.value
+                                } catch (e) {
+                                    result = e
+                                }
+
+                                return { error, result } as any
+                            }.call(undefined)
+                        )
+
                         input = undefined
+                    } else if (cache instanceof ErrorCache) {
+                        input = { error: true, result: cache.value }
                     } else {
-                        input = cacheValue
+                        input = { error: false, result: cache.value }
                     }
 
                     dependencies.add(value)
