@@ -8,10 +8,6 @@ import { ErrorCache, DataCache } from './cache'
 import { Stack } from './stack'
 import { ActorGenerator } from './actor'
 
-function isr(arg: any): boolean {
-    return typeof arg === 'object' && 'result' in arg
-}
-
 export class Atom<T = any> {
     private readonly stream: Stream<T>
     private readonly context: Context
@@ -105,7 +101,7 @@ export class Atom<T = any> {
                     }, null)
 
                     if (executed.result instanceof Delegation) {
-                        this.stack.push(
+                        stack.push(
                             function* () {
                                 try {
                                     const result = yield* executed.result
@@ -119,10 +115,6 @@ export class Atom<T = any> {
                         input = undefined
                     } else {
                         input = executed
-
-                        if (isr(executed.result)) {
-                            debugger
-                        }
                     }
 
                     continue
