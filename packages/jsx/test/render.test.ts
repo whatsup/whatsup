@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { fractal } from 'whatsup-js'
+import { fractal } from 'whatsup'
 import { component, html } from '../src/factories'
 import { render } from '../src/render'
 

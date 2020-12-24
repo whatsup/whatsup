@@ -20,7 +20,7 @@
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "whatsup-js": "^0.2.3",
+        "whatsup": "0.2.3-async.1",
         "csstype": "^3.0.3"
     },
     "peerDependencies": {},
