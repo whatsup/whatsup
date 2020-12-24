@@ -171,6 +171,45 @@ describe('Actor', () => {
         expect(mock).lastCalledWith('onethr')
     })
 
+    it(`should extract error from delegation`, () => {
+        const mock = jest.fn()
+        const errMock = jest.fn()
+        let def: ActorController<any, any>
+
+        const ups = cause(function* (ctx) {
+            const one = conse('one')
+            const two = fractal<string>(function* () {
+                return thr
+            } as any)
+            const thr = fractal<string>(function* () {
+                throw 'THR'
+            } as any)
+
+            def = ctx.actor(function* (_, arg) {
+                try {
+                    const newValue = yield* two
+                    one.set(newValue + arg)
+                    return newValue
+                } catch (e) {
+                    errMock(e)
+                    return
+                }
+            })
+
+            while (true) {
+                yield yield* one
+            }
+        })
+
+        whatsUp(ups, mock)
+
+        expect(mock).lastCalledWith('one')
+
+        def!('thr')
+
+        expect(errMock).lastCalledWith('THR')
+    })
+
     it(`should throw already breaked`, () => {
         const mock = jest.fn()
         let change: ActorController<any, any>

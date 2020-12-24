@@ -196,17 +196,13 @@ export class Atom<T = any> {
                     if (cache.value instanceof Delegation) {
                         this.stack.push(
                             function* () {
-                                const error = cache instanceof ErrorCache
-
-                                let result
-
                                 try {
-                                    result = yield* cache.value
-                                } catch (e) {
-                                    result = e
-                                }
+                                    const result = yield* cache.value
 
-                                return { error, result } as any
+                                    return { error: false, result } as any
+                                } catch (result) {
+                                    return { error: true, result } as any
+                                }
                             }.call(undefined)
                         )
 

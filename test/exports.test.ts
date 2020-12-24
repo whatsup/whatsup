@@ -19,8 +19,8 @@ import {
     Fraction as _Fraction,
     list as _list,
     List as _List,
-    watch as _watch,
-    Watcher as _Watcher,
+    whatsUp as _whatsUp,
+    Observer as _Observer,
     factor as _factor,
     transaction as _transaction,
     action as _action,
@@ -41,8 +41,8 @@ it('Exports', () => {
     expect(Fraction).toBe(_Fraction)
     expect(list).toBe(_list)
     expect(List).toBe(_List)
-    expect(whatsUp).toBe(_watch)
-    expect(Observer).toBe(_Watcher)
+    expect(whatsUp).toBe(_whatsUp)
+    expect(Observer).toBe(_Observer)
     expect(factor).toBe(_factor)
     expect(transaction).toBe(_transaction)
     expect(transaction).toBe(_action)
