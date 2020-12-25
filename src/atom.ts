@@ -4,7 +4,7 @@ import { Dependencies } from './dependencies'
 import { ConsumerQuery, Query } from './query'
 import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
-import { ErrorCache, DataCache } from './cache'
+import { ErrorCache, DataCache, Cache } from './cache'
 import { Stack } from './stack'
 import { ActorGenerator } from './actor'
 
@@ -70,9 +70,9 @@ export class Atom<T = any> {
                         continue
                     }
 
-                    const result = this.prepareNewData(value as any)
+                    const data = this.prepareNewData(value as any)
 
-                    return ({ error: false, result } as any) as U | Delegation<U>
+                    return (new DataCache(data) as any) as U | Delegation<U>
                 }
                 if (value instanceof ConsumerQuery) {
                     input = this
@@ -81,7 +81,7 @@ export class Atom<T = any> {
                 if (value instanceof Atom) {
                     const { stream } = value
 
-                    const executed = value.exec(function* () {
+                    const cache = value.exec(function* () {
                         const iterator = stream.iterate(context)
                         let input: any
 
@@ -100,29 +100,30 @@ export class Atom<T = any> {
                         }
                     }, null)
 
-                    if (executed.result instanceof Delegation) {
+                    if (cache.value instanceof Delegation) {
                         stack.push(
                             function* () {
                                 try {
-                                    const result = yield* executed.result
+                                    const result = yield* cache.value
 
-                                    return { error: false, result } as any
+                                    return new DataCache(result) as any
                                 } catch (result) {
-                                    return { error: true, result } as any
+                                    return new ErrorCache(result) as any
                                 }
                             }.call(undefined)
                         )
                         input = undefined
                     } else {
-                        input = executed
+                        input = cache
                     }
 
                     continue
                 }
 
                 throw 'Unknown value'
-            } catch (e) {
-                return ({ error: true, result: e } as any) as U | Delegation<U>
+            } catch (error) {
+                return new ErrorCache(error) as any
+                //return ({ error: true, result: e } as any) as U | Delegation<U>
             }
         }
     }
@@ -145,14 +146,13 @@ export class Atom<T = any> {
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<this | Query, T, any>
-        const r = (yield this as never) as { error: boolean; result: T }
-        const { error, result } = r
+        const cache = (yield this as never) as Cache
 
-        if (error) {
-            throw result
+        if (cache instanceof ErrorCache) {
+            throw cache.value
         }
 
-        return result
+        return cache.value
     }
 
     buildIfNeeded() {
@@ -199,18 +199,16 @@ export class Atom<T = any> {
                                 try {
                                     const result = yield* cache.value
 
-                                    return { error: false, result } as any
+                                    return new DataCache(result) as any
                                 } catch (result) {
-                                    return { error: true, result } as any
+                                    return new ErrorCache(result) as any
                                 }
                             }.call(undefined)
                         )
 
                         input = undefined
-                    } else if (cache instanceof ErrorCache) {
-                        input = { error: true, result: cache.value }
                     } else {
-                        input = { error: false, result: cache.value }
+                        input = cache
                     }
 
                     dependencies.add(value)
