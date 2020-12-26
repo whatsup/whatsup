@@ -2,7 +2,7 @@ import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
 import { Actor, ActorController, ActorGenerator } from './actor'
-import { Cache, ErrorCache } from './cache'
+import { Result, Err } from './result'
 
 export class Context {
     /**@internal */
@@ -101,9 +101,9 @@ export class Context {
 
         const { controller } = new Actor<T, A>(
             (arg: A) => {
-                const cache = (atom.exec(generator, arg) as any) as Cache
+                const cache = (atom.exec(generator, arg) as any) as Result
 
-                if (cache instanceof ErrorCache) {
+                if (cache instanceof Err) {
                     throw cache.value
                 }
 

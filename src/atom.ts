@@ -4,7 +4,7 @@ import { Dependencies } from './dependencies'
 import { ConsumerQuery, Query } from './query'
 import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
-import { ErrorCache, DataCache, Cache } from './cache'
+import { Err, Data, Result } from './result'
 import { Stack } from './stack'
 import { ActorGenerator } from './actor'
 
@@ -15,7 +15,7 @@ export class Atom<T = any> {
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
     private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
-    private cache: ErrorCache | DataCache<T | Delegation<T>> | undefined
+    private cache: Err | Data<T | Delegation<T>> | undefined
 
     constructor(stream: Stream<T>, parentContext: Context | null = null) {
         this.stream = stream
@@ -50,7 +50,7 @@ export class Atom<T = any> {
         SCHEDULER.run((transaction) => transaction.add(this))
     }
 
-    exec<U, A>(generator: ActorGenerator<U, A>, arg: A): U | Delegation<U> {
+    exec<U, A>(generator: ActorGenerator<U, A>, arg: A): Data<U | Delegation<U>> | Err {
         const { context, stream } = this
         const stack = new Stack<StreamIterator<U>>()
 
@@ -72,7 +72,7 @@ export class Atom<T = any> {
 
                     const data = this.prepareNewData(value as any)
 
-                    return (new DataCache(data) as any) as U | Delegation<U>
+                    return new Data(data as any)
                 }
                 if (value instanceof ConsumerQuery) {
                     input = this
@@ -106,9 +106,9 @@ export class Atom<T = any> {
                                 try {
                                     const result = yield* cache.value
 
-                                    return new DataCache(result) as any
+                                    return new Data(result) as any
                                 } catch (result) {
-                                    return new ErrorCache(result) as any
+                                    return new Err(result) as any
                                 }
                             }.call(undefined)
                         )
@@ -122,8 +122,7 @@ export class Atom<T = any> {
 
                 throw 'Unknown value'
             } catch (error) {
-                return new ErrorCache(error) as any
-                //return ({ error: true, result: e } as any) as U | Delegation<U>
+                return new Err(error)
             }
         }
     }
@@ -146,13 +145,13 @@ export class Atom<T = any> {
     *[Symbol.iterator](): Generator<never, T, any> {
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<this | Query, T, any>
-        const cache = (yield this as never) as Cache
+        const result = (yield this as never) as Result
 
-        if (cache instanceof ErrorCache) {
-            throw cache.value
+        if (result instanceof Err) {
+            throw result.value
         }
 
-        return cache.value
+        return result.value
     }
 
     buildIfNeeded() {
@@ -199,9 +198,9 @@ export class Atom<T = any> {
                                 try {
                                     const result = yield* cache.value
 
-                                    return new DataCache(result) as any
+                                    return (new Data(result) as any) as T
                                 } catch (result) {
-                                    return new ErrorCache(result) as any
+                                    return (new Err(result) as any) as T
                                 }
                             }.call(undefined)
                         )
@@ -215,11 +214,11 @@ export class Atom<T = any> {
                     continue
                 }
 
-                const data = this.prepareNewData(value)
-                this.cache = new DataCache(data)
+                const data = this.prepareNewData(value as T)
+                this.cache = new Data(data)
             } catch (error) {
                 stack.pop()
-                this.cache = new ErrorCache(error)
+                this.cache = new Err(error)
             }
 
             dependencies.disposeUnused()
