@@ -138,23 +138,23 @@ describe('Situations', () => {
         const mock3 = jest.fn()
         const fac = factor('default')
         const One = fractal(function* (ctx) {
-            ctx!.set(fac, 'hello')
-            mock1(ctx!.get(fac))
+            ctx!.define(fac, 'hello')
+            mock1(ctx!.find(fac))
 
             while (true) {
                 yield yield* Two
             }
         })
         const Two = fractal(function* (ctx) {
-            mock2(ctx!.get(fac))
-            ctx!.set(fac, 'world')
+            mock2(ctx!.find(fac))
+            ctx!.define(fac, 'world')
 
             while (true) {
                 yield Thr
             }
         })
         const Thr = fractal(function* (ctx) {
-            mock3(ctx!.get(fac))
+            mock3(ctx!.find(fac))
 
             while (true) {
                 yield ''

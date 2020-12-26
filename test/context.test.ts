@@ -37,7 +37,7 @@ describe('Context', () => {
 
     whatsUp(test1, () => {})
 
-    describe('Factors', () => {
+    describe('Sharing', () => {
         const testFactor = new Factor('default')
 
         it('should have defaultValue', () => {
@@ -45,28 +45,47 @@ describe('Context', () => {
         })
 
         it('should return defaultValue when factor is not defined', () => {
-            const value = context1.get(testFactor)
+            const value = context1.find(testFactor)
             expect(value).toBe('default')
         })
 
         it('should return test value on child levels', () => {
-            context1.set(testFactor, 'hello')
+            context1.define(testFactor, 'hello')
 
-            expect(context2.get(testFactor)).toBe('hello')
-            expect(context3.get(testFactor)).toBe('hello')
-            expect(context4.get(testFactor)).toBe('hello')
+            expect(context2.find(testFactor)).toBe('hello')
+            expect(context3.find(testFactor)).toBe('hello')
+            expect(context4.find(testFactor)).toBe('hello')
         })
 
         it('should override factor for child levels', () => {
-            context3.set(testFactor, 'world')
+            context3.define(testFactor, 'world')
 
-            expect(context2.get(testFactor)).toBe('hello')
-            expect(context3.get(testFactor)).toBe('hello')
-            expect(context4.get(testFactor)).toBe('world')
+            expect(context2.find(testFactor)).toBe('hello')
+            expect(context3.find(testFactor)).toBe('hello')
+            expect(context4.find(testFactor)).toBe('world')
         })
 
         it('factor("test") should return instance of factor', () => {
             expect(factor('test')).toBeInstanceOf(Factor)
+        })
+
+        it('should share instance to children', () => {
+            class Instance {}
+            const instance = new Instance()
+
+            context1.share(instance)
+
+            expect(context2.find(Instance)).toBe(instance)
+            expect(context3.find(Instance)).toBe(instance)
+            expect(context4.find(Instance)).toBe(instance)
+        })
+
+        it('should return undefined when shared instance not found', () => {
+            class Instance {}
+
+            expect(context2.find(Instance)).toBe(undefined)
+            expect(context3.find(Instance)).toBe(undefined)
+            expect(context4.find(Instance)).toBe(undefined)
         })
     })
 

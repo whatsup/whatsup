@@ -4,13 +4,15 @@ import { Atom } from './atom'
 import { Actor, ActorController, ActorGenerator } from './actor'
 import { Result, Err } from './result'
 
+type Ctor<T> = Function | (new (...args: any[]) => T)
+
 export class Context {
     /**@internal */
     readonly parent: Context | null
 
     private readonly atom: Atom
     private readonly actors: Map<ActorGenerator<any, any>, ActorController<any, any>>
-    private factors!: WeakMap<Factor<any>, any>
+    private shared!: WeakMap<Factor<any> | Ctor<any>, any>
     private listeners!: WeakMap<EventCtor, Set<EventListener>>
 
     constructor(atom: Atom, parent: Context | null) {
@@ -20,31 +22,44 @@ export class Context {
     }
 
     /**@internal */
-    getFactors() {
-        return this.factors
+    getShared() {
+        return this.shared
     }
 
-    get<T>(factor: Factor<T>): T | undefined {
+    share<T>(instance: T & { constructor: Ctor<T> }) {
+        if (!this.shared) {
+            this.shared = new WeakMap()
+        }
+        this.shared.set(instance.constructor, instance)
+    }
+
+    define<T>(key: Factor<T>, value: T) {
+        if (!this.shared) {
+            this.shared = new WeakMap()
+        }
+        this.shared.set(key, value)
+    }
+
+    find<T>(key: Factor<T>): T | undefined
+    find<T>(key: Ctor<T>): T | undefined
+    find<T>(key: Factor<T> | Ctor<T>): T | undefined {
         let parent = this.parent as Context | null
 
         while (parent) {
-            const factors = parent.getFactors()
+            const shared = parent.getShared()
 
-            if (factors && factors.has(factor)) {
-                return factors.get(factor)
+            if (shared && shared.has(key)) {
+                return shared.get(key)
             }
 
             parent = parent.parent
         }
 
-        return factor.defaultValue
-    }
-
-    set<T>(factor: Factor<T>, value: T) {
-        if (!this.factors) {
-            this.factors = new WeakMap()
+        if (key instanceof Factor) {
+            return key.defaultValue
         }
-        this.factors.set(factor, value)
+
+        return undefined
     }
 
     on<T extends Event>(ctor: EventCtor<T>, listener: EventListener<T>) {
@@ -157,7 +172,7 @@ export class Context {
     }
 
     dispose() {
-        this.factors = undefined!
+        this.shared = undefined!
         this.listeners = undefined!
 
         for (const [_, actor] of this.actors) {
