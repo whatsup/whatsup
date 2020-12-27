@@ -22,7 +22,13 @@ class Scheduler {
 
         const result = action(transaction)
 
+        let counter = 0
+
         while (transaction === this.master) {
+            if (counter > 100) {
+                throw 'May be cycle?'
+            }
+
             transaction.run(key)
 
             if (transaction.state === State.Completed) {
@@ -32,6 +38,7 @@ class Scheduler {
                 if (this.master) {
                     transaction = this.master
                     key = transaction.key
+                    counter++
                     continue
                 }
             }
@@ -61,9 +68,15 @@ class Transaction {
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new WeakMap<Atom, number>()
+    //private readonly abortTimer: number
 
     constructor(key: symbol) {
         this.key = key
+        //this.abortTimer = setImmediate(() => this.abort()) as any // TODO
+    }
+
+    abort() {
+        throw 'Aborted'
     }
 
     add(atom: Atom) {
@@ -85,7 +98,7 @@ class Transaction {
                 const atom = queue[i++]
                 const oldCache = atom.getCache()
 
-                atom.build()
+                atom.rebuild()
 
                 const newCache = atom.getCache()
                 const consumers = atom.getConsumers()
@@ -100,6 +113,8 @@ class Transaction {
             }
 
             this.state = State.Completed
+
+            //clearImmediate(this.abortTimer as any) // TODO Node.Immediate mzf
         }
     }
 

@@ -1,15 +1,20 @@
+import { Context } from 'context'
 import { Cause } from './cause'
 
 export class Conse<T> extends Cause<T> {
     private value: T
+    private update?: () => void
 
     constructor(value: T) {
         super()
         this.value = value
     }
 
-    *whatsUp() {
+    *whatsUp(ctx: Context) {
         while (true) {
+            if (!this.update) {
+                this.update = () => ctx.update()
+            }
             yield this.value
         }
     }
@@ -20,7 +25,7 @@ export class Conse<T> extends Cause<T> {
 
     set(value: T) {
         this.value = value
-        this.atom.update()
+        this.update && this.update()
     }
 }
 

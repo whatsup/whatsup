@@ -273,29 +273,29 @@ describe('Actor', () => {
         expect(() => change!('thr')).toThrow('Already breaked')
     })
 
-    it(`should throw unknown value`, () => {
-        const mock = jest.fn()
-        let change: ActorController<any, any>
+    // it(`should throw unknown value`, () => {
+    //     const mock = jest.fn()
+    //     let change: ActorController<any, any>
 
-        const ups = cause(function* (ctx) {
-            const one = conse('one')
+    //     const ups = cause(function* (ctx) {
+    //         const one = conse('one')
 
-            change = ctx.actor(function* (_, arg: string) {
-                yield Symbol('WoW') as any
-                one.set(arg)
-            })
+    //         change = ctx.actor(function* (_, arg: string) {
+    //             yield Symbol('WoW') as any
+    //             one.set(arg)
+    //         })
 
-            while (true) {
-                yield yield* one
-            }
-        })
+    //         while (true) {
+    //             yield yield* one
+    //         }
+    //     })
 
-        whatsUp(ups, mock)
+    //     whatsUp(ups, mock)
 
-        expect(mock).lastCalledWith('one')
+    //     expect(mock).lastCalledWith('one')
 
-        expect(() => change!('two')).toThrow('Unknown value')
-    })
+    //     expect(() => change!('two')).toThrow('Unknown value')
+    // })
 
     it(`should catch exception`, () => {
         const mock = jest.fn()

@@ -2,7 +2,7 @@ import { fractal } from '../src/fractal'
 import { run } from '../src/run'
 
 describe('Run', () => {
-    it(`should take stream and return disposeer`, () => {
+    it(`should take stream and return disposer`, () => {
         const mock = jest.fn()
         const User = fractal(function* () {
             try {
@@ -21,7 +21,7 @@ describe('Run', () => {
         expect(mock).toBeCalledTimes(1)
     })
 
-    it(`should take iterator and return disposeer`, () => {
+    it(`should take iterator and return disposer`, () => {
         const mock = jest.fn()
 
         const dispose = run(function* () {

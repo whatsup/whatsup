@@ -12,7 +12,7 @@ function normalizeSource<T>(source: Stream<T> | StreamGeneratorFunc<T>): Stream<
 export function run<T>(source: Stream<T> | StreamGeneratorFunc<T>) {
     const normalized = normalizeSource(source)
     const onData = () => {}
-    const reaction = new Observer(normalized, onData)
+    const observer = new Observer(normalized, onData)
 
-    return reaction.run()
+    return observer.run()
 }

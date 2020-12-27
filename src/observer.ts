@@ -1,5 +1,6 @@
 import { Stream } from './stream'
 import { Cause } from './cause'
+import { Atom } from './atom'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
@@ -28,8 +29,9 @@ export class Observer<T> extends Cause<void> {
     }
 
     run() {
-        this.atom.update()
-        return () => this.atom.dispose()
+        const atom = new Atom(this, null)
+        atom.lazyBuild()
+        return () => atom.dispose()
     }
 }
 
