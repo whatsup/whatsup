@@ -4,7 +4,7 @@ import { Dependencies } from './dependencies'
 import { InitCommand } from './query'
 import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
-import { Err, Data, Result } from './result'
+import { Err, Data } from './result'
 import { Stack } from './stack'
 import { ActorGenerator } from './actor'
 
@@ -153,17 +153,17 @@ export class Atom<T = any> {
         }
     }
 
-    *[Symbol.iterator](): Generator<never, T, any> {
-        //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //        really is Generator<this | Query, T, any>
-        const result = (yield this as never) as Result
+    // *[Symbol.iterator](): Generator<never, T, any> {
+    //     //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
+    //     //        really is Generator<this | Query, T, any>
+    //     const result = (yield this as never) as Result
 
-        if (result instanceof Err) {
-            throw result.value
-        }
+    //     if (result instanceof Err) {
+    //         throw result.value
+    //     }
 
-        return result.value
-    }
+    //     return result.value
+    // }
 
     lazyBuild() {
         if (!this.cache) {

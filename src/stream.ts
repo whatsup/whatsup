@@ -1,3 +1,4 @@
+import { Err } from './result'
 import { Atom } from './atom'
 //import { Atomizer, ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
@@ -34,13 +35,13 @@ export abstract class Streamable<T> {
     // protected abstract readonly atomizer: Atomizer<T>
 
     *[Symbol.iterator](command: InitCommand): Generator<never, T, any> {
-        const { error, value } = yield command as never
+        const result = yield command as never
 
-        if (error) {
-            throw value
+        if (result instanceof Err) {
+            throw result.value
         }
 
-        return value
+        return result.value
         //        this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //        really is Generator<T | ConsumerQuery | Atom<any>, T, any>
         // const consumer: Atom = yield command as never // CONSUMER_QUERY as never
