@@ -1,41 +1,33 @@
-// import { Atom } from './atom'
-// import { Context } from './context'
-// import { Stream } from './stream'
+import { Stream } from './stream'
+import { Atom } from './atom'
 
-// export abstract class Atomizer<T> {
-//     abstract get(consumer: Atom): Atom
+const GLOBAL_MULTI_MAP = new WeakMap<Stream<any>, Atom>()
 
-//     protected readonly stream: Stream<T>
-//     protected readonly parentContext: Context | null
+export class Atomizer {
+    static readonly multiMap = new WeakMap<Stream<any>, Atom>()
 
-//     constructor(stream: Stream<T>, parentContext: Context | null = null) {
-//         this.stream = stream
-//         this.parentContext = parentContext
-//     }
-// }
+    private readonly root: Atom
+    private readonly multiMap: WeakMap<Stream<any>, Atom>
 
-// export class ExclusiveAtomizer<T> extends Atomizer<T> {
-//     private readonly atoms = new WeakMap<Atom, Atom>()
+    constructor(root: Atom) {
+        this.root = root
+        this.multiMap = new WeakMap()
+    }
 
-//     get(consumer: Atom) {
-//         if (!this.atoms.has(consumer)) {
-//             const parentContext = this.parentContext || consumer.getContext()
-//             const atom = new Atom(this.stream, parentContext)
+    get(stream: Stream<any>, multi: boolean): Atom {
+        if (multi) {
+            if (!this.multiMap.has(stream)) {
+                const atom = new Atom(stream, this.root.context)
+                this.multiMap.set(stream, atom)
+            }
 
-//             this.atoms.set(consumer, atom)
-//         }
+            return this.multiMap.get(stream)!
+        }
 
-//         return this.atoms.get(consumer)!
-//     }
-// }
+        if (!GLOBAL_MULTI_MAP.has(stream)) {
+            GLOBAL_MULTI_MAP.set(stream, new Atom(stream, null))
+        }
 
-// export class CommunalAtomizer<T> extends Atomizer<T> {
-//     private atom!: Atom<T>
-
-//     get() {
-//         if (!this.atom) {
-//             this.atom = new Atom(this.stream)
-//         }
-//         return this.atom
-//     }
-// }
+        return GLOBAL_MULTI_MAP.get(stream)!
+    }
+}
