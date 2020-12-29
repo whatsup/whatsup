@@ -1,13 +1,13 @@
 import { InitCommand } from './query'
 //import { ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
-import { DelegatingStream, StreamGenerator, StreamGeneratorFunc } from './stream'
+import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
 export interface FractalOptions {
     thisArg?: any
 }
 
-export abstract class Fractal<T> extends DelegatingStream<T> {
+export abstract class Fractal<T> extends Stream<T> {
     //protected readonly atomizer: ExclusiveAtomizer<T>
     abstract whatsUp(context: Context): StreamGenerator<T | Fractal<T>>
 
