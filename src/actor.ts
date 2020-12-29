@@ -1,9 +1,8 @@
-import { Delegation } from './stream'
 import { Context } from './context'
 
 export type ActorController<T, A> = ((arg: A) => T) & { dispose(): void }
 export type ActorGenerator<T, A> = (context: Context, arg: A) => Generator<T, T>
-export type ActorResolver<T, A> = (arg: A) => T | Delegation<T>
+export type ActorResolver<T, A> = (arg: A) => T
 
 function createController<T, A>(actor: Actor<T, A>) {
     const controller = (arg: A) => actor.resolve(arg)
