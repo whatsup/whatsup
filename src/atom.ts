@@ -97,11 +97,12 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                if (value instanceof Delegation) {
-                    stack.push(value.stream[Symbol.iterator](null as any))
-                    input = undefined
-                    continue
-                }
+                // ???
+                // if (value instanceof Delegation) {
+                //     stack.push(value.stream[Symbol.iterator](null as any))
+                //     input = undefined
+                //     continue
+                // }
 
                 const data = this.prepareNewData(value as T)
                 const result = error ? new Err(data as any) : new Data(data)
@@ -181,11 +182,12 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                if (value instanceof Delegation) {
-                    stack.push(value.stream[Symbol.iterator](null as any))
-                    input = undefined
-                    continue
-                }
+                // ???
+                // if (value instanceof Delegation) {
+                //     stack.push(value.stream[Symbol.iterator](null as any))
+                //     input = undefined
+                //     continue
+                // }
 
                 const result = error ? new Err(value as any) : new Data(value)
 
