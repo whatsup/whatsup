@@ -1,3 +1,5 @@
+import { delegate } from '../src/delegation'
+import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
 import { whatsUp } from '../src/observer'
@@ -202,6 +204,52 @@ describe('Errors', () => {
             Balance.set(100)
             expect(mock).toBeCalledTimes(5)
             expect(mock).lastCalledWith('User Wallet Balance 100')
+        })
+    })
+
+    describe('test catch error with delegating', () => {
+        const mock = jest.fn((v) => v)
+        const Toggle = conse(true)
+        const Balance = fraction(33)
+        const App = fractal(function* () {
+            while (true) {
+                try {
+                    yield `User ${yield* User}`
+                } catch (e) {
+                    yield `User ${e}`
+                }
+            }
+        })
+        const User = fractal(function* () {
+            if (yield* Toggle) {
+                throw delegate(Wallet)
+            } else {
+                return delegate(Wallet)
+            }
+        })
+        const Wallet = fractal(function* () {
+            while (true) {
+                yield `Balance ${yield* Balance}`
+            }
+        })
+
+        whatsUp(App, mock)
+
+        it(`mock called with "User Balance 33"`, () => {
+            expect(mock).toBeCalledTimes(1)
+            expect(mock).lastCalledWith('User Balance 33')
+        })
+
+        it(`mock called with "User Balance 10"`, () => {
+            Balance.set(10)
+            expect(mock).toBeCalledTimes(2)
+            expect(mock).lastCalledWith('User Balance 10')
+        })
+
+        it(`mock called with "User Balance 10" always`, () => {
+            Toggle.set(false)
+            expect(mock).toBeCalledTimes(2)
+            expect(mock).lastCalledWith('User Balance 10')
         })
     })
 })

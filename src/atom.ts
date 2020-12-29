@@ -97,7 +97,7 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                if (done && value instanceof Delegation) {
+                if (value instanceof Delegation) {
                     stack.push(value.stream[Symbol.iterator](null as any))
                     input = undefined
                     continue
@@ -114,7 +114,8 @@ export class Atom<T = any> {
                 //if (error) {
                 return result as any
                 //}
-            } else if (value instanceof InitCommand) {
+            }
+            if (value instanceof InitCommand) {
                 const { stream, multi } = value
                 const atom = this.atomizer.get(stream, multi)
 
@@ -180,7 +181,7 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                if (done && value instanceof Delegation) {
+                if (value instanceof Delegation) {
                     stack.push(value.stream[Symbol.iterator](null as any))
                     input = undefined
                     continue
@@ -196,7 +197,8 @@ export class Atom<T = any> {
                 //if (error) {
                 return result as any
                 //}
-            } else if (value instanceof InitCommand) {
+            }
+            if (value instanceof InitCommand) {
                 const { stream, multi } = value
                 const atom = this.atomizer.get(stream, multi)
 
