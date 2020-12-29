@@ -1,5 +1,4 @@
 import { InitCommand } from './query'
-//import { ExclusiveAtomizer } from './atomizer'
 import { Context } from './context'
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 
@@ -8,13 +7,7 @@ export interface FractalOptions {
 }
 
 export abstract class Fractal<T> extends Stream<T> {
-    //protected readonly atomizer: ExclusiveAtomizer<T>
     abstract whatsUp(context: Context): StreamGenerator<T | Fractal<T>>
-
-    // constructor() {
-    //     super()
-    //     this.atomizer = new ExclusiveAtomizer(this)
-    // }
 
     [Symbol.iterator](): Generator<never, T, any> {
         return super[Symbol.iterator](new InitCommand(this, { multi: true }))

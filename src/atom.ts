@@ -112,9 +112,7 @@ export class Atom<T = any> {
                     continue
                 }
 
-                //if (error) {
                 return result as any
-                //}
             }
             if (value instanceof InitCommand) {
                 const { stream, multi } = value
@@ -196,9 +194,7 @@ export class Atom<T = any> {
                     continue
                 }
 
-                //if (error) {
                 return result as any
-                //}
             }
             if (value instanceof InitCommand) {
                 const { stream, multi } = value

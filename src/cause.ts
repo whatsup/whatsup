@@ -1,5 +1,4 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
-//import { CommunalAtomizer } from './atomizer'
 import { Context } from './context'
 import { InitCommand } from './query'
 
@@ -8,17 +7,6 @@ export interface CauseOptions {
 }
 
 export abstract class Cause<T> extends Stream<T> {
-    //  protected readonly atomizer: CommunalAtomizer<T>
-
-    // constructor() {
-    //     super()
-    //     this.atomizer = new CommunalAtomizer(this)
-    // }
-
-    // protected get atom() {
-    //     return this.atomizer.get()
-    // }
-
     [Symbol.iterator](): Generator<never, T, any> {
         return super[Symbol.iterator](new InitCommand(this, { multi: false }))
     }
