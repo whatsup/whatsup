@@ -1,3 +1,4 @@
+import { delegate } from '../src/delegation'
 import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
 import { whatsUp } from '../src/observer'
@@ -12,9 +13,9 @@ describe('Delegating', () => {
         const One = fractal(function* () {
             while (true) {
                 if (mock1(yield* Trigger1) > 0) {
-                    yield Two
+                    yield delegate(Two)
                 } else {
-                    yield Trigger3
+                    yield delegate(Trigger3)
                 }
             }
         })
@@ -66,9 +67,9 @@ describe('Delegating', () => {
         const One = fractal(function* () {
             while (true) {
                 if (yield* Trigger1) {
-                    yield Two
+                    yield delegate(Two)
                 } else {
-                    yield Trigger2
+                    yield delegate(Trigger2)
                 }
             }
         })

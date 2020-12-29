@@ -1,6 +1,6 @@
 import { conse } from '../src/conse'
 import { factor } from '../src/factor'
-import { fractal } from '../src/fractal'
+import { Fractal, fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
 import { Mutator } from '../src/mutator'
 import { whatsUp } from '../src/observer'
@@ -150,7 +150,8 @@ describe('Situations', () => {
             ctx!.define(fac, 'world')
 
             while (true) {
-                yield Thr
+                yield* Four
+                yield yield* Thr
             }
         })
         const Thr = fractal(function* (ctx) {
@@ -159,7 +160,15 @@ describe('Situations', () => {
             while (true) {
                 yield ''
             }
-        })
+        }) as Fractal<any>
+        const Four = fractal(function* (ctx) {
+            ctx!.define(fac, 'delegator')
+            mock2(ctx!.find(fac))
+
+            while (true) {
+                yield Two
+            }
+        }) as Fractal<any>
 
         whatsUp(One, () => {})
 
@@ -169,8 +178,9 @@ describe('Situations', () => {
         })
 
         it(`should mock2 to be called with "hello"`, () => {
-            expect(mock2).toBeCalledTimes(1)
-            expect(mock2).lastCalledWith('hello')
+            expect(mock2).toBeCalledTimes(2)
+            expect(mock2).nthCalledWith(1, 'hello')
+            expect(mock2).nthCalledWith(2, 'world')
         })
 
         it(`should mock3 to be called with "world"`, () => {

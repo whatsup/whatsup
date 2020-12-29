@@ -4,6 +4,7 @@ import { fractal } from '../src/fractal'
 import { ActorController, ActorGenerator } from '../src/actor'
 import { Stream } from '../src/stream'
 import { whatsUp } from '../src/observer'
+import { delegate } from '../src/delegation'
 
 describe('Actor', () => {
     it(`should extract current value`, () => {
@@ -148,7 +149,7 @@ describe('Actor', () => {
         const ups = cause(function* (ctx) {
             const one = conse('one')
             const two = fractal<string>(function* () {
-                return one
+                while (true) yield delegate(one)
             } as any)
 
             def = ctx.actor(function* (_, arg) {
@@ -179,7 +180,7 @@ describe('Actor', () => {
         const ups = cause(function* (ctx) {
             const one = conse('one')
             const two = fractal<string>(function* () {
-                return thr
+                while (true) yield delegate(thr)
             } as any)
             const thr = fractal<string>(function* () {
                 throw 'THR'

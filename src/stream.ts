@@ -64,10 +64,10 @@ export abstract class Stream<T> extends Streamable<T> {
 
 export abstract class DelegatingStream<T> extends Stream<T> {}
 
-export class Delegation<T> extends Streamable<T> {
-    // protected readonly atomizer: ExclusiveAtomizer<T>
-    // constructor(stream: Stream<T>, parentContext: Context) {
-    //     super()
-    //     this.atomizer = new ExclusiveAtomizer(stream, parentContext)
-    // }
-}
+// export class Delegation<T> extends Streamable<T> {
+//     // protected readonly atomizer: ExclusiveAtomizer<T>
+//     // constructor(stream: Stream<T>, parentContext: Context) {
+//     //     super()
+//     //     this.atomizer = new ExclusiveAtomizer(stream, parentContext)
+//     // }
+// }

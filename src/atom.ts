@@ -1,13 +1,14 @@
-import { StreamIterator, Stream, Delegation, StreamGeneratorFunc } from './stream'
+import { StreamIterator, Stream, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { InitCommand } from './query'
+import { Command, InitCommand } from './query'
 import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { Err, Data } from './result'
 import { Stack } from './stack'
 import { ActorGenerator } from './actor'
 import { Atomizer } from './atomizer'
+import { Delegation } from './delegation'
 
 export class Atom<T = any> {
     readonly stream: Stream<T>
@@ -77,32 +78,61 @@ export class Atom<T = any> {
         let input: any
 
         while (true) {
+            let done: boolean
+            let error: boolean
+            let value: U | Command | Atom<any>
+
             try {
-                const { done, value } = stack.last.next(input)
+                const result = stack.last.next(input)
 
-                if (done) {
-                    stack.pop()
+                done = result.done!
+                error = false
+                value = result.value!
+            } catch (e) {
+                done = true
+                error = true
+                value = e
+            }
 
-                    if (!stack.empty) {
-                        input = value
-                        continue
-                    }
-                } else if (value instanceof InitCommand) {
-                    const { stream, multi } = value
-                    const atom = this.atomizer.get(stream, multi)
+            if (done || error) {
+                stack.pop()
 
-                    input = atom.exec(function (ctx: Context) {
-                        return atom.stream.whatsUp(ctx)
-                    }, null)
+                if (done && value instanceof Delegation) {
+                    stack.push(value.stream[Symbol.iterator](null as any))
+                    input = undefined
                     continue
                 }
 
-                const data = this.prepareNewData(value as any)
+                const data = this.prepareNewData(value as T)
+                const result = error ? new Err(data as any) : new Data(data)
 
-                return new Data(data as any)
-            } catch (error) {
-                return new Err(error)
+                if (!stack.empty) {
+                    input = result
+                    continue
+                }
+
+                //if (error) {
+                return result as any
+                //}
+            } else if (value instanceof InitCommand) {
+                const { stream, multi } = value
+                const atom = this.atomizer.get(stream, multi)
+
+                input = atom.exec(function (ctx: Context) {
+                    return atom.stream.whatsUp(ctx)
+                }, null)
+
+                if (input.value instanceof Delegation) {
+                    stack.push(input.value.stream[Symbol.iterator]())
+                    input = undefined
+                }
+                continue
             }
+
+            const data = this.prepareNewData(value as T)
+            const result = new Data(data)
+
+            return result as any
         }
     }
 
@@ -129,38 +159,63 @@ export class Atom<T = any> {
         }
 
         let input: any
-        let result: Err | Data<T | Delegation<T>>
 
         while (true) {
+            let done: boolean
+            let error: boolean
+            let value: any
+
             try {
-                const { done, value } = stack.last.next(input)
+                const result = stack.last.next(input)
 
-                if (done) {
-                    stack.pop()
+                done = result.done!
+                error = false
+                value = result.value!
+            } catch (e) {
+                done = true
+                error = true
+                value = e
+            }
 
-                    if (!stack.empty) {
-                        input = value
-                        continue
-                    }
-                } else if (value instanceof InitCommand) {
-                    const { stream, multi } = value
-                    const atom = this.atomizer.get(stream, multi)
+            if (done || error) {
+                stack.pop()
 
-                    dependencies.add(atom)
-                    atom.addConsumer(this)
-
-                    input = atom.lazyBuild()
+                if (done && value instanceof Delegation) {
+                    stack.push(value.stream[Symbol.iterator](null as any))
+                    input = undefined
                     continue
                 }
 
-                const data = this.prepareNewData(value as T)
-                result = new Data(data)
-            } catch (error) {
-                stack.pop()
-                result = new Err(error)
+                const result = error ? new Err(value as any) : new Data(value)
+
+                if (!stack.empty) {
+                    input = result
+                    continue
+                }
+
+                //if (error) {
+                return result as any
+                //}
+            } else if (value instanceof InitCommand) {
+                const { stream, multi } = value
+                const atom = this.atomizer.get(stream, multi)
+
+                dependencies.add(atom)
+                atom.addConsumer(this)
+
+                input = atom.lazyBuild()
+
+                if (input.value instanceof Delegation) {
+                    stack.push(input.value.stream[Symbol.iterator]())
+                    input = undefined
+                }
+                continue
             }
 
             dependencies.disposeUnused()
+
+            const data = this.prepareNewData(value as T)
+            const result = new Data(data)
 
             return result
         }
