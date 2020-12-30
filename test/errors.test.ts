@@ -209,15 +209,12 @@ describe('Errors', () => {
 
     describe('test catch error with delegating', () => {
         const mock = jest.fn((v) => v)
+        const mock2 = jest.fn((v) => v)
         const Toggle = conse(true)
         const Balance = fraction(33)
         const App = fractal(function* () {
             while (true) {
-                try {
-                    yield `User ${yield* User}`
-                } catch (e) {
-                    yield `User ${e}`
-                }
+                yield `User ${yield* User}`
             }
         })
         const User = fractal(function* () {
@@ -233,21 +230,21 @@ describe('Errors', () => {
             }
         })
 
-        whatsUp(App, mock)
+        whatsUp(App, mock, mock2)
 
         it(`mock called with "User Balance 33"`, () => {
+            expect(mock2).toBeCalledTimes(1)
+            expect(mock2).lastCalledWith(delegate(Wallet))
+        })
+
+        it(`mock called with "User Balance 10" always`, () => {
+            Toggle.set(false)
             expect(mock).toBeCalledTimes(1)
             expect(mock).lastCalledWith('User Balance 33')
         })
 
         it(`mock called with "User Balance 10"`, () => {
             Balance.set(10)
-            expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Balance 10')
-        })
-
-        it(`mock called with "User Balance 10" always`, () => {
-            Toggle.set(false)
             expect(mock).toBeCalledTimes(2)
             expect(mock).lastCalledWith('User Balance 10')
         })
