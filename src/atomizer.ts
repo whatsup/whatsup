@@ -1,18 +1,18 @@
 import { Stream } from './stream'
 import { Atom } from './atom'
 
-const GLOBAL_MAP = new WeakMap<Stream<any>, Atom>()
+const GLOBAL_MAP = new WeakMap<Stream<unknown>, Atom>()
 
-export class Atomizer {
-    private readonly root: Atom
-    private readonly map: WeakMap<Stream<any>, Atom>
+export class Atomizer<T> {
+    private readonly root: Atom<T>
+    private readonly map: WeakMap<Stream<T>, Atom>
 
     constructor(root: Atom) {
         this.root = root
         this.map = new WeakMap()
     }
 
-    get(stream: Stream<any>, multi: boolean): Atom {
+    get(stream: Stream<T>, multi: boolean): Atom<T> {
         if (multi) {
             if (!this.map.has(stream)) {
                 const atom = new Atom(stream, this.root.context)

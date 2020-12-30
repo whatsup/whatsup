@@ -14,20 +14,18 @@ export class Atom<T = any> {
     readonly stream: Stream<T>
     readonly context: Context
     private readonly stack: Stack<StreamIterator<T>>
-    private readonly atomizer: Atomizer
+    private readonly atomizer: Atomizer<T>
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
-    // private readonly delegations: WeakMap<Stream<any>, Delegation<T>>
     private cache: Err | Data<T | Delegation<T>> | undefined
 
     constructor(stream: Stream<T>, parentContext: Context | null = null) {
+        this.stack = new Stack()
         this.stream = stream
         this.context = new Context(this, parentContext)
-        this.consumers = new Set()
-        this.stack = new Stack()
-        this.dependencies = new Dependencies(this)
-        //this.delegations = new WeakMap()
         this.atomizer = new Atomizer(this)
+        this.consumers = new Set()
+        this.dependencies = new Dependencies(this)
     }
 
     addConsumer(consumer: Atom) {
@@ -38,16 +36,8 @@ export class Atom<T = any> {
         return this.consumers
     }
 
-    getContext() {
-        return this.context
-    }
-
     getCache() {
         return this.cache
-    }
-
-    getCacheValue() {
-        return this.cache && this.cache.value
     }
 
     update() {
@@ -118,8 +108,8 @@ export class Atom<T = any> {
                 const { stream, multi } = value
                 const atom = this.atomizer.get(stream, multi)
 
-                input = atom.exec(function (ctx: Context) {
-                    return atom.stream.whatsUp(ctx)
+                input = atom.exec(function (this: Stream<any>, ctx: Context) {
+                    return this.whatsUp(ctx)
                 }, null)
 
                 if (input.value instanceof Delegation) {
@@ -223,23 +213,11 @@ export class Atom<T = any> {
 
     private prepareNewData(value: T): T | Delegation<T> {
         if (value instanceof Mutator) {
-            const oldValue = this.getCacheValue()
+            const oldValue = this.cache && this.cache.value
             const newValue = value.mutate(oldValue) as T
             return newValue
         }
 
-        // if (value instanceof Stream && this.stream instanceof DelegatingStream) {
-        //     return this.getDelegation(value)
-        // }
-
         return value
     }
-
-    // private getDelegation(stream: Stream<any>) {
-    //     if (!this.delegations.has(stream)) {
-    //         const delegation = new Delegation(stream, this.context)
-    //         this.delegations.set(stream, delegation)
-    //     }
-    //     return this.delegations.get(stream)!
-    // }
 }
