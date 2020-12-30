@@ -79,7 +79,7 @@ export class Atom<T = any> {
                 error = false
                 value = result.value!
             } catch (e) {
-                done = true
+                done = false
                 error = true
                 value = e
             }
@@ -87,8 +87,7 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                const data = this.prepareNewData(value as T)
-                const result = error ? new Err(data as any) : new Data(data)
+                const result = error ? new Err(value as any) : new Data(this.prepareNewData(value as T))
 
                 if (!stack.empty) {
                     input = result
@@ -155,7 +154,7 @@ export class Atom<T = any> {
                 error = false
                 value = result.value!
             } catch (e) {
-                done = true
+                done = false
                 error = true
                 value = e
             }
@@ -163,7 +162,7 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                const result = error ? new Err(value as any) : new Data(value)
+                const result = error ? new Err(value as any) : new Data(this.prepareNewData(value as T))
 
                 if (!stack.empty) {
                     input = result
