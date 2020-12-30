@@ -20,7 +20,8 @@ export class Observer<T> extends Cause<void> {
     *whatsUp() {
         while (true) {
             try {
-                this.onData(yield* this.target)
+                const d = yield* this.target
+                this.onData(d)
             } catch (e) {
                 this.onError(e)
             }
