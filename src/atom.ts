@@ -19,10 +19,10 @@ export class Atom<T = any> {
     private readonly dependencies: Dependencies
     private cache: Err | Data<T | Delegation<T>> | undefined
 
-    constructor(stream: Stream<T>, parentContext: Context | null = null) {
+    constructor(stream: Stream<T>, parent: Atom | null) {
         this.stack = new Stack()
         this.stream = stream
-        this.context = new Context(this, parentContext)
+        this.context = new Context(this, parent && parent.context)
         this.atomizer = new Atomizer(this)
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)

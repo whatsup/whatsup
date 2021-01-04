@@ -15,7 +15,7 @@ export class Atomizer<T> {
     get(stream: Stream<T>, multi: boolean): Atom<T> {
         if (multi) {
             if (!this.map.has(stream)) {
-                const atom = new Atom(stream, this.root.context)
+                const atom = new Atom(stream, this.root)
                 this.map.set(stream, atom)
             }
 
