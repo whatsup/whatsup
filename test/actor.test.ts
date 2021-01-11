@@ -1,7 +1,7 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { Actor, ActorGenerator } from '../src/context'
+import { Actor } from '../src/context'
 import { Stream } from '../src/stream'
 import { whatsUp } from '../src/observer'
 import { delegate } from '../src/delegation'
@@ -34,42 +34,6 @@ describe('Actor', () => {
 
         expect(result).toBe('HelloWorld')
         expect(mock).lastCalledWith('HelloWorld')
-
-        change!.dispose()
-
-        expect(() => change!('Double')).toThrow()
-    })
-
-    it(`should return some actor on sem sem generator`, () => {
-        const mock = jest.fn()
-        let def: Actor<any, any>
-
-        const ups = cause(function* (ctx) {
-            const value = conse('Hello')
-
-            const define: ActorGenerator<string, string> = function* (_, arg) {
-                const newValue = (yield* value) + arg
-                value.set(newValue)
-                return newValue
-            }
-
-            while (true) {
-                def = ctx.actor(define)
-
-                yield yield* value
-            }
-        })
-
-        whatsUp(ups, mock)
-
-        expect(mock).lastCalledWith('Hello')
-
-        const old = def!
-
-        def!('World')
-
-        expect(mock).lastCalledWith('HelloWorld')
-        expect(def!).toBe(old)
     })
 
     it(`should extract from nested`, () => {
@@ -210,93 +174,6 @@ describe('Actor', () => {
 
         expect(errMock).lastCalledWith('THR')
     })
-
-    it(`should throw already breaked`, () => {
-        const mock = jest.fn()
-        let change: Actor<any, any>
-
-        const ups = cause(function* (ctx) {
-            const one = conse('one')
-
-            change = ctx.actor(function* (_, arg: string) {
-                one.set(arg)
-                change.dispose()
-            })
-
-            while (true) {
-                yield yield* one
-            }
-        })
-
-        whatsUp(ups, mock)
-
-        expect(mock).lastCalledWith('one')
-
-        change!('two')
-
-        expect(mock).lastCalledWith('two')
-        expect(() => change!('thr')).toThrow('Actor already disposed')
-    })
-
-    it(`should break when atom dispose`, () => {
-        const mock = jest.fn()
-        const disposeMock = jest.fn()
-        let change: Actor<any, any>
-
-        const ups = cause(function* (ctx) {
-            try {
-                const one = conse('one')
-
-                change = ctx.actor(function* (_, arg: string) {
-                    one.set(arg)
-                })
-
-                while (true) {
-                    yield yield* one
-                }
-            } finally {
-                disposeMock()
-            }
-        })
-
-        const dispose = whatsUp(ups, mock)
-
-        expect(mock).lastCalledWith('one')
-
-        change!('two')
-
-        expect(mock).lastCalledWith('two')
-
-        dispose()
-
-        expect(disposeMock).toBeCalled()
-
-        expect(() => change!('thr')).toThrow('Actor already disposed')
-    })
-
-    // it(`should throw unknown value`, () => {
-    //     const mock = jest.fn()
-    //     let change: ActorController<any, any>
-
-    //     const ups = cause(function* (ctx) {
-    //         const one = conse('one')
-
-    //         change = ctx.actor(function* (_, arg: string) {
-    //             yield Symbol('WoW') as any
-    //             one.set(arg)
-    //         })
-
-    //         while (true) {
-    //             yield yield* one
-    //         }
-    //     })
-
-    //     whatsUp(ups, mock)
-
-    //     expect(mock).lastCalledWith('one')
-
-    //     expect(() => change!('two')).toThrow('Unknown value')
-    // })
 
     it(`should catch exception`, () => {
         const mock = jest.fn()

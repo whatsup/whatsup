@@ -4,7 +4,7 @@ import { Atom } from './atom'
 import { Result, Err } from './result'
 import { Stream } from './stream'
 
-export type Actor<T, A> = ((arg: A) => T) & { dispose(): void }
+export type Actor<T, A> = (arg: A) => T
 export type ActorGenerator<T, A> = (context: Context, arg: A) => Generator<T, T>
 
 type Ctor<T> = Function | (new (...args: any[]) => T)
@@ -14,14 +14,12 @@ export class Context {
     readonly parent: Context | null
 
     private readonly atom: Atom
-    private readonly actors: Map<ActorGenerator<any, any>, Actor<any, any>>
     private shared: WeakMap<Factor<any> | Ctor<any>, any> | undefined
     private listeners: WeakMap<EventCtor, Set<EventListener>> | undefined
 
     constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
         this.parent = parent
-        this.actors = new Map()
     }
 
     /**@internal */
@@ -111,42 +109,19 @@ export class Context {
     }
 
     actor<T, A>(generator: ActorGenerator<T, A>) {
-        const { atom, actors } = this
+        const { atom } = this
 
-        if (actors.has(generator)) {
-            return actors.get(generator)!
-        }
-
-        let disposed = false
-
-        const actor = (arg: A) => {
-            if (disposed) {
-                throw 'Actor already disposed'
-            }
-
-            const cache = atom.exec(function (this: Stream<any>, ctx: Context) {
+        return (arg: A) => {
+            const result = atom.exec(function (this: Stream<any>, ctx: Context) {
                 return generator.call(this, ctx, arg) as any
             }) as Result
 
-            if (cache instanceof Err) {
-                throw cache.value
+            if (result instanceof Err) {
+                throw result.value
             }
 
-            return cache.value
+            return result.value
         }
-
-        Object.defineProperties(actor, {
-            dispose: {
-                value() {
-                    disposed = true
-                    actors.delete(generator)
-                },
-            },
-        })
-
-        actors.set(generator, actor as Actor<T, A>)
-
-        return actor as Actor<T, A>
     }
 
     /* 
@@ -191,11 +166,5 @@ export class Context {
     dispose() {
         this.shared = undefined
         this.listeners = undefined
-
-        for (const [_, actor] of this.actors) {
-            actor.dispose()
-        }
-
-        this.actors.clear()
     }
 }
