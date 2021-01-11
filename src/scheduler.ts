@@ -75,9 +75,9 @@ class Transaction {
         //this.abortTimer = setImmediate(() => this.abort()) as any // TODO
     }
 
-    abort() {
-        throw 'Aborted'
-    }
+    // abort() {
+    //     throw 'Aborted'
+    // }
 
     add(atom: Atom) {
         if (!this.queue.includes(atom)) {
