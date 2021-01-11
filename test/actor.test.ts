@@ -1,7 +1,7 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { ActorController, ActorGenerator } from '../src/actor'
+import { Actor, ActorGenerator } from '../src/context'
 import { Stream } from '../src/stream'
 import { whatsUp } from '../src/observer'
 import { delegate } from '../src/delegation'
@@ -9,7 +9,7 @@ import { delegate } from '../src/delegation'
 describe('Actor', () => {
     it(`should extract current value`, () => {
         const mock = jest.fn()
-        let change: ActorController<any, any>
+        let change: Actor<any, any>
 
         const f = cause(function* (ctx) {
             const value = conse('Hello')
@@ -42,7 +42,7 @@ describe('Actor', () => {
 
     it(`should return some actor on sem sem generator`, () => {
         const mock = jest.fn()
-        let def: ActorController<any, any>
+        let def: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             const value = conse('Hello')
@@ -74,7 +74,7 @@ describe('Actor', () => {
 
     it(`should extract from nested`, () => {
         const mock = jest.fn()
-        let def: ActorController<any, any>
+        let def: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -108,7 +108,7 @@ describe('Actor', () => {
         const mock = jest.fn()
         let sourceThis: Stream<any>
         let actorThis: Stream<any>
-        let def: ActorController<any, any>
+        let def: Actor<any, any>
 
         const ups = cause(function* (this: Stream<any>, ctx) {
             const one = conse('one')
@@ -144,7 +144,7 @@ describe('Actor', () => {
 
     it(`should extract delegation`, () => {
         const mock = jest.fn()
-        let def: ActorController<any, any>
+        let def: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -175,7 +175,7 @@ describe('Actor', () => {
     it(`should extract error from delegation`, () => {
         const mock = jest.fn()
         const errMock = jest.fn()
-        let def: ActorController<any, any>
+        let def: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -213,7 +213,7 @@ describe('Actor', () => {
 
     it(`should throw already breaked`, () => {
         const mock = jest.fn()
-        let change: ActorController<any, any>
+        let change: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -235,13 +235,13 @@ describe('Actor', () => {
         change!('two')
 
         expect(mock).lastCalledWith('two')
-        expect(() => change!('thr')).toThrow('Already breaked')
+        expect(() => change!('thr')).toThrow('Actor already disposed')
     })
 
     it(`should break when atom dispose`, () => {
         const mock = jest.fn()
         const disposeMock = jest.fn()
-        let change: ActorController<any, any>
+        let change: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             try {
@@ -271,7 +271,7 @@ describe('Actor', () => {
 
         expect(disposeMock).toBeCalled()
 
-        expect(() => change!('thr')).toThrow('Already breaked')
+        expect(() => change!('thr')).toThrow('Actor already disposed')
     })
 
     // it(`should throw unknown value`, () => {
@@ -300,7 +300,7 @@ describe('Actor', () => {
 
     it(`should catch exception`, () => {
         const mock = jest.fn()
-        let change: ActorController<any, any>
+        let change: Actor<any, any>
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -323,7 +323,7 @@ describe('Actor', () => {
 
     it(`should catch nested exception`, () => {
         const mock = jest.fn()
-        let change: ActorController<any, any>
+        let change: Actor<any, any>
 
         const nested = cause(function* () {
             throw 'WoW'

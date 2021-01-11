@@ -1,9 +1,11 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
-import { Actor, ActorController, ActorGenerator } from './actor'
 import { Result, Err } from './result'
 import { Stream } from './stream'
+
+export type Actor<T, A> = ((arg: A) => T) & { dispose(): void }
+export type ActorGenerator<T, A> = (context: Context, arg: A) => Generator<T, T>
 
 type Ctor<T> = Function | (new (...args: any[]) => T)
 
@@ -12,7 +14,7 @@ export class Context {
     readonly parent: Context | null
 
     private readonly atom: Atom
-    private readonly actors: Map<ActorGenerator<any, any>, ActorController<any, any>>
+    private readonly actors: Map<ActorGenerator<any, any>, Actor<any, any>>
     private shared: WeakMap<Factor<any> | Ctor<any>, any> | undefined
     private listeners: WeakMap<EventCtor, Set<EventListener>> | undefined
 
@@ -115,24 +117,36 @@ export class Context {
             return actors.get(generator)!
         }
 
-        const { controller } = new Actor<T, A>(
-            (arg: A) => {
-                const cache = atom.exec(function (this: Stream<any>, ctx: Context) {
-                    return generator.call(this, ctx, arg) as any
-                }) as Result
+        let disposed = false
 
-                if (cache instanceof Err) {
-                    throw cache.value
-                }
+        const actor = (arg: A) => {
+            if (disposed) {
+                throw 'Actor already disposed'
+            }
 
-                return cache.value
+            const cache = atom.exec(function (this: Stream<any>, ctx: Context) {
+                return generator.call(this, ctx, arg) as any
+            }) as Result
+
+            if (cache instanceof Err) {
+                throw cache.value
+            }
+
+            return cache.value
+        }
+
+        Object.defineProperties(actor, {
+            dispose: {
+                value() {
+                    disposed = true
+                    actors.delete(generator)
+                },
             },
-            () => actors.delete(generator)
-        )
+        })
 
-        actors.set(generator, controller)
+        actors.set(generator, actor as Actor<T, A>)
 
-        return controller
+        return actor as Actor<T, A>
     }
 
     /* 
