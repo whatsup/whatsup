@@ -3,6 +3,7 @@ import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
 import { Actor, ActorController, ActorGenerator } from './actor'
 import { Result, Err } from './result'
+import { Stream } from './stream'
 
 type Ctor<T> = Function | (new (...args: any[]) => T)
 
@@ -12,8 +13,8 @@ export class Context {
 
     private readonly atom: Atom
     private readonly actors: Map<ActorGenerator<any, any>, ActorController<any, any>>
-    private shared!: WeakMap<Factor<any> | Ctor<any>, any>
-    private listeners!: WeakMap<EventCtor, Set<EventListener>>
+    private shared: WeakMap<Factor<any> | Ctor<any>, any> | undefined
+    private listeners: WeakMap<EventCtor, Set<EventListener>> | undefined
 
     constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
@@ -116,7 +117,9 @@ export class Context {
 
         const { controller } = new Actor<T, A>(
             (arg: A) => {
-                const cache = (atom.exec(generator, arg) as any) as Result
+                const cache = atom.exec(function (this: Stream<any>, ctx: Context) {
+                    return generator.call(this, ctx, arg) as any
+                }) as Result
 
                 if (cache instanceof Err) {
                     throw cache.value
@@ -172,8 +175,8 @@ export class Context {
     }
 
     dispose() {
-        this.shared = undefined!
-        this.listeners = undefined!
+        this.shared = undefined
+        this.listeners = undefined
 
         for (const [_, actor] of this.actors) {
             actor.dispose()

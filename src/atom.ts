@@ -6,7 +6,6 @@ import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { Err, Data } from './result'
 import { Stack } from './stack'
-import { ActorGenerator } from './actor'
 import { Atomizer } from './atomizer'
 import { Delegation } from './delegation'
 
@@ -59,11 +58,11 @@ export class Atom<T = any> {
         }
     }
 
-    exec<U, A>(generator: ActorGenerator<U, A>, arg: A): Data<U | Delegation<U>> | Err {
+    exec<U>(generator: StreamGeneratorFunc<U>): Data<U | Delegation<U>> | Err {
         const { context, stream } = this
         const stack = new Stack<StreamIterator<U>>()
 
-        stack.push(generator.call(stream, context, arg))
+        stack.push(generator.call(stream, context) as StreamIterator<U>)
 
         let input: any
 
@@ -102,7 +101,7 @@ export class Atom<T = any> {
 
                 input = atom.exec(function (this: Stream<any>, ctx: Context) {
                     return this.whatsUp(ctx)
-                }, null)
+                })
 
                 if (input instanceof Data && input.value instanceof Delegation) {
                     stack.push(input.value.stream[Symbol.iterator](null as any))

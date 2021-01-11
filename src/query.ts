@@ -1,9 +1,10 @@
 import { Stream } from './stream'
 
+export class CommandOptions {}
+
 export class Command {
     constructor(_: CommandOptions) {}
 }
-export class CommandOptions {}
 
 export interface InitOptions extends CommandOptions {
     multi: boolean
