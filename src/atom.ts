@@ -196,7 +196,7 @@ export class Atom<T = any> {
         }
     }
 
-    private prepareNewData(value: T): T | Delegation<T> {
+    private prepareNewData(value: T): T {
         if (value instanceof Mutator) {
             const oldValue = this.cache && this.cache.value
             const newValue = value.mutate(oldValue) as T
