@@ -2,7 +2,7 @@ import { cause } from '../src/cause'
 import { whatsUp } from '../src/observer'
 
 describe('Defer', () => {
-    const delay = <T>(t: number, v?: T) => new Promise<T>((r) => setTimeout(() => r(v), t))
+    const delay = <T>(t: number) => new Promise<T>((r) => setTimeout(r, t))
 
     it(`should toggle context`, async () => {
         const mock = jest.fn()
