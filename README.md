@@ -1,3 +1,5 @@
+> Sorry, but this information is temporarily out of date. We are moving to a new name "whatsup". We will soon release a new version and update the readme.
+
 ![](https://hsto.org/webt/7u/82/rc/7u82rcfrurytc0gvyels2j9ut_u.png)
 
 <div align="center">
