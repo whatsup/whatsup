@@ -6,7 +6,6 @@ import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { Err, Data } from './result'
 import { Stack } from './stack'
-import { Atomizer } from './atomizer'
 import { Delegation } from './delegation'
 
 export class Atom<T = any> {
@@ -203,5 +202,34 @@ export class Atom<T = any> {
         }
 
         return value
+    }
+}
+
+class Atomizer<T> {
+    static readonly map = new WeakMap<Stream<unknown>, Atom>()
+
+    private readonly root: Atom<T>
+    private readonly map: WeakMap<Stream<T>, Atom>
+
+    constructor(root: Atom) {
+        this.root = root
+        this.map = new WeakMap()
+    }
+
+    get(stream: Stream<T>, multi: boolean): Atom<T> {
+        if (multi) {
+            if (!this.map.has(stream)) {
+                const atom = new Atom(stream, this.root)
+                this.map.set(stream, atom)
+            }
+
+            return this.map.get(stream)!
+        }
+
+        if (!Atomizer.map.has(stream)) {
+            Atomizer.map.set(stream, new Atom(stream, null))
+        }
+
+        return Atomizer.map.get(stream)!
     }
 }
