@@ -74,13 +74,11 @@ export class Context {
     }
 
     off<T extends Event>(ctor: EventCtor<T>, listener?: EventListener<T>) {
-        if (this.listeners) {
-            if (this.listeners.has(ctor)) {
-                if (listener) {
-                    this.listeners.get(ctor)!.delete(listener)
-                } else {
-                    this.listeners.delete(ctor)
-                }
+        if (this.listeners && this.listeners.has(ctor)) {
+            if (listener) {
+                this.listeners.get(ctor)!.delete(listener)
+            } else {
+                this.listeners.delete(ctor)
             }
         }
     }
