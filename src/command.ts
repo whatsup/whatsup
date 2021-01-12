@@ -8,7 +8,7 @@ export interface InitOptions {
 }
 
 export class InitCommand extends Command {
-    readonly stream: Stream<any>
+    readonly stream: Stream
     readonly multi: boolean
 
     constructor({ stream, multi }: InitOptions) {

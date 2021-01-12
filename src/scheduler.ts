@@ -72,7 +72,7 @@ class Transaction {
 
     constructor(key: symbol) {
         this.key = key
-        //this.abortTimer = setImmediate(() => this.abort()) as any // TODO
+        //this.abortTimer = setImmediate(() => this.abort()) // TODO
     }
 
     // abort() {
@@ -114,7 +114,7 @@ class Transaction {
 
             this.state = State.Completed
 
-            //clearImmediate(this.abortTimer as any) // TODO Node.Immediate mzf
+            //clearImmediate(this.abortTimer) // TODO Node.Immediate mzf
         }
     }
 

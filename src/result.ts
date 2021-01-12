@@ -1,4 +1,4 @@
-export abstract class Result<T = any> {
+export abstract class Result<T = unknown> {
     readonly value: T
 
     constructor(value: T) {

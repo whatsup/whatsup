@@ -4,15 +4,15 @@ import { Atom } from './atom'
 import { Err } from './result'
 import { Stream } from './stream'
 
-type Ctor<T> = Function | (new (...args: any[]) => T)
+type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
 export class Context {
     /**@internal */
     readonly parent: Context | null
 
     private readonly atom: Atom
-    private shared: WeakMap<Factor<any> | Ctor<any>, any> | undefined
-    private listeners: WeakMap<EventCtor, Set<EventListener>> | undefined
+    private shared: WeakMap<Factor<unknown> | Ctor<unknown>, unknown> | undefined
+    private listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined
 
     constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
@@ -47,7 +47,7 @@ export class Context {
             const shared = parent.getShared()
 
             if (shared && shared.has(key)) {
-                return shared.get(key)
+                return shared.get(key) as T
             }
 
             parent = parent.parent
@@ -105,9 +105,9 @@ export class Context {
         }
     }
 
-    actor<T, A extends any[]>(generator: (this: Stream<any>, context: Context, ...args: A) => Generator<T, T>) {
+    actor<T, A extends unknown[]>(generator: (this: Stream, context: Context, ...args: A) => Generator<T, T>) {
         return (...args: A) => {
-            const result = this.atom.exec<T>(function (this: Stream<any>, context: Context) {
+            const result = this.atom.exec<T>(function (this: Stream, context: Context) {
                 return generator.call(this, context, ...args)
             })
 
@@ -134,7 +134,7 @@ export class Context {
     ctx.defer(()=>                          порядке )
     */
 
-    private deferred: Promise<any> | null = null
+    private deferred: Promise<unknown> | null = null
 
     defer<T>(deffered: () => Promise<T>) {
         const promise = this.deferred ? this.deferred.then(deffered) : deffered()

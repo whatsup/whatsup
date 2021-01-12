@@ -8,14 +8,14 @@ import { Err, Data } from './result'
 import { Stack } from './stack'
 import { Delegation } from './delegation'
 
-export class Atom<T = any> {
+export class Atom<T = unknown> {
     readonly stream: Stream<T>
     readonly context: Context
     private readonly stack: Stack<StreamIterator<T>>
-    private readonly atomizer: Atomizer<T>
+    private readonly atomizer: Atomizer
     private readonly consumers: Set<Atom>
     private readonly dependencies: Dependencies
-    private cache: Err | Data<T | Delegation<T>> | undefined
+    private cache: Err | Data<T> | undefined
 
     constructor(stream: Stream<T>, parent: Atom | null) {
         this.stack = new Stack()
@@ -57,18 +57,18 @@ export class Atom<T = any> {
         }
     }
 
-    exec<U>(generator: StreamGeneratorFunc<U>): Data<U | Delegation<U>> | Err {
+    exec<U extends T>(generator: StreamGeneratorFunc<U>): Data<U> | Err {
         const { context, stream } = this
         const stack = new Stack<StreamIterator<U>>()
 
         stack.push(generator.call(stream, context) as StreamIterator<U>)
 
-        let input: any
+        let input: unknown
 
         while (true) {
             let done: boolean
             let error: boolean
-            let value: U | Command | Atom<any>
+            let value: U | Command | Delegation<U> | Mutator<U>
 
             try {
                 const result = stack.last.next(input)
@@ -85,34 +85,34 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                const result = error ? new Err(value as any) : new Data(this.prepareNewData(value as T))
+                const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as U))
 
                 if (!stack.empty) {
                     input = result
                     continue
                 }
 
-                return result as any
+                return result
             }
             if (value instanceof InitCommand) {
                 const { stream, multi } = value
                 const atom = this.atomizer.get(stream, multi)
 
-                input = atom.exec(function (this: Stream<any>, ctx: Context) {
+                input = atom.exec(function (this: Stream, ctx: Context) {
                     return this.whatsUp(ctx)
                 })
 
                 if (input instanceof Data && input.value instanceof Delegation) {
-                    stack.push(input.value.stream[Symbol.iterator](null as any))
+                    stack.push(input.value.stream[Symbol.iterator]())
                     input = undefined
                 }
                 continue
             }
 
-            const data = this.prepareNewData(value as T)
+            const data = this.prepareNewData(value as U)
             const result = new Data(data)
 
-            return result as any
+            return result
         }
     }
 
@@ -124,12 +124,12 @@ export class Atom<T = any> {
     }
 
     rebuild() {
-        this.cache = this.build(function (this: Stream<any>, ctx: Context) {
+        this.cache = this.build(function (this: Stream<T>, ctx: Context) {
             return this.whatsUp(ctx)
         })
     }
 
-    build(generator: StreamGeneratorFunc<T>): Err | Data<T | Delegation<T>> {
+    build(generator: StreamGeneratorFunc<T>): Err | Data<T> {
         const { stack, dependencies, context, stream } = this
 
         dependencies.swap()
@@ -138,12 +138,12 @@ export class Atom<T = any> {
             stack.push(generator.call(stream, context) as StreamIterator<T>)
         }
 
-        let input: any
+        let input: unknown
 
         while (true) {
             let done: boolean
             let error: boolean
-            let value: any
+            let value: T | Command | Delegation<T> | Mutator<T>
 
             try {
                 const result = stack.last.next(input)
@@ -160,14 +160,14 @@ export class Atom<T = any> {
             if (done || error) {
                 stack.pop()
 
-                const result = error ? new Err(value as any) : new Data(this.prepareNewData(value as T))
+                const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as T))
 
                 if (!stack.empty) {
                     input = result
                     continue
                 }
 
-                return result as any
+                return result
             }
             if (value instanceof InitCommand) {
                 const { stream, multi } = value
@@ -179,7 +179,7 @@ export class Atom<T = any> {
                 input = atom.lazyBuild()
 
                 if (input instanceof Data && input.value instanceof Delegation) {
-                    stack.push(input.value.stream[Symbol.iterator](null as any))
+                    stack.push(input.value.stream[Symbol.iterator]())
                     input = undefined
                 }
                 continue
@@ -194,10 +194,10 @@ export class Atom<T = any> {
         }
     }
 
-    private prepareNewData(value: T): T {
+    private prepareNewData<U extends T>(value: U | Mutator<U>): U {
         if (value instanceof Mutator) {
             const oldValue = this.cache && this.cache.value
-            const newValue = value.mutate(oldValue) as T
+            const newValue = value.mutate(oldValue as U) as U
             return newValue
         }
 
@@ -205,31 +205,35 @@ export class Atom<T = any> {
     }
 }
 
-class Atomizer<T> {
-    static readonly map = new WeakMap<Stream<unknown>, Atom>()
+class Atomizer {
+    static readonly map = new WeakMap<Stream, Atom>()
 
-    private readonly root: Atom<T>
-    private readonly map: WeakMap<Stream<T>, Atom>
+    private readonly root: Atom
+    private readonly map: WeakMap<Stream, Atom>
 
     constructor(root: Atom) {
         this.root = root
         this.map = new WeakMap()
     }
 
-    get(stream: Stream<T>, multi: boolean): Atom<T> {
+    get<T>(stream: Stream<T>, multi: boolean): Atom<T> {
         if (multi) {
             if (!this.map.has(stream)) {
                 const atom = new Atom(stream, this.root)
                 this.map.set(stream, atom)
             }
 
-            return this.map.get(stream)!
+            return this.map.get(stream) as Atom<T>
         }
 
-        if (!Atomizer.map.has(stream)) {
-            Atomizer.map.set(stream, new Atom(stream, null))
+        try {
+            if (!Atomizer.map.has(stream)) {
+                Atomizer.map.set(stream, new Atom(stream, null))
+            }
+        } catch (e) {
+            e
         }
 
-        return Atomizer.map.get(stream)!
+        return Atomizer.map.get(stream) as Atom<T>
     }
 }

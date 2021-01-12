@@ -1,13 +1,14 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { InitCommand } from './command'
+import { Result } from './result'
 
 export interface FractalOptions {
-    thisArg?: any
+    thisArg?: unknown
 }
 
 export abstract class Fractal<T> extends Stream<T> {
-    [Symbol.iterator](): Generator<never, T, any> {
+    [Symbol.iterator](): Generator<never, T, Result> {
         return super[Symbol.iterator](new InitCommand({ stream: this, multi: true }))
     }
 }
