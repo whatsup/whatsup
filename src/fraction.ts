@@ -4,7 +4,7 @@ import { SCHEDULER } from './scheduler'
 
 export class Fraction<T> extends Fractal<T> {
     private contexts = new Set<Context>()
-    protected value: T | Fractal<T>
+    private value: T | Fractal<T>
 
     constructor(value: T | Fractal<T>) {
         super()
