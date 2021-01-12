@@ -1,4 +1,3 @@
-import { conse } from '../src/conse'
 import { factor } from '../src/factor'
 import { Fractal, fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
@@ -92,17 +91,18 @@ describe('Situations', () => {
 
     describe('test mutators', () => {
         let result: any
+        let kickstart: () => void
         const disposeMock = jest.fn()
-        const Kickstarter = conse(1)
         class Increment extends Mutator<number> {
             mutate(prev = 0) {
                 return prev + 1
             }
         }
-        const Output = fractal(function* () {
+        const Output = fractal(function* (ctx) {
+            kickstart = () => ctx.update()
+
             try {
                 while (true) {
-                    yield* Kickstarter
                     yield new Increment()
                 }
             } finally {
@@ -117,12 +117,12 @@ describe('Situations', () => {
         })
 
         it(`should return 2`, () => {
-            Kickstarter.set(2)
+            kickstart()
             expect(result).toBe(2)
         })
 
         it(`should return 3`, () => {
-            Kickstarter.set(3)
+            kickstart()
             expect(result).toBe(3)
         })
 
