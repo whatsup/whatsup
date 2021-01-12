@@ -1,21 +1,25 @@
-import { Context } from 'context'
+import { Context } from './context'
+import { SCHEDULER } from './scheduler'
 import { Cause } from './cause'
 
 export class Conse<T> extends Cause<T> {
+    private contexts = new Set<Context>()
     private value: T
-    private update?: () => void
 
     constructor(value: T) {
         super()
         this.value = value
     }
 
-    *whatsUp(ctx: Context) {
-        while (true) {
-            if (!this.update) {
-                this.update = () => ctx.update()
+    *whatsUp(context: Context) {
+        this.contexts.add(context)
+
+        try {
+            while (true) {
+                yield this.value
             }
-            yield this.value
+        } finally {
+            this.contexts.delete(context)
         }
     }
 
@@ -25,7 +29,12 @@ export class Conse<T> extends Cause<T> {
 
     set(value: T) {
         this.value = value
-        this.update && this.update()
+
+        SCHEDULER.run(() => {
+            for (const context of this.contexts) {
+                context.update()
+            }
+        })
     }
 }
 
