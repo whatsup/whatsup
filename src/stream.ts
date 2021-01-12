@@ -1,10 +1,16 @@
 import { Err } from './result'
-import { Atom } from './atom'
 import { Context } from './context'
 import { Command, InitCommand } from './query'
+import { Delegation } from './delegation'
+import { Mutator } from './mutator'
 
-export type StreamIterator<T> = Iterator<T | Command | Atom<any>, T, any>
-export type StreamGenerator<T> = Generator<T, T | void | never, any>
+//export type StreamEmission<T> = T | Delegation<T> | Mutator<T>
+export type StreamIterator<T> = Iterator<T | Delegation<T> | Mutator<T> | Command, T | Delegation<T> | Mutator<T>, any>
+export type StreamGenerator<T> = Generator<
+    T | Delegation<T> | Mutator<T>,
+    T | Delegation<T> | Mutator<T> | void | never,
+    any
+>
 export type StreamGeneratorFunc<T> = ((context: Context) => StreamGenerator<T>) | (() => StreamGenerator<T>)
 
 //export const CONSUMER_QUERY = new InitCommand()
