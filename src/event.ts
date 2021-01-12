@@ -4,8 +4,8 @@ enum State {
     ImmediateStopped,
 }
 
-export type EventCtor<T extends Event> = new (...args: unknown[]) => T
-export type EventListener<T extends Event> = (event?: T) => void
+export type EventCtor<T extends Event> = new (...args: any[]) => T
+export type EventListener<T extends Event> = (event: T) => void
 
 export abstract class Event {
     private state = State.Default

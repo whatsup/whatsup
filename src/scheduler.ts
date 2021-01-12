@@ -96,10 +96,10 @@ class Transaction {
 
                 atom.rebuild()
 
-                const newCache = atom.getCache()
+                const newCache = atom.getCache()!
                 const consumers = atom.getConsumers()
 
-                if (!newCache!.equal(oldCache)) {
+                if (!newCache.equal(oldCache)) {
                     for (const consumer of consumers) {
                         this.queueCandidates.add(consumer)
                     }
