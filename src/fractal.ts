@@ -1,6 +1,6 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
-import { InitCommand } from './query'
+import { InitCommand } from './command'
 
 export interface FractalOptions {
     thisArg?: any

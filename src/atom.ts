@@ -1,7 +1,7 @@
 import { StreamIterator, Stream, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { Command, InitCommand } from './query'
+import { Command, InitCommand } from './command'
 import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { Err, Data } from './result'

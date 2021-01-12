@@ -1,6 +1,6 @@
 import { Err } from './result'
 import { Context } from './context'
-import { Command, InitCommand } from './query'
+import { Command, InitCommand } from './command'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 
