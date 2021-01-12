@@ -8,7 +8,7 @@ export interface FractalOptions {
 
 export abstract class Fractal<T> extends Stream<T> {
     [Symbol.iterator](): Generator<never, T, any> {
-        return super[Symbol.iterator](new InitCommand(this, { multi: true }))
+        return super[Symbol.iterator](new InitCommand({ stream: this, multi: true }))
     }
 }
 
