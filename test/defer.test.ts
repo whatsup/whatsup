@@ -4,7 +4,7 @@ import { whatsUp } from '../src/observer'
 describe('Defer', () => {
     const delay = <T>(t: number) => new Promise<T>((r) => setTimeout(r, t))
 
-    it(`should toggle context`, async () => {
+    it(`should trigger context.update`, async () => {
         const mock = jest.fn()
 
         const cau = cause(function* (ctx) {
@@ -22,22 +22,22 @@ describe('Defer', () => {
         expect(mock).lastCalledWith('World')
     })
 
-    it(`should return value`, async () => {
+    it(`should return {done, value}`, async () => {
         const mock = jest.fn()
 
         const cau = cause(function* (ctx) {
             const result = ctx.defer(() => new Promise((r) => setTimeout(() => r('World'), 300)))
-            yield 'Hello'
-            yield result.value
+            yield { ...result }
+            yield { ...result }
         })
 
         whatsUp(cau, mock)
 
-        expect(mock).lastCalledWith('Hello')
+        expect(mock.mock.calls[0][0]).toEqual({ done: false })
 
         await new Promise((r) => setTimeout(r, 400))
 
-        expect(mock).lastCalledWith('World')
+        expect(mock.mock.calls[1][0]).toEqual({ done: true, value: 'World' })
     })
 
     it(`should serve scopes`, async () => {

@@ -138,9 +138,10 @@ export class Context {
 
     defer<T>(deffered: () => Promise<T>) {
         const promise = this.deferred ? this.deferred.then(deffered) : deffered()
-        const result = { value: undefined } as { value: T | undefined }
+        const result = { done: false } as { done: boolean; value?: T }
 
         promise.then((r) => {
+            result.done = true
             result.value = r
 
             if (this.deferred === promise) {
