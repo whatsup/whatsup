@@ -4,9 +4,9 @@ import { SCHEDULER } from './scheduler'
 
 export class Fraction<T> extends Fractal<T> {
     private contexts = new Set<Context>()
-    private value: T | Fractal<T>
+    private value: T
 
-    constructor(value: T | Fractal<T>) {
+    constructor(value: T) {
         super()
         this.value = value
     }
@@ -27,7 +27,7 @@ export class Fraction<T> extends Fractal<T> {
         return this.value
     }
 
-    set(value: T | Fractal<T>) {
+    set(value: T) {
         this.value = value
 
         SCHEDULER.run(() => {
