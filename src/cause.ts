@@ -9,7 +9,7 @@ export interface CauseOptions {
 
 export abstract class Cause<T> extends Stream<T> {
     [Symbol.iterator](): Generator<never, T, Result> {
-        return super[Symbol.iterator](new InitCommand({ stream: this, multi: false }))
+        return super[Symbol.iterator](new InitCommand(this, false))
     }
 }
 
