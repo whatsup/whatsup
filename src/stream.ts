@@ -4,13 +4,9 @@ import { Command, InitCommand } from './query'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 
-//export type StreamEmission<T> = T | Delegation<T> | Mutator<T>
-export type StreamIterator<T> = Iterator<T | Delegation<T> | Mutator<T> | Command, T | Delegation<T> | Mutator<T>, any>
-export type StreamGenerator<T> = Generator<
-    T | Delegation<T> | Mutator<T>,
-    T | Delegation<T> | Mutator<T> | void | never,
-    any
->
+export type Payload<T> = T | Delegation<T> | Mutator<T>
+export type StreamIterator<T> = Iterator<Payload<T> | Command, Payload<T>, any>
+export type StreamGenerator<T> = Generator<Payload<T>, Payload<T> | void | never, any>
 export type StreamGeneratorFunc<T> = ((context: Context) => StreamGenerator<T>) | (() => StreamGenerator<T>)
 
 //export const CONSUMER_QUERY = new InitCommand()
@@ -40,7 +36,7 @@ export abstract class Stream<T> {
 
     *[Symbol.iterator](command: InitCommand): Generator<never, T, any> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //                            really is Generator<T | Command, T, any> ... may be ;)
+        //                            really is Generator<Command, T, any> ... may be ;)
         const result = yield command as never
 
         if (result instanceof Err) {
