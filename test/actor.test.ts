@@ -1,7 +1,6 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { Actor } from '../src/context'
 import { Stream } from '../src/stream'
 import { whatsUp } from '../src/observer'
 import { delegate } from '../src/delegation'
@@ -9,7 +8,7 @@ import { delegate } from '../src/delegation'
 describe('Actor', () => {
     it(`should extract current value`, () => {
         const mock = jest.fn()
-        let change: Actor<any, any>
+        let change: (arg: any) => void
 
         const f = cause(function* (ctx) {
             const value = conse('Hello')
@@ -38,7 +37,7 @@ describe('Actor', () => {
 
     it(`should extract from nested`, () => {
         const mock = jest.fn()
-        let def: Actor<any, any>
+        let def: (arg: any) => void
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -72,7 +71,7 @@ describe('Actor', () => {
         const mock = jest.fn()
         let sourceThis: Stream<any>
         let actorThis: Stream<any>
-        let def: Actor<any, any>
+        let def: (arg: any) => void
 
         const ups = cause(function* (this: Stream<any>, ctx) {
             const one = conse('one')
@@ -108,7 +107,7 @@ describe('Actor', () => {
 
     it(`should extract delegation`, () => {
         const mock = jest.fn()
-        let def: Actor<any, any>
+        let def: (arg: any) => void
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -139,7 +138,7 @@ describe('Actor', () => {
     it(`should extract error from delegation`, () => {
         const mock = jest.fn()
         const errMock = jest.fn()
-        let def: Actor<any, any>
+        let def: (arg: any) => void
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -177,7 +176,7 @@ describe('Actor', () => {
 
     it(`should catch exception`, () => {
         const mock = jest.fn()
-        let change: Actor<any, any>
+        let change: (arg: any) => void
 
         const ups = cause(function* (ctx) {
             const one = conse('one')
@@ -200,7 +199,7 @@ describe('Actor', () => {
 
     it(`should catch nested exception`, () => {
         const mock = jest.fn()
-        let change: Actor<any, any>
+        let change: (arg: any) => void
 
         const nested = cause(function* () {
             throw 'WoW'

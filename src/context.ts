@@ -1,11 +1,8 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
-import { Result, Err } from './result'
+import { Err } from './result'
 import { Stream } from './stream'
-
-export type Actor<T, A> = (arg: A) => T
-export type ActorGenerator<T, A> = (context: Context, arg: A) => Generator<T, T>
 
 type Ctor<T> = Function | (new (...args: any[]) => T)
 
@@ -108,13 +105,11 @@ export class Context {
         }
     }
 
-    actor<T, A>(generator: ActorGenerator<T, A>) {
-        const { atom } = this
-
-        return (arg: A) => {
-            const result = atom.exec(function (this: Stream<any>, ctx: Context) {
-                return generator.call(this, ctx, arg) as any
-            }) as Result
+    actor<T, A extends any[]>(generator: (this: Stream<any>, context: Context, ...args: A) => Generator<T, T>) {
+        return (...args: A) => {
+            const result = this.atom.exec<T>(function (this: Stream<any>, context: Context) {
+                return generator.call(this, context, ...args)
+            })
 
             if (result instanceof Err) {
                 throw result.value
