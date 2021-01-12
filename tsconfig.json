@@ -17,9 +17,6 @@
         "moduleResolution": "node",
         "declarationDir": "./dist",
         "rootDir": "./src",
-        "baseUrl": "./",
-        "paths": {
-            "*": ["src/*", "node_modules/*"]
-        }
+        "baseUrl": "./"
     }
 }
