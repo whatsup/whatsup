@@ -5,7 +5,7 @@ class Scheduler {
     private slave: Transaction | null = null
 
     run<T>(action: (transaction: Transaction) => T): T {
-        let key = suid()
+        let key = Symbol('Transaction key')
         let transaction: Transaction
 
         if (!this.master) {
@@ -48,10 +48,6 @@ class Scheduler {
 
         return result
     }
-}
-
-function suid() {
-    return Symbol((~~(Math.random() * 1e8)).toString(16))
 }
 
 export const SCHEDULER = new Scheduler()
