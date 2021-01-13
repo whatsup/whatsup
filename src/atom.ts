@@ -205,6 +205,18 @@ export class Atom<T = unknown> {
     }
 }
 
+// class AtomMap {
+//     readonly key = Symbol()
+
+//     get<T>(stream: Stream<T>) {
+//         return Reflect.get(stream, this.key)
+//     }
+
+//     set<T>(stream: Stream<T>, atom: Atom<T>) {
+//         return Reflect.set(stream, this.key, atom)
+//     }
+// }
+
 class Atomizer {
     static readonly map = new WeakMap<Stream, Atom>()
 
