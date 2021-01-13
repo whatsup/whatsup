@@ -7,7 +7,7 @@ import { Mutator } from './mutator'
 export type Payload<T> = T | Delegation<T> | Mutator<T>
 export type StreamIterator<T> = Iterator<Payload<T> | Command, Payload<T>, unknown>
 export type StreamGenerator<T> = Generator<Payload<T>, Payload<T> | void | never>
-export type StreamGeneratorFunc<T> = ((context: Context) => StreamGenerator<T>) | (() => StreamGenerator<T>)
+export type StreamGeneratorFunc<T> = (context: Context) => StreamGenerator<T> //| (() => StreamGenerator<T>)
 
 /*
 // This is Name
@@ -34,7 +34,7 @@ export abstract class Stream<T = unknown> {
 
     *[Symbol.iterator](command?: InitCommand): Generator<never, T, Result> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //                            really is Generator<Command, T, any> ... may be ;)
+        //                            really is Generator<Command, T, Result> ... may be ;)
         if (!command) {
             throw 'Initial command of stream iterator is undefined'
         }
