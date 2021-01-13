@@ -1,4 +1,4 @@
-import { run } from '../src/run'
+import { whatsUp } from '../src/observer'
 import { fractal } from '../src/fractal'
 
 describe('Fractal', () => {
@@ -10,7 +10,7 @@ describe('Fractal', () => {
             while (true) yield null
         }, thisArg)
 
-        run(fr)
+        whatsUp(fr)
 
         expect(mock).toBeCalledWith(thisArg)
     })

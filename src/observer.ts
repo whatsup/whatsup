@@ -10,7 +10,11 @@ export class Observer<T> extends Cause<void> {
     readonly onData: DataHandler<T>
     readonly onError: ErrorHandler
 
-    constructor(target: Stream<T>, onData: DataHandler<T>, onError: ErrorHandler = defaultErrorHandler) {
+    constructor(
+        target: Stream<T>,
+        onData: DataHandler<T> = defaultDataHandler,
+        onError: ErrorHandler = defaultErrorHandler
+    ) {
         super()
         this.target = target
         this.onData = onData
@@ -20,8 +24,7 @@ export class Observer<T> extends Cause<void> {
     *whatsUp() {
         while (true) {
             try {
-                const d = yield* this.target
-                this.onData(d)
+                this.onData(yield* this.target)
             } catch (e) {
                 this.onError(e)
             }
@@ -36,11 +39,28 @@ export class Observer<T> extends Cause<void> {
     }
 }
 
+function defaultDataHandler() {}
+
 function defaultErrorHandler(e: Error) {
     throw e
 }
 
-export function whatsUp<T>(target: Stream<T>, onData: DataHandler<T>, onError?: ErrorHandler) {
+export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?: ErrorHandler) {
     const observer = new Observer(target, onData, onError)
     return observer.run()
 }
+
+// function normalizeSource<T>(source: Stream<T> | StreamGeneratorFunc<T>): Stream<T> {
+//     if (source instanceof Stream) {
+//         return source
+//     }
+//     return cause(source)
+// }
+
+// export function run<T>(source: Stream<T> | StreamGeneratorFunc<T>) {
+//     const normalized = normalizeSource(source)
+//     const onData = () => {}
+//     const observer = new Observer(normalized, onData)
+
+//     return observer.run()
+// }

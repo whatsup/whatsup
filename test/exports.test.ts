@@ -8,7 +8,6 @@ import { whatsUp, Observer } from '../src/observer'
 import { factor, Factor } from '../src/factor'
 import { mutator, Mutator } from '../src/mutator'
 import { transaction } from '../src/scheduler'
-import { run } from '../src/run'
 import { Event } from '../src/event'
 
 import {
@@ -25,7 +24,6 @@ import {
     Factor as _Factor,
     transaction as _transaction,
     action as _action,
-    run as _run,
     mutator as _mutator,
     Mutator as _Mutator,
     Event as _Event,
@@ -49,7 +47,6 @@ it('Exports', () => {
     expect(Factor).toBe(_Factor)
     expect(transaction).toBe(_transaction)
     expect(transaction).toBe(_action)
-    expect(run).toBe(_run)
     expect(mutator).toBe(_mutator)
     expect(Mutator).toBe(_Mutator)
     expect(Event).toBe(_Event)

@@ -1,4 +1,4 @@
-import { run } from '../src/run'
+import { whatsUp } from '../src/observer'
 import { cause } from '../src/cause'
 
 describe('Cause', () => {
@@ -10,7 +10,7 @@ describe('Cause', () => {
             while (true) yield null
         }, thisArg)
 
-        run(fr)
+        whatsUp(fr)
 
         expect(mock).toBeCalledWith(thisArg)
     })
