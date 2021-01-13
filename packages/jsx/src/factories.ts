@@ -1,36 +1,36 @@
 import { EMPTY_ARR, EMPTY_OBJ } from './constants'
 import { ComponentMutator, HTMLElementMutator, SVGElementMutator } from './mutator'
-import { FractalJSX } from './types'
+import { WhatsJSX } from './types'
 
 export function html(
-    type: FractalJSX.TagName,
-    uid: FractalJSX.Uid,
-    key: FractalJSX.Key | undefined,
-    ref: FractalJSX.Ref | undefined,
-    props = EMPTY_OBJ as FractalJSX.ElementProps,
-    children = EMPTY_ARR as FractalJSX.Child[]
+    type: WhatsJSX.TagName,
+    uid: WhatsJSX.Uid,
+    key: WhatsJSX.Key | undefined,
+    ref: WhatsJSX.Ref | undefined,
+    props = EMPTY_OBJ as WhatsJSX.ElementProps,
+    children = EMPTY_ARR as WhatsJSX.Child[]
 ) {
     return new HTMLElementMutator(type, uid, key, ref, props, children)
 }
 
 export function svg(
-    type: FractalJSX.TagName,
-    uid: FractalJSX.Uid,
-    key: FractalJSX.Key | undefined,
-    ref: FractalJSX.Ref | undefined,
-    props = EMPTY_OBJ as FractalJSX.ElementProps,
-    children = EMPTY_ARR as FractalJSX.Child[]
+    type: WhatsJSX.TagName,
+    uid: WhatsJSX.Uid,
+    key: WhatsJSX.Key | undefined,
+    ref: WhatsJSX.Ref | undefined,
+    props = EMPTY_OBJ as WhatsJSX.ElementProps,
+    children = EMPTY_ARR as WhatsJSX.Child[]
 ) {
     return new SVGElementMutator(type, uid, key, ref, props, children)
 }
 
 export function component(
-    type: FractalJSX.Component,
-    uid: FractalJSX.Uid,
-    key: FractalJSX.Key | undefined,
-    ref: FractalJSX.Ref | undefined,
-    props = EMPTY_OBJ as FractalJSX.ComponentProps,
-    children = EMPTY_ARR as FractalJSX.Child[]
+    type: WhatsJSX.Component,
+    uid: WhatsJSX.Uid,
+    key: WhatsJSX.Key | undefined,
+    ref: WhatsJSX.Ref | undefined,
+    props = EMPTY_OBJ as WhatsJSX.ComponentProps,
+    children = EMPTY_ARR as WhatsJSX.Child[]
 ) {
     return new ComponentMutator(type, uid, key, ref, props, children)
 }

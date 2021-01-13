@@ -1,5 +1,5 @@
-import { FractalJSX } from './types'
+import { WhatsJSX } from './types'
 
-export function createRef(): FractalJSX.Ref {
+export function createRef(): WhatsJSX.Ref {
     return { current: null }
 }

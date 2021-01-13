@@ -11,29 +11,29 @@ type Booleanish = boolean | 'true' | 'false'
 // Events
 // ----------------------------------------------------------------------
 
-export namespace FractalJSX {
+export namespace WhatsJSX {
     export interface Event<T = Element> {
+        readonly AT_TARGET: number
+        readonly BUBBLING_PHASE: number
+        readonly CAPTURING_PHASE: number
+        readonly NONE: number
         readonly bubbles: boolean
-        cancelBubble: boolean
         readonly cancelable: boolean
         readonly composed: boolean
         readonly currentTarget: EventTarget & T
         readonly defaultPrevented: boolean
         readonly eventPhase: number
         readonly isTrusted: boolean
-        returnValue: boolean
         readonly target: EventTarget
         readonly timeStamp: number
         readonly type: string
+        cancelBubble: boolean
+        returnValue: boolean
         composedPath(): EventTarget[]
         initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void
         preventDefault(): void
         stopImmediatePropagation(): void
         stopPropagation(): void
-        readonly AT_TARGET: number
-        readonly BUBBLING_PHASE: number
-        readonly CAPTURING_PHASE: number
-        readonly NONE: number
     }
 
     export interface ClipboardEvent<T = Element> extends Event<T> {
@@ -1566,8 +1566,8 @@ declare global {
             children: {}
         }
 
-        export interface IntrinsicAttributes extends FractalJSX.Attributes {}
+        export interface IntrinsicAttributes extends WhatsJSX.Attributes {}
 
-        export interface IntrinsicElements extends FractalJSX.Elements {}
+        export interface IntrinsicElements extends WhatsJSX.Elements {}
     }
 }
