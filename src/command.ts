@@ -3,12 +3,18 @@ import { Stream } from './stream'
 export class Command {}
 
 export class InitCommand extends Command {
-    readonly stream: Stream
-    readonly multi: boolean
+    readonly multi!: boolean
+    stream!: Stream
 
-    constructor(stream: Stream<unknown>, multi: boolean) {
+    constructor(multi: boolean) {
         super()
-        this.stream = stream
         this.multi = multi
+    }
+
+    // reusable
+    // special for GC :)
+    reuseWith(stream: Stream<unknown>) {
+        this.stream = stream
+        return this
     }
 }

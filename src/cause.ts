@@ -3,9 +3,11 @@ import { Context } from './context'
 import { InitCommand } from './command'
 import { Result } from './result'
 
+const init = new InitCommand(false)
+
 export abstract class Cause<T> extends Stream<T> {
     [Symbol.iterator](): Generator<never, T, Result> {
-        return super[Symbol.iterator](new InitCommand(this, false))
+        return super[Symbol.iterator](init.reuseWith(this))
     }
 }
 
