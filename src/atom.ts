@@ -205,31 +205,31 @@ export class Atom<T = unknown> {
     }
 }
 
-class AtomMap {
-    readonly key = Symbol()
+// class AtomMap {
+//     readonly key = Symbol()
 
-    has<T>(stream: Stream<T>) {
-        return Reflect.has(stream, this.key)
-    }
+//     has<T>(stream: Stream<T>) {
+//         return Reflect.has(stream, this.key)
+//     }
 
-    get<T>(stream: Stream<T>) {
-        return Reflect.get(stream, this.key)
-    }
+//     get<T>(stream: Stream<T>) {
+//         return Reflect.get(stream, this.key)
+//     }
 
-    set<T>(stream: Stream<T>, atom: Atom<T>) {
-        return Reflect.set(stream, this.key, atom)
-    }
-}
+//     set<T>(stream: Stream<T>, atom: Atom<T>) {
+//         return Reflect.set(stream, this.key, atom)
+//     }
+// }
 
 class Atomizer {
-    static readonly map = new AtomMap()
+    static readonly map = new WeakMap<Stream, Atom>()
 
     private readonly root: Atom
-    private readonly map: AtomMap
+    private readonly map: WeakMap<Stream, Atom>
 
     constructor(root: Atom) {
         this.root = root
-        this.map = new AtomMap()
+        this.map = new WeakMap()
     }
 
     get<T>(stream: Stream<T>, multi: boolean): Atom<T> {
