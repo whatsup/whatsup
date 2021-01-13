@@ -1,5 +1,5 @@
 import { factor } from '../src/factor'
-import { Fractal, fractal } from '../src/fractal'
+import { fractal } from '../src/fractal'
 import { fraction } from '../src/fraction'
 import { whatsUp } from '../src/observer'
 
@@ -116,15 +116,15 @@ describe('Situations', () => {
             while (true) {
                 yield ''
             }
-        }) as Fractal<any>
+        })
         const Four = fractal(function* (ctx) {
             ctx!.define(fac, 'delegator')
             mock2(ctx!.find(fac))
 
             while (true) {
-                yield Two
+                yield ''
             }
-        }) as Fractal<any>
+        })
 
         whatsUp(One, () => {})
 
