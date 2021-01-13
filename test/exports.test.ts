@@ -5,10 +5,10 @@ import { cause, Cause } from '../src/cause'
 import { conse, Conse } from '../src/conse'
 import { list, List } from '../src/list'
 import { whatsUp, Observer } from '../src/observer'
-import { factor } from '../src/factor'
+import { factor, Factor } from '../src/factor'
+import { mutator, Mutator } from '../src/mutator'
 import { transaction } from '../src/scheduler'
 import { run } from '../src/run'
-import { Mutator } from '../src/mutator'
 import { Event } from '../src/event'
 
 import {
@@ -22,9 +22,11 @@ import {
     whatsUp as _whatsUp,
     Observer as _Observer,
     factor as _factor,
+    Factor as _Factor,
     transaction as _transaction,
     action as _action,
     run as _run,
+    mutator as _mutator,
     Mutator as _Mutator,
     Event as _Event,
     cause as _cause,
@@ -44,9 +46,11 @@ it('Exports', () => {
     expect(whatsUp).toBe(_whatsUp)
     expect(Observer).toBe(_Observer)
     expect(factor).toBe(_factor)
+    expect(Factor).toBe(_Factor)
     expect(transaction).toBe(_transaction)
     expect(transaction).toBe(_action)
     expect(run).toBe(_run)
+    expect(mutator).toBe(_mutator)
     expect(Mutator).toBe(_Mutator)
     expect(Event).toBe(_Event)
     expect(cause).toBe(_cause)
