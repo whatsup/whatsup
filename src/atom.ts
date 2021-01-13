@@ -226,12 +226,8 @@ class Atomizer {
             return this.map.get(stream) as Atom<T>
         }
 
-        try {
-            if (!Atomizer.map.has(stream)) {
-                Atomizer.map.set(stream, new Atom(stream, null))
-            }
-        } catch (e) {
-            e
+        if (!Atomizer.map.has(stream)) {
+            Atomizer.map.set(stream, new Atom(stream, null))
         }
 
         return Atomizer.map.get(stream) as Atom<T>
