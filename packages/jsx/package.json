@@ -1,5 +1,5 @@
 {
-    "name": "@whatsup-js/jsx",
+    "name": "@whatsup/jsx",
     "description": "Whats Up Jsx mutator and renderer",
     "version": "0.1.1",
     "author": "Denis Churbanov",
@@ -20,7 +20,7 @@
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "whatsup": "0.2.3-async.1",
+        "whatsup": "^0.2.4-beta.2",
         "csstype": "^3.0.3"
     },
     "peerDependencies": {},

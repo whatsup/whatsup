@@ -1,22 +1,15 @@
-import { run, Stream } from 'whatsup'
+import { whatsUp, cause, Stream } from 'whatsup'
 import { reconcile, placeElements, removeUnreconciledElements } from './mutator'
 import { ReconcileMap } from './reconcile_map'
-import { FractalJSX } from './types'
+import { WhatsJSX } from './types'
 
-type Source = FractalJSX.Child | Stream<Source>
-
-function* extract(source: Stream<Source>): Generator<any, FractalJSX.Child, any> {
-    const result = yield* source
-    return result instanceof Stream ? yield* extract(result) : result
-}
-
-export function render(source: Stream<FractalJSX.Child>, container: HTMLElement | SVGElement = document.body) {
-    return run(function* () {
+export function render(source: Stream<WhatsJSX.Child>, container: HTMLElement | SVGElement = document.body) {
+    const root = cause(function* () {
         try {
             let oldReconcileMap = new ReconcileMap()
 
             while (true) {
-                const result = yield* extract(source)
+                const result = yield* source
                 const children = Array.isArray(result) ? result : [result]
                 const elements = [] as (HTMLElement | SVGElement | Text)[]
                 const reconcileMap = new ReconcileMap()
@@ -33,4 +26,6 @@ export function render(source: Stream<FractalJSX.Child>, container: HTMLElement 
             console.error(e)
         }
     })
+
+    return whatsUp(root)
 }
