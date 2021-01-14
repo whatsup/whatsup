@@ -1,5 +1,3 @@
-> Sorry, but this information is temporarily out of date. We are moving to a new name "whatsup". We will soon release a new version and update the readme.
-
 ![](https://hsto.org/webt/7u/82/rc/7u82rcfrurytc0gvyels2j9ut_u.png)
 
 <div align="center">
@@ -620,8 +618,8 @@ The `return` statement does the same as the `yield` statement, but it does the i
 
 ## Examples
 
--   [Sierpinski](https://fract.github.io/sierpinski) - perfomance test like React sierpinski triangle. [[source](https://github.com/fract/fract.github.io/tree/master/src/sierpinski)]
--   [Todos](https://fract.github.io/todos) - fractal-like realization of TodoMVC. [[source](https://github.com/fract/fract.github.io/tree/master/src/todos)]
--   [Loadable](https://fract.github.io/loadable) - an example showing how you can organize the display of loaders during background loading. I specifically added small delays there in order to slow down the processes. [[source](https://github.com/fract/fract.github.io/tree/master/src/loadable)]
--   [Factors](https://fract.github.io/factors) - work in different conditions. One and the same fractal, depending on the factor set in the context, gives three different results, and also maintains their relevance. Try editing the name and age. [[source](https://github.com/fract/fract.github.io/tree/master/src/factors)]
--   [Antistress](https://fract.github.io/antistress) - just a toy, click the balls, paint them in different colors and get cool pictures. In fact, this is a fractal that shows a circle inside itself, or three of the same fractals inscribed in the perimeter of the circle. Click - paint, long click - crush, long click in the center of the crushed circle - return to its original state. If you crush the circles to a sufficiently deep level, you can see the [Sierpinski triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle). [[source](https://github.com/fract/fract.github.io/tree/master/src/antistress)]
+-   [Sierpinski](https://whatsup.github.io/sierpinski) - perfomance test like React sierpinski triangle. [[source](https://github.com/fract/whatsup.github.io/tree/master/src/sierpinski)]
+-   [Todos](https://whatsup.github.io/todos) - WhatsUp realization of TodoMVC. [[source](https://github.com/fract/whatsup.github.io/tree/master/src/todos)]
+-   [Loadable](https://whatsup.github.io/loadable) - an example showing how you can organize the display of loaders during background loading. I specifically added small delays there in order to slow down the processes. [[source](https://github.com/fract/whatsup.github.io/tree/master/src/loadable)]
+-   [Factors](https://whatsup.github.io/factors) - work in different conditions. One and the same fractal, depending on the factor set in the context, gives three different results, and also maintains their relevance. Try editing the name and age. [[source](https://github.com/fract/whatsup.github.io/tree/master/src/factors)]
+-   [Antistress](https://whatsup.github.io/antistress) - just a toy, click the balls, paint them in different colors and get cool pictures. In fact, this is a fractal that shows a circle inside itself, or three of the same fractals inscribed in the perimeter of the circle. Click - paint, long click - crush, long click in the center of the crushed circle - return to its original state. If you crush the circles to a sufficiently deep level, you can see the [Sierpinski triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle). [[source](https://github.com/fract/whatsup.github.io/tree/master/src/antistress)]
