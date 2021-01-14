@@ -32,7 +32,7 @@ whatsUp(user, (v)=> console.log(v))
 export abstract class Stream<T = unknown> {
     abstract whatsUp(context?: Context): StreamGenerator<T>
 
-    *[Symbol.iterator](command?: InitCommand): Generator<never, T, Result> {
+    *[Symbol.iterator](command?: InitCommand): Generator<never, T, unknown> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //                            really is Generator<Command, T, Result> ... may be ;)
         if (!command) {
