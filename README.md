@@ -3,11 +3,11 @@
 ![](https://hsto.org/webt/7u/82/rc/7u82rcfrurytc0gvyels2j9ut_u.png)
 
 <div align="center">
-<img src="https://img.shields.io/travis/fract/core/master" alt="travis" />
-<img src="https://img.shields.io/codecov/c/github/fract/core/master" alt="codecov" />
-<img src="https://img.shields.io/bundlephobia/min/@fract/core" alt="size" />
-<img src="https://img.shields.io/github/languages/top/fract/core" alt="language" />
-<img src="https://img.shields.io/npm/l/@fract/core" alt="npm" /> 
+<img src="https://img.shields.io/travis/whatsup/whatsup/master" alt="travis" />
+<img src="https://img.shields.io/codecov/c/github/whatsup/whatsup/master" alt="codecov" />
+<img src="https://img.shields.io/bundlephobia/min/whatsup" alt="size" />
+<img src="https://img.shields.io/github/languages/top/whatsup/whatsup" alt="language" />
+<img src="https://img.shields.io/npm/l/whatsup" alt="npm" /> 
 <a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore">
 <img src="https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore" alt="tweet">
 </a> 
@@ -15,30 +15,34 @@
 
 # What is it?
 
-Fractal is a front-end framework based on the ideas of streams and fractals. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
+Whats Up is a front-end framework based on the ideas of streams and fractals. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
 
 ## Install
 
 ```bash
-npm i @fract/core
+npm i whatsup
 ```
 
 ## Streams
 
-### `Observable`
+### `Conse`
+
+it's like a observable
 
 ```ts
-import { observable } from '@fract/core'
+import { conse } from 'whatsup'
 
-const name = observable('Natali')
+const name = conse('Natali')
 ```
 
-### `Computed`
+### `Cause`
+
+it's like a computed
 
 ```ts
-import { computed } from '@fract/core'
+import { cause } from 'whatsup'
 
-const user = computed(function* () {
+const user = cause(function* () {
     while (true) {
         yield {
             name: yield* name,
@@ -55,23 +59,23 @@ These are the cherries on the cake. We will cover this below :)
 
 `yield` - send to stream
 
-`yield*` - get from stream
+`yield*` - read from stream
 
 ## Watching
 
 ```ts
-import { watch } from '@fract/core'
+import { whatsUp } from 'whatsup'
 
 const onData = (data) => console.log(data)
 const onError = (err) => console.error(err)
 
-const dispose = watch(user, onData, onError)
+const dispose = whatsUp(user, onData, onError)
 //> {name: 'Natali'}
 
 name.set('Aria')
 //> {name: 'Aria'}
 
-dispose() // to stop watching
+dispose() // to stop whatsUping
 ```
 
 ## Incremental & glitch-free computing
@@ -79,27 +83,27 @@ dispose() // to stop watching
 All dependencies are updated synchronously in a topological sequence without unnecessary calculations.
 
 ```ts
-import { observable, computed, watch } from '@fract/core'
+import { conse, cause, whatsUp } from 'whatsup'
 
-const num = observable(1)
-const evenOrOdd = computed(function* () {
+const num = conse(1)
+const evenOrOdd = cause(function* () {
     while (true) {
-        yield (yield* a) % 2 === 0 ? 'even' : 'odd'
+        yield (yield* num) % 2 === 0 ? 'even' : 'odd'
     }
 })
-const isEven = computed(function* () {
+const isEven = cause(function* () {
     while (true) {
         yield `${yield* num} is ${yield* evenOrOdd}`
     }
 })
-const isZero = computed(function* () {
+const isZero = cause(function* () {
     while (true) {
         yield (yield* num) === 0 ? 'zero' : 'not zero'
     }
 })
 
-watch(isEven, (data) => console.log(data))
-watch(isZero, (data) => console.log(data))
+whatsUp(isEven, (data) => console.log(data))
+whatsUp(isZero, (data) => console.log(data))
 //> 1 is odd
 //> not zero
 num.set(2)
@@ -113,18 +117,18 @@ num.set(0)
 
 ## Extended example
 
-You can extend base classes, but you need to implement the `stream` method
+You can extend base classes, but you need to implement the `whatsUp` method
 
 ```ts
-import { Observable, Computed, watch } from '@fract/core'
+import { conse, cause, whatsUp } from 'whatsup'
 
 interface UserData {
     name: string
 }
 
-class Name extends Observable<string> {}
+class Name extends Conse<string> {}
 
-class User extends Computed<UserData> {
+class User extends Cause<UserData> {
     readonly name: Name
 
     constructor(name: string) {
@@ -132,7 +136,7 @@ class User extends Computed<UserData> {
         this.name = new Name(name)
     }
 
-    protected *stream() {
+    protected *whatsUp() {
         while (true) {
             yield {
                 name: yield* this.name,
@@ -143,26 +147,26 @@ class User extends Computed<UserData> {
 
 const user = new User('Natali')
 
-watch(user, (data) => console.log(data))
+whatsUp(user, (data) => console.log(data))
 //> {name: 'Natali'}
 
-name.set('Aria')
+user.name.set('Aria')
 //> {name: 'Aria'}
 ```
 
-## Single argument of `stream` method - `context: Context`
+## Single argument of `whatsUp` method - `context: Context`
 
 The context has several useful methods for controlling flow, such as `update`
 
 ```ts
-import { Computed, watch } from '@fract/core'
+import { cause, whatsUp } from 'whatsup'
 
-class Timer extends Computed<number> {
+class Timer extends Cause<number> {
     constructor(readonly delay: number) {
         super()
     }
 
-    protected *stream(ctx: Context) {
+    protected *whatsUp(ctx: Context) {
         let i = 0
 
         while (true) {
@@ -175,7 +179,7 @@ class Timer extends Computed<number> {
 
 const timer = new Timer(1000)
 
-watch(timer, (data) => console.log(data))
+whatsUp(timer, (data) => console.log(data))
 //> 0
 //> 1
 //> 2 ...
@@ -186,14 +190,14 @@ watch(timer, (data) => console.log(data))
 You can store ancillary data available from calculation to calculation directly in the generator body and you can react to disposing with the native language capabilities
 
 ```ts
-import { observable, Computed, watch } from '@fract/core'
+import { conse, cause, whatsUp } from 'whatsup'
 
-class Timer extends Computed<number> {
+class Timer extends Cause<number> {
     constructor(readonly delay: number) {
         super()
     }
 
-    *stream(ctx: Context) {
+    *whatsUp(ctx: Context) {
         let i = 0
         let timeoutId: number
 
@@ -210,10 +214,10 @@ class Timer extends Computed<number> {
     }
 }
 
-class App extends Computed<number> {
-    readonly showTimer = observable(true);
+class App extends Cause<number> {
+    readonly showTimer = conse(true);
 
-    *stream() {
+    *whatsUp() {
         // local scoped Timer instance, she is alive while the stream App is alive
         const timer = new Timer()
 
@@ -230,7 +234,7 @@ class App extends Computed<number> {
 
 const app = new App()
 
-watch(app, (data) => console.log(data))
+whatsUp(app, (data) => console.log(data))
 //> 0
 //> 1
 //> 2
@@ -248,7 +252,7 @@ app.showTimer.set(true) // the timer starts from the beginning
 Allows you to create new data based on previous. You need just to implement the mutate method.
 
 ```ts
-import { Computed, Mutator } from '@fract/core'
+import { cause, Mutator } from 'whatsup'
 
 class Increment extends Mutator<number> {
     mutate(prev: number | undefined = 0) {
@@ -256,12 +260,12 @@ class Increment extends Mutator<number> {
     }
 }
 
-class Timer extends Computed<number> {
+class Timer extends Cause<number> {
     constructor(readonly delay: number) {
         super()
     }
 
-    *stream(ctx: Context) {
+    *whatsUp(ctx: Context) {
         while (true) {
             setTimeout(() => ctx.update(), this.delay)
             yield new Increment()
@@ -271,10 +275,35 @@ class Timer extends Computed<number> {
 }
 ```
 
+## Mutator shorthand
+
+You can create a mutator using shorthand
+
+```ts
+import { cause, mutator } from 'whatsup'
+
+const increment = mutator<number>((n = 0) => n + 1)
+
+class Timer extends Cause<number> {
+    constructor(readonly delay: number) {
+        super()
+    }
+
+    *whatsUp(ctx: Context) {
+        while (true) {
+            setTimeout(() => ctx.update(), this.delay)
+            yield increment
+        }
+    }
+}
+```
+
+## Mutators & filters
+
 Mutators can be used to write filters.
 
 ```ts
-import { watch, Computed, Mutator } from '@fract/core'
+import { whatsUp, cause, Mutator } from 'whatsup'
 
 class EvenOnly extends Mutator<number> {
     readonly next: number
@@ -288,13 +317,13 @@ class EvenOnly extends Mutator<number> {
         return this.next % 2 === 0 ? this.next : prev
         // We allow the new value only if it is even,
         // otherwise we return the old value
-        // Having received the previous value,
+        // if the new value is strictly equal (===) to the old value,
         // the App will stop updates propagation
     }
 }
 
-class App extends Computed<number> {
-    *stream() {
+class App extends Cause<number> {
+    *whatsUp() {
         const timer = new Timer()
 
         while (true) {
@@ -305,26 +334,55 @@ class App extends Computed<number> {
 
 const app = new App()
 
-watch(app, (data) => console.log(data))
+whatsUp(app, (data) => console.log(data))
 //> 0
 //> 2
 //> 4
 //> ...
 ```
 
+You can create custom equal filters
+
+```ts
+import { whatsUp, cause, Mutator } from 'whatsup'
+
+class EqualArr<T> extends Mutator<T[]> {
+    readonly arr: T[]
+
+    constructor(arr: T[]) {
+        super()
+        this.arr = arr
+    }
+
+    mutate(prev) {
+        const { arr } = this
+
+        if (Array.isArray(prev) && prev.lenght === arr.length && prev.every((item, i) => item === arr[i])) {
+            return prev
+        }
+
+        return arr
+    }
+}
+
+/*
+then in whatsUp generator - yield new EqualArr([...])
+*/
+```
+
 ## Mutators & JSX
 
-Fractal has its own plugin that converts jsx-tags into mutators calls. You can read the installation details here [fract/babel-plugin-transform-jsx](https://github.com/fract/babel-plugin-transform-jsx) and [fract/jsx](https://github.com/fract/jsx)
+Fractal has its own plugin that converts jsx-tags into mutators calls. You can read the installation details here [whatsup/babel-plugin-transform-jsx](https://github.com/whatsup/babel-plugin-transform-jsx) and [whatsup/jsx](https://github.com/whatsup/jsx)
 
 ```tsx
-import { observable, Computed } from '@fract/core'
-import { render } from '@fract/jsx'
+import { conse, Cause } from 'whatsup'
+import { render } from '@whatsup-js/jsx'
 
-class User extends Computed<JSX.Element> {
-    readonly name = observable('John')
-    readonly age = observable(33);
+class User extends Cause<JSX.Element> {
+    readonly name = conse('John')
+    readonly age = conse(33);
 
-    *stream() {
+    *whatsUp() {
         while (true) {
             yield (
                 <Container>
@@ -346,11 +404,11 @@ The mutator gets the old DOMNode and mutates it into a new DOMNode the shortest 
 
 ## Fractal
 
-It looks like a computed, but for each consumer, the fractal creates a new iterator and context. Contexts bind to the consumer context like a parent-child relation and form a context tree. This allows you to organize the transfer of factors down the tree, as well as the bubbling of events up. A computed, unlike a fractal, creates one iterator for all consumers, and one context without a reference to the parent (root context).
+It looks like a cause, but for each consumer, the fractal creates a new iterator and context. Contexts bind to the consumer context like a parent-child relation and form a context tree. This allows you to organize the transfer of factors down the tree, as well as the bubbling of events up. A cause, unlike a fractal, creates one iterator for all consumers, and one context without a reference to the parent (root context).
 
 ```tsx
-import { Fractal, Event, Context, factor } from '@fract/core'
-import { render } from '@fract/jsx'
+import { Fractal, Event, Context, factor } from 'whatsup'
+import { render } from '@whatsup-js/jsx'
 
 const Theme = factor<'light' | 'dark'>('light')
 // factor determining color scheme
@@ -363,13 +421,13 @@ class RemoveEvent extends Event {
 }
 
 class Todo extends Fractal<JSX.Element> {
-    readonly name: Observable<string>
+    readonly name: Conse<string>
 
     constructor(name: string) {
-        this.name = observable(name)
+        this.name = conse(name)
     }
 
-    *stream(ctx: Context) {
+    *whatsUp(ctx: Context) {
         const theme = ctx.get(Theme)
         //   get value of ^^^ Theme factor
         const onClick = () => ctx.dispatch(new RemoveEvent(this))
@@ -398,7 +456,7 @@ class Todos extends Fractal<JSX.Element> {
         this.list.delete(todo)
     }
 
-    *stream(ctx: Context) {
+    *whatsUp(ctx: Context) {
         ctx.set(Theme, 'dark')
         //  ^^^ set value of Theme factor for children contexts
         ctx.on(RemoveEvent, (e) => this.remove(e.todo))
@@ -423,14 +481,14 @@ render(todos)
 
 ## Fraction
 
-A fraction is a fractal arranged like a observable. It also has a set method and allows you to set values.
+A fraction is a fractal arranged like a conse. It also has a set method and allows you to set values.
 
 ```ts
-import { fraction, watch } from '@fract/core'
+import { fraction, whatsUp } from 'whatsup'
 
 const title = fraction('Hello')
 
-watch(title, (data) => console.log(data))
+whatsUp(title, (data) => console.log(data))
 //> 'Hello'
 title.set('World')
 //> 'World'
@@ -438,10 +496,10 @@ title.set('World')
 
 ## Delegation
 
-A useful mechanism thanks to which a fractal can delegate self work to another fractal. For this, the performer must be returned as a result of his work. Delegation is available only in fractals.
+A useful mechanism by which a stream can delegate its work to another stream.
 
 ```ts
-import { fractal, fraction, watch } from '@fract/core'
+import { fractal, fraction, whatsUp, delegate } from 'whatsup'
 
 const Name = fraction('John')
 
@@ -453,34 +511,36 @@ const User = fractal(function* () {
 
 const Guest = fractal(function* () {
     while (true) {
-        yield User // delegate work to User
+        yield delegate(User) // delegate work to User
     }
 })
 
 const guest = new Guest()
 
-watch(guest, (data) => console.log(data))
+whatsUp(guest, (data) => console.log(data))
 //> 'User John'
 ```
 
-In the following example, you can see what happens if a fractal is passed to the fraction.
+In the following example, you can see what happens if a delegation is passed to the conse.
 
 ```ts
-import { fractal, fraction, watch } from '@fract/core'
+import { cause, conse, whatsUp, delegate } from 'whatsup'
 
-const BarryName = fractal(function* () {
+const BarryName = cause(function* () {
     while (true) yield 'Barry'
 })
 
-const Name = fraction('John')
+const Name = conse('John')
 
-watch(Name, (data) => console.log(data))
+whatsUp(Name, (data) => console.log(data))
 //> 'John'
-Name.set(BarryName)
+Name.set(delegate(BarryName))
 //> 'Barry'
 ```
 
-Again, delegation will happen, since a fraction is a regular fractal and a `yield BarryName` occurs inside its generator.
+## Asynchrony (deferred work)
+
+Asynchronous support in development, we will definitely come up with something fresh and incredibly tasty :)
 
 ## Lifecycle
 
@@ -495,10 +555,6 @@ The life cycle consists of three steps:
 3. having received the update message, the stream clears the list of dependencies and, if in the previous step the data was obtained using `yield`, the stream continues its work from the second step; if there was a `return`, the work continues from the first step
 
 The `return` statement does the same as the `yield` statement, but it does the iterator reset, and the stream starts its life anew.
-
-## Asynchrony
-
-Asynchronous support in development, we will definitely come up with something fresh and incredibly tasty :)
 
 ## Examples
 
