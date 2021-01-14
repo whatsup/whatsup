@@ -1,6 +1,5 @@
 import { Stream } from '../src/stream'
 import { fractal, Fractal } from '../src/fractal'
-import { fraction, Fraction } from '../src/fraction'
 import { cause, Cause } from '../src/cause'
 import { conse, Conse } from '../src/conse'
 import { list, List } from '../src/list'
@@ -14,8 +13,6 @@ import {
     Stream as _Stream,
     fractal as _fractal,
     Fractal as _Fractal,
-    fraction as _fraction,
-    Fraction as _Fraction,
     list as _list,
     List as _List,
     whatsUp as _whatsUp,
@@ -37,8 +34,6 @@ it('Exports', () => {
     expect(Stream).toBe(_Stream)
     expect(fractal).toBe(_fractal)
     expect(Fractal).toBe(_Fractal)
-    expect(fraction).toBe(_fraction)
-    expect(Fraction).toBe(_Fraction)
     expect(list).toBe(_list)
     expect(List).toBe(_List)
     expect(whatsUp).toBe(_whatsUp)

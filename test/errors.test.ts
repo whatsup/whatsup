@@ -1,13 +1,12 @@
 import { delegate } from '../src/delegation'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { fraction } from '../src/fraction'
 import { whatsUp } from '../src/observer'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
         const mock = jest.fn((v) => v)
-        const Balance = fraction(33)
+        const Balance = conse(33)
         const App = fractal(function* () {
             while (true) yield `User ${yield* User}`
         })
@@ -51,7 +50,7 @@ describe('Errors', () => {
 
     describe('test catch error on other parent levels (error propagation)', () => {
         const mock = jest.fn((v) => v)
-        const Balance = fraction(33)
+        const Balance = conse(33)
         const App = fractal(function* () {
             while (true) yield `Parent ${yield* Parent}`
         })
@@ -100,7 +99,7 @@ describe('Errors', () => {
 
     describe('test throw & catch error with alive error data', () => {
         const mock = jest.fn((v) => v)
-        const Balance = fraction(10)
+        const Balance = conse(10)
         const App = fractal(function* () {
             while (true) yield `User ${yield* User}`
         })
@@ -151,8 +150,8 @@ describe('Errors', () => {
 
     describe('test throw & catch error with alive error & catcher data', () => {
         const mock = jest.fn((v) => v)
-        const Count = fraction(0)
-        const Balance = fraction(100)
+        const Count = conse(0)
+        const Balance = conse(100)
         const App = fractal(function* () {
             while (true) yield `User ${yield* User}`
         })
@@ -211,7 +210,7 @@ describe('Errors', () => {
         const mock = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
         const Toggle = conse(true)
-        const Balance = fraction(33)
+        const Balance = conse(33)
         const App = fractal(function* () {
             while (true) {
                 yield `User ${yield* User}`

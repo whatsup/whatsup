@@ -1,13 +1,13 @@
 import { factor } from '../src/factor'
 import { fractal } from '../src/fractal'
-import { fraction } from '../src/fraction'
+import { conse } from '../src/conse'
 import { whatsUp } from '../src/observer'
 
 describe('Situations', () => {
     describe('test reactions with initial values', () => {
         const mock = jest.fn()
-        const Name = fraction('John')
-        const Age = fraction(33)
+        const Name = conse('John')
+        const Age = conse(33)
         const User = fractal(function* () {
             while (true) yield `User ${yield* Name} ${yield* Age}`
         })
@@ -22,8 +22,8 @@ describe('Situations', () => {
 
     describe('react only on connected fractals', () => {
         const mock = jest.fn()
-        const Switch = fraction(true)
-        const Name = fraction('John')
+        const Switch = conse(true)
+        const Name = conse('John')
         const User = fractal(function* () {
             while (true) {
                 yield `User ${(yield* Switch) ? yield* Name : 'Default'}`
@@ -63,7 +63,7 @@ describe('Situations', () => {
 
     describe('test reactions on unique values only', () => {
         const mock = jest.fn()
-        const Name = fraction<string>('John')
+        const Name = conse<string>('John')
         const User = fractal(function* () {
             while (true) yield `User ${yield* Name}`
         })

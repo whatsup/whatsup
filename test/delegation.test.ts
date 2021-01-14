@@ -1,15 +1,15 @@
 import { delegate } from '../src/delegation'
 import { fractal } from '../src/fractal'
-import { fraction } from '../src/fraction'
+import { conse } from '../src/conse'
 import { whatsUp } from '../src/observer'
 
 describe('Delegating', () => {
     describe('test delegation', () => {
         const mock1 = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Trigger1 = fraction(1)
-        const Trigger2 = fraction(2)
-        const Trigger3 = fraction(3)
+        const Trigger1 = conse(1)
+        const Trigger2 = conse(2)
+        const Trigger3 = conse(3)
         const One = fractal(function* () {
             while (true) {
                 if (mock1(yield* Trigger1) > 0) {
@@ -62,8 +62,8 @@ describe('Delegating', () => {
     describe('test when executor throw excepton', () => {
         const mock1 = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Trigger1 = fraction(false)
-        const Trigger2 = fraction(2)
+        const Trigger1 = conse(false)
+        const Trigger2 = conse(2)
         const One = fractal(function* () {
             while (true) {
                 if (yield* Trigger1) {
@@ -113,9 +113,9 @@ describe('Delegating', () => {
     describe('test when executor throw delegation', () => {
         const mock1 = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Trigger1 = fraction(false)
-        const Trigger2 = fraction(2)
-        const Trigger3 = fraction(3)
+        const Trigger1 = conse(false)
+        const Trigger2 = conse(2)
+        const Trigger3 = conse(3)
         const One = fractal(function* () {
             while (true) {
                 if (yield* Trigger1) {

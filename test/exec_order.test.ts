@@ -1,5 +1,4 @@
 import { fractal } from '../src/fractal'
-import { fraction } from '../src/fraction'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
 import { whatsUp } from '../src/observer'
@@ -25,7 +24,7 @@ describe('Execution order', () => {
                 yield yield* Hub
             }
         })
-        const Hub = fraction(1)
+        const Hub = conse(1)
         const mock = jest.fn()
 
         whatsUp(App, mock)
