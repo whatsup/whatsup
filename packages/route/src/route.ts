@@ -1,28 +1,15 @@
-import {
-    computed,
-    fractal,
-    factor,
-    Context,
-    Computed,
-    Fractal,
-    FractalOptions,
-    Stream,
-    StreamGenerator,
-} from '@fract/core'
-import { pathname } from '@fract/browser-pathname'
+import { cause, fractal, factor, Context, Cause, Fractal, Stream, StreamGenerator, delegate } from 'whatsup'
+import { pathname } from '@whatsup-js/browser-pathname'
 
 export type RouteGeneratorFunc<T> =
-    | ((context: Context, ...args: Computed<string>[]) => StreamGenerator<T>)
+    | ((context: Context, ...args: Cause<string>[]) => StreamGenerator<T>)
     | (() => StreamGenerator<T>)
 
 export const PATHNAME = factor<Stream<string>>()
 export const DEFAULT_ROUTE_VALUE = factor(null)
 
 abstract class Route<T> extends Fractal<T> {
-    protected abstract getNestedFractal(
-        matched: Computed<boolean>,
-        match: Computed<RegExpMatchArray | null>
-    ): Fractal<T>
+    protected abstract getNestedFractal(matched: Cause<boolean>, match: Cause<RegExpMatchArray | null>): Fractal<T>
     private readonly regexp: RegExp
 
     constructor(pattern: string | RegExp) {
@@ -35,11 +22,11 @@ abstract class Route<T> extends Fractal<T> {
         this.regexp = pattern
     }
 
-    protected *stream(ctx: Context) {
+    *whatsUp(ctx: Context) {
         const { regexp } = this
-        const defaultValue = ctx.get(DEFAULT_ROUTE_VALUE)
-        const path = ctx.get(PATHNAME) || pathname
-        const match = computed(function* () {
+        const defaultValue = ctx.find(DEFAULT_ROUTE_VALUE)!
+        const path = ctx.find(PATHNAME) || pathname
+        const match = cause(function* () {
             while (true) {
                 const result = (yield* path).match(regexp)
 
@@ -50,12 +37,12 @@ abstract class Route<T> extends Fractal<T> {
                 yield result
             }
         })
-        const matched = computed(function* () {
+        const matched = cause(function* () {
             while (true) {
                 yield (yield* match) !== null
             }
         })
-        const tail = computed(function* () {
+        const tail = cause(function* () {
             while (true) {
                 if (yield* matched) {
                     const fullpath = yield* path
@@ -69,12 +56,17 @@ abstract class Route<T> extends Fractal<T> {
             }
         })
         const nested = this.getNestedFractal(matched, match)
+        const wrapped = fractal(function* (ctx) {
+            ctx.define(PATHNAME, tail)
 
-        ctx.set(PATHNAME, tail)
+            while (true) {
+                yield yield* nested
+            }
+        })
 
         while (true) {
             if (yield* matched) {
-                yield nested
+                yield delegate(wrapped)
                 continue
             }
 
@@ -98,19 +90,19 @@ class FromFractalRoute<T> extends Route<T> {
 
 class FromGeneratorRoute<T> extends Route<T> {
     private readonly target: RouteGeneratorFunc<T>
-    private readonly targetOptions: FractalOptions
+    private readonly thisArg: unknown
 
-    constructor(pattern: string | RegExp, target: RouteGeneratorFunc<T>, targetOptions: FractalOptions) {
+    constructor(pattern: string | RegExp, target: RouteGeneratorFunc<T>, thisArg?: unknown) {
         super(pattern)
         this.target = target
-        this.targetOptions = targetOptions
+        this.thisArg = thisArg
     }
 
-    protected getNestedFractal(matched: Computed<boolean>, match: Computed<RegExpMatchArray | null>) {
-        const { target, targetOptions } = this
+    protected getNestedFractal(matched: Cause<boolean>, match: Cause<RegExpMatchArray | null>) {
+        const { target, thisArg } = this
         const { length } = target
         const params = Array.from({ length }, (_, i) =>
-            computed(function* () {
+            cause(function* () {
                 while (true) {
                     if (yield* matched) {
                         yield (yield* match)![i + 1]
@@ -122,25 +114,17 @@ class FromGeneratorRoute<T> extends Route<T> {
             })
         )
 
-        return fractal<T>(function* (this: typeof targetOptions.thisArg, context: Context) {
+        return fractal<T>(function* (this: typeof thisArg, context: Context) {
             return yield* target.call(this, context, ...params)
-        }, targetOptions)
+        }, thisArg)
     }
 }
 
 export function route<T>(pattern: string | RegExp, target: Fractal<T>): Route<T>
-export function route<T>(
-    pattern: string | RegExp,
-    target: RouteGeneratorFunc<T>,
-    targetOptions?: FractalOptions
-): Route<T>
-export function route<T>(
-    pattern: string | RegExp,
-    target: Fractal<T> | RouteGeneratorFunc<T>,
-    targetOptions: FractalOptions = {}
-) {
+export function route<T>(pattern: string | RegExp, target: RouteGeneratorFunc<T>, thisArg?: unknown): Route<T>
+export function route<T>(pattern: string | RegExp, target: Fractal<T> | RouteGeneratorFunc<T>, thisArg?: unknown) {
     if (target instanceof Fractal) {
         return new FromFractalRoute(pattern, target)
     }
-    return new FromGeneratorRoute(pattern, target, targetOptions)
+    return new FromGeneratorRoute(pattern, target, thisArg)
 }

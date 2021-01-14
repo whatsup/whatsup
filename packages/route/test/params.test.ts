@@ -2,22 +2,22 @@
  * @jest-environment jsdom
  */
 
-import { Computed, watch } from '@fract/core'
-import { redirect } from '@fract/browser-pathname'
+import { Cause, whatsUp } from 'whatsup'
+import { redirect } from '@whatsup-js/browser-pathname'
 import { route } from '../src/route'
 
 describe('Test with params', () => {
     const mock = jest.fn()
     const appRoute = route(
         /\/app([0-9]+)\/user([A-Za-z]+)/,
-        function* (_, appId: Computed<string>, userName: Computed<string>) {
+        function* (_, appId: Cause<string>, userName: Cause<string>) {
             while (true) {
                 yield `App:${yield* appId}|User:${yield* userName}`
             }
         }
     )
 
-    watch(appRoute, mock)
+    whatsUp(appRoute, mock)
 
     it('should mock called with null ', () => {
         expect(mock).lastCalledWith(null)

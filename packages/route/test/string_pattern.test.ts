@@ -2,8 +2,8 @@
  * @jest-environment jsdom
  */
 
-import { watch } from '@fract/core'
-import { redirect } from '@fract/browser-pathname'
+import { whatsUp } from 'whatsup'
+import { redirect } from '@whatsup-js/browser-pathname'
 import { route } from '../src/route'
 
 describe('String pattern test', () => {
@@ -14,7 +14,7 @@ describe('String pattern test', () => {
         }
     })
 
-    watch(rootRoute, mock)
+    whatsUp(rootRoute, mock)
 
     it('should mock called with null', () => {
         expect(mock).lastCalledWith(null)

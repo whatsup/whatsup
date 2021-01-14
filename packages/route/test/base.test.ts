@@ -2,8 +2,8 @@
  * @jest-environment jsdom
  */
 
-import { watch } from '@fract/core'
-import { redirect } from '@fract/browser-pathname'
+import { whatsUp } from 'whatsup'
+import { redirect } from '@whatsup-js/browser-pathname'
 import { route } from '../src/route'
 
 describe('Base test', () => {
@@ -15,7 +15,7 @@ describe('Base test', () => {
         }
     })
 
-    watch(rootRoute, mock, errorMock)
+    whatsUp(rootRoute, mock, errorMock)
 
     it('should mock called with null', () => {
         expect(mock).lastCalledWith(null)

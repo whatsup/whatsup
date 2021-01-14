@@ -2,24 +2,24 @@
  * @jest-environment jsdom
  */
 
-import { Computed, watch } from '@fract/core'
-import { redirect } from '@fract/browser-pathname'
+import { Cause, whatsUp } from 'whatsup'
+import { redirect } from '@whatsup-js/browser-pathname'
 import { route } from '../src/route'
 
 describe('Test with nested routes', () => {
     const mock = jest.fn()
-    const appRoute = route(/\/app([0-9]+)/, function* (_, appId: Computed<string>) {
+    const appRoute = route(/\/app([0-9]+)/, function* (_, appId: Cause<string>) {
         while (true) {
             yield `App:${yield* appId}|${yield* nestedRoute}`
         }
     })
-    const nestedRoute = route(/\/user([A-Za-z]+)/, function* (_, userName: Computed<string>) {
+    const nestedRoute = route(/\/user([A-Za-z]+)/, function* (_, userName: Cause<string>) {
         while (true) {
             yield `User:${yield* userName}`
         }
     })
 
-    watch(appRoute, mock)
+    whatsUp(appRoute, mock)
 
     it('should mock called with null ', () => {
         expect(mock).lastCalledWith(null)
@@ -32,14 +32,14 @@ describe('Test with nested routes', () => {
 
     it('should mock called with "App:10|User:John"', () => {
         redirect('/app10/userJohn')
-        expect(mock).toBeCalledTimes(3)
         expect(mock).lastCalledWith('App:10|User:John')
+        expect(mock).toBeCalledTimes(3)
     })
 
     it('should mock called with "App:11|User:Barry"', () => {
         redirect('/app11/userBarry')
-        expect(mock).toBeCalledTimes(4)
         expect(mock).lastCalledWith('App:11|User:Barry')
+        expect(mock).toBeCalledTimes(4)
     })
 
     it('should mock called with "App:20|null"', () => {

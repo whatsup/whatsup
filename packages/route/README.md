@@ -1,30 +1,30 @@
-# Routing stream for organizing routing in a fractal application
+# Route stream for organizing routing in a Whats Up application
 
 <div align="center">
-<img src="https://img.shields.io/travis/fract/route" alt="travis" />
-<img src="https://img.shields.io/codecov/c/github/fract/route" alt="codecov" />
-<img src="https://img.shields.io/github/languages/top/fract/route" alt="language" />
-<img src="https://img.shields.io/npm/l/@fract/route" alt="license" />  
+<img src="https://img.shields.io/travis/whatsup/route" alt="travis" />
+<img src="https://img.shields.io/codecov/c/github/whatsup/route" alt="codecov" />
+<img src="https://img.shields.io/github/languages/top/whatsup/route" alt="language" />
+<img src="https://img.shields.io/npm/l/@whatsup-js/route" alt="license" />  
 </div>
 
 ## Install
 
 ```bash
-npm i @fract/route
+npm i @whatsup-js/route
 ```
 
 ## Usage
 
 ```tsx
-import { fractal } from '@fract/core'
-import { render } from '@fract/jsx'
-import { redirect } from '@fract/browser-pathname'
-import { route } from '@fract/route'
+import { fractal, Context, Cause } from 'whatsup'
+import { render } from '@whatsup-js/jsx'
+import { redirect } from '@whatsup-js/browser-pathname'
+import { route } from '@whatsup-js/route'
 
 const app = fractal(function* () {
     const aboutRoute = route('/about', aboutPage)
     // pattern must be string ↑↑↑↑↑↑ ↓↓↓↓↓↓ or RegExp
-    const userRoute = route(/\/user([0-9]+)/, function* (ctx: Context, id: Computed<string>) {
+    const userRoute = route(/\/user([0-9]+)/, function* (ctx: Context, id: Cause<string>) {
         //               this match ^^^^^^ - will be available here  - ^^^^^^^^^^^^^^^^^^^^
         while (true) {
             yield (
@@ -51,7 +51,7 @@ const aboutPage = fractal(function* () {
         yield (
             <div>
                 <p>About company info</p>
-                <a onClick={() => redirect('/user25')}>Go to used page</a>
+                <a onClick={() => redirect('/user25')}>Go to user page</a>
             </div>
         )
     }
