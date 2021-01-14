@@ -51,9 +51,9 @@ const user = cause(function* () {
 })
 ```
 
-### `Fractal` & `Fraction`
+### `Fractal`
 
-These are the cherries on the cake. We will cover this below :)
+This is the cherry on the cake. We'll tell you about it below :)
 
 ## Simple rules
 
@@ -428,7 +428,7 @@ class Todo extends Fractal<JSX.Element> {
     }
 
     *whatsUp(ctx: Context) {
-        const theme = ctx.get(Theme)
+        const theme = ctx.find(Theme)
         //   get value of ^^^ Theme factor
         const onClick = () => ctx.dispatch(new RemoveEvent(this))
         //   start event bubbling ^^^^^^^^
@@ -457,8 +457,8 @@ class Todos extends Fractal<JSX.Element> {
     }
 
     *whatsUp(ctx: Context) {
-        ctx.set(Theme, 'dark')
-        //  ^^^ set value of Theme factor for children contexts
+        ctx.define(Theme, 'dark')
+        //  ^^^ define value of Theme factor for children contexts
         ctx.on(RemoveEvent, (e) => this.remove(e.todo))
         //  ^^ start event listening
 
@@ -479,19 +479,85 @@ const todos = new Todos()
 render(todos)
 ```
 
-## Fraction
+## Sharing
 
-A fraction is a fractal arranged like a conse. It also has a set method and allows you to set values.
+This mechanism allows you to make any object publicly available to all children.
 
 ```ts
-import { fraction, whatsUp } from 'whatsup'
+import { Fractal, whatsUp } from 'whatsup'
 
-const title = fraction('Hello')
+class Session {
+    constructor(readonly token: string) {}
+}
 
-whatsUp(title, (data) => console.log(data))
-//> 'Hello'
-title.set('World')
-//> 'World'
+class App extends Fractal<string> {
+    *whatsUp(ctx: Context) {
+        const session = new Session('Secret token')
+        const page = new Page()
+
+        ctx.share(this.session) // share Session instance
+
+        while (true) {
+            yield `App ${yield* page}`
+        }
+    }
+}
+
+class Page extends Fractal<string> {
+    *whatsUp(ctx: Context) {
+        const session = ctx.find(Session) // get Session instance
+
+        while (true) {
+            yield `Page ${session.token}`
+        }
+    }
+}
+
+whatsUp(new App(), (d) => console.log(d))
+//> App Page Secret token
+```
+
+## Asynchrony (deferred job)
+
+The context has a `defer` method. This method allows you to start the execution of asynchronous code, after the execution of which `ctx.update()` will be automatically called. Defer returns an object like `{done: boolean, value: T}`.
+
+```ts
+import { Cause, whatsUp } from 'whatsup'
+
+// welcome.ts
+export class Welcome extends Cause<string> {
+    *whatsUp() {
+        while (true) {
+            yield 'Hello world'
+        }
+    }
+}
+
+// app.ts
+class App extends Cause<string> {
+    *whatsUp(ctx) {
+        const deferred = ctx.defer(async function () {
+            const { Welcome } = await import('./welcome')
+            return new Welcome()
+        })
+
+        // deferred is {done: false}
+
+        yield 'Loading...'
+
+        // deferred is {done: true, value: Welcome}
+
+        const welcome = deferred.value
+
+        while (true) {
+            yield `App: ${yield* welcome}`
+        }
+    }
+}
+
+whatsUp(new App(), (d) => console.log(d))
+//> Loading...
+//> App: Hello world
 ```
 
 ## Delegation
@@ -499,9 +565,9 @@ title.set('World')
 A useful mechanism by which a stream can delegate its work to another stream.
 
 ```ts
-import { fractal, fraction, whatsUp, delegate } from 'whatsup'
+import { fractal, conse, whatsUp, delegate } from 'whatsup'
 
-const Name = fraction('John')
+const Name = conse('John')
 
 const User = fractal(function* () {
     while (true) {
@@ -518,7 +584,7 @@ const Guest = fractal(function* () {
 const guest = new Guest()
 
 whatsUp(guest, (data) => console.log(data))
-//> 'User John'
+//> User John
 ```
 
 In the following example, you can see what happens if a delegation is passed to the conse.
@@ -533,14 +599,10 @@ const BarryName = cause(function* () {
 const Name = conse('John')
 
 whatsUp(Name, (data) => console.log(data))
-//> 'John'
+//> John
 Name.set(delegate(BarryName))
-//> 'Barry'
+//> Barry
 ```
-
-## Asynchrony (deferred work)
-
-Asynchronous support in development, we will definitely come up with something fresh and incredibly tasty :)
 
 ## Lifecycle
 
