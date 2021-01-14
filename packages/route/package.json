@@ -1,7 +1,7 @@
 {
     "name": "@whatsup-js/route",
     "description": "Route stream for organizing routing in a Whats Up application",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
