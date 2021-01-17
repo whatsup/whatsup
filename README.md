@@ -76,43 +76,6 @@ name.set('Aria')
 dispose() // to stop whatsUping
 ```
 
-## Incremental & glitch-free computing
-
-All dependencies are updated synchronously in a topological sequence without unnecessary calculations.
-
-```ts
-import { conse, cause, whatsUp } from 'whatsup'
-
-const num = conse(1)
-const evenOrOdd = cause(function* () {
-    while (true) {
-        yield (yield* num) % 2 === 0 ? 'even' : 'odd'
-    }
-})
-const isEven = cause(function* () {
-    while (true) {
-        yield `${yield* num} is ${yield* evenOrOdd}`
-    }
-})
-const isZero = cause(function* () {
-    while (true) {
-        yield (yield* num) === 0 ? 'zero' : 'not zero'
-    }
-})
-
-whatsUp(isEven, (data) => console.log(data))
-whatsUp(isZero, (data) => console.log(data))
-//> 1 is odd
-//> not zero
-num.set(2)
-//> 2 is even
-num.set(3)
-//> 3 is odd
-num.set(0)
-//> 0 is even
-//> zero
-```
-
 ## Extended example
 
 You can extend base classes, but you need to implement the `whatsUp` method
@@ -600,6 +563,43 @@ whatsUp(Name, (data) => console.log(data))
 //> John
 Name.set(delegate(BarryName))
 //> Barry
+```
+
+## Incremental & glitch-free computing
+
+All dependencies are updated synchronously in a topological sequence without unnecessary calculations.
+
+```ts
+import { conse, cause, whatsUp } from 'whatsup'
+
+const num = conse(1)
+const evenOrOdd = cause(function* () {
+    while (true) {
+        yield (yield* num) % 2 === 0 ? 'even' : 'odd'
+    }
+})
+const isEven = cause(function* () {
+    while (true) {
+        yield `${yield* num} is ${yield* evenOrOdd}`
+    }
+})
+const isZero = cause(function* () {
+    while (true) {
+        yield (yield* num) === 0 ? 'zero' : 'not zero'
+    }
+})
+
+whatsUp(isEven, (data) => console.log(data))
+whatsUp(isZero, (data) => console.log(data))
+//> 1 is odd
+//> not zero
+num.set(2)
+//> 2 is even
+num.set(3)
+//> 3 is odd
+num.set(0)
+//> 0 is even
+//> zero
 ```
 
 ## Lifecycle
