@@ -97,7 +97,7 @@ class User extends Cause<UserData> {
         this.name = new Name(name)
     }
 
-    protected *whatsUp() {
+    *whatsUp() {
         while (true) {
             yield {
                 name: yield* this.name,
@@ -127,7 +127,7 @@ class Timer extends Cause<number> {
         super()
     }
 
-    protected *whatsUp(ctx: Context) {
+    *whatsUp(ctx: Context) {
         let i = 0
 
         while (true) {
