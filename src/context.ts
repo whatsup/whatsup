@@ -24,17 +24,24 @@ export class Context {
         return this.shared
     }
 
-    share<T>(instance: T & { constructor: Ctor<T> }) {
-        if (!this.shared) {
-            this.shared = new WeakMap()
-        }
-        this.shared.set(instance.constructor, instance)
-    }
+    share<T>(key: Factor<T>, value: T): void
+    share<T>(instance: T & { constructor: Ctor<T> }): void
+    share<T>(...args: unknown[]) {
+        let key: Factor<T> | Ctor<T>
+        let value: T
 
-    define<T>(key: Factor<T>, value: T) {
+        if (args.length === 2) {
+            key = args[0] as Factor<T>
+            value = args[1] as T
+        } else {
+            key = (args[0] as T & { constructor: Ctor<T> }).constructor
+            value = args[0] as T
+        }
+
         if (!this.shared) {
             this.shared = new WeakMap()
         }
+
         this.shared.set(key, value)
     }
 

@@ -50,7 +50,7 @@ describe('Context', () => {
         })
 
         it('should return test value on child levels', () => {
-            context1.define(testFactor, 'hello')
+            context1.share(testFactor, 'hello')
 
             expect(context2.find(testFactor)).toBe('hello')
             expect(context3.find(testFactor)).toBe('hello')
@@ -58,7 +58,7 @@ describe('Context', () => {
         })
 
         it('should override factor for child levels', () => {
-            context3.define(testFactor, 'world')
+            context3.share(testFactor, 'world')
 
             expect(context2.find(testFactor)).toBe('hello')
             expect(context3.find(testFactor)).toBe('hello')

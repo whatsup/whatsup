@@ -94,7 +94,7 @@ describe('Situations', () => {
         const mock3 = jest.fn()
         const fac = factor('default')
         const One = fractal(function* (ctx) {
-            ctx!.define(fac, 'hello')
+            ctx!.share(fac, 'hello')
             mock1(ctx!.find(fac))
 
             while (true) {
@@ -103,7 +103,7 @@ describe('Situations', () => {
         })
         const Two = fractal(function* (ctx) {
             mock2(ctx!.find(fac))
-            ctx!.define(fac, 'world')
+            ctx!.share(fac, 'world')
 
             while (true) {
                 yield* Four
@@ -118,7 +118,7 @@ describe('Situations', () => {
             }
         })
         const Four = fractal(function* (ctx) {
-            ctx!.define(fac, 'delegator')
+            ctx!.share(fac, 'delegator')
             mock2(ctx!.find(fac))
 
             while (true) {
