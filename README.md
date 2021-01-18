@@ -418,7 +418,7 @@ class Todos extends Fractal<JSX.Element> {
     }
 
     *whatsUp(ctx: Context) {
-        ctx.define(Theme, 'dark')
+        ctx.share(Theme, 'dark')
         //  ^^^ define value of Theme factor for children contexts
         ctx.on(RemoveEvent, (e) => this.remove(e.todo))
         //  ^^ start event listening
@@ -476,6 +476,44 @@ class Page extends Fractal<string> {
 
 whatsUp(new App(), (d) => console.log(d))
 //> App Page Secret token
+```
+
+## Sharing with factors
+
+The `share` method can take a factor as a share-key.
+
+```ts
+import { Fractal, whatsUp, factor } from 'whatsup'
+
+const Theme = factor<string>('light')
+//             default value ^^^^^^^
+
+class App extends Fractal<string> {
+    *whatsUp(ctx: Context) {
+        const page = new Page()
+
+        ctx.share(Theme, 'dark') // share theme value for children contexts
+
+        while (true) {
+            yield `App ${yield* page}`
+        }
+    }
+}
+
+class Page extends Fractal<string> {
+    *whatsUp(ctx: Context) {
+        const theme = ctx.find(Theme) // get Theme shared value
+        // when no factor is found (not shared in parents)
+        // the default value is returned - 'light'
+
+        while (true) {
+            yield `Page. Theme is ${theme}.`
+        }
+    }
+}
+
+whatsUp(new App(), (d) => console.log(d))
+//> Page. Theme is dark.
 ```
 
 ## Asynchrony (deferred job)
