@@ -1,26 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`transform types Should transform User 1`] = `
-"import { component as _component } from \\"@whatsup-js/jsx\\";
+"import { component as _component } from \\"@whatsup/jsx\\";
 
 _component(User, \\"UniqueId\\", undefined, undefined, undefined, [\\"foobar\\"]);"
 `;
 
 exports[`transform types Should transform div 1`] = `
-"import { html as _html } from \\"@whatsup-js/jsx\\";
+"import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, [\\"foobar\\"]);"
 `;
 
 exports[`transform types Should transform fragment 1`] = `
-"import { Fragment as _Fragment } from \\"@whatsup-js/jsx\\";
-import { component as _component } from \\"@whatsup-js/jsx\\";
+"import { Fragment as _Fragment } from \\"@whatsup/jsx\\";
+import { component as _component } from \\"@whatsup/jsx\\";
 
 _component(_Fragment, \\"UniqueId\\", undefined, undefined, undefined, [\\"foobar\\"]);"
 `;
 
 exports[`transform types Should transform svg 1`] = `
-"import { svg as _svg } from \\"@whatsup-js/jsx\\";
+"import { svg as _svg } from \\"@whatsup/jsx\\";
 
 _svg(\\"svg\\", \\"UniqueId\\", undefined, undefined, undefined, [\\"foobar\\"]);"
 `;
