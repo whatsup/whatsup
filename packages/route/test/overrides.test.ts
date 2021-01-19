@@ -3,7 +3,7 @@
  */
 
 import { Cause, Context, fractal, conse, whatsUp } from 'whatsup'
-import { redirect } from '@whatsup-js/browser-pathname'
+import { redirect } from '@whatsup/browser-pathname'
 import { route, PATHNAME, DEFAULT_ROUTE_VALUE } from '../src/route'
 
 describe('Overrides', () => {

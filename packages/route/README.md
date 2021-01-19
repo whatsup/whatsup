@@ -4,22 +4,22 @@
 <img src="https://img.shields.io/travis/whatsup/route" alt="travis" />
 <img src="https://img.shields.io/codecov/c/github/whatsup/route" alt="codecov" />
 <img src="https://img.shields.io/github/languages/top/whatsup/route" alt="language" />
-<img src="https://img.shields.io/npm/l/@whatsup-js/route" alt="license" />  
+<img src="https://img.shields.io/npm/l/@whatsup/route" alt="license" />  
 </div>
 
 ## Install
 
 ```bash
-npm i @whatsup-js/route
+npm i @whatsup/route
 ```
 
 ## Usage
 
 ```tsx
 import { fractal, Context, Cause } from 'whatsup'
-import { render } from '@whatsup-js/jsx'
-import { redirect } from '@whatsup-js/browser-pathname'
-import { route } from '@whatsup-js/route'
+import { render } from '@whatsup/jsx'
+import { redirect } from '@whatsup/browser-pathname'
+import { route } from '@whatsup/route'
 
 const app = fractal(function* () {
     const aboutRoute = route('/about', aboutPage)

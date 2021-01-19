@@ -1,5 +1,5 @@
 import { cause, fractal, factor, Context, Cause, Fractal, Stream, StreamGenerator, delegate } from 'whatsup'
-import { pathname } from '@whatsup-js/browser-pathname'
+import { pathname } from '@whatsup/browser-pathname'
 
 export type RouteGeneratorFunc<T> =
     | ((context: Context, ...args: Cause<string>[]) => StreamGenerator<T>)

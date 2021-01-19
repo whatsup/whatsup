@@ -3,7 +3,7 @@
  */
 
 import { Cause, whatsUp } from 'whatsup'
-import { redirect } from '@whatsup-js/browser-pathname'
+import { redirect } from '@whatsup/browser-pathname'
 import { route } from '../src/route'
 
 describe('Test with nested routes', () => {

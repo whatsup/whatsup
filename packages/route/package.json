@@ -1,5 +1,5 @@
 {
-    "name": "@whatsup-js/route",
+    "name": "@whatsup/route",
     "description": "Route stream for organizing routing in a Whats Up application",
     "version": "0.3.0",
     "author": "Denis Churbanov",
@@ -20,7 +20,7 @@
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "@whatsup-js/browser-pathname": "^0.4.0"
+        "@whatsup/browser-pathname": "^0.4.0"
     },
     "peerDependencies": {
         "whatsup": "^1.1.0"
