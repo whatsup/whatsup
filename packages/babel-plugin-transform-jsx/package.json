@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/babel-plugin-transform-jsx",
     "description": "Babel plugin for transform jsx to Whats Up mutator factories",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
