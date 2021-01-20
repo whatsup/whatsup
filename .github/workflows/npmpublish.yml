@@ -5,21 +5,7 @@ on:
         types: [created]
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v2
-            - uses: actions/setup-node@v1
-              with:
-                  node-version: 12
-            - name: Install dependencies
-              run: npm install --frozen-lockfile
-            - name: Run tests and generate coverage report
-              run: npm run test:coverage
-            - name: Build
-              run: npm run build
     npm-publish:
-        needs: build
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
@@ -29,6 +15,8 @@ jobs:
                   registry-url: https://registry.npmjs.org/
             - name: Install dependencies
               run: npm install --frozen-lockfile
+            - name: Run tests and generate coverage report
+              run: npm run test:coverage
             - name: Build
               run: npm run build
             - name: Npm publish
