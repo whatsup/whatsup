@@ -1,13 +1,13 @@
 ![](https://hsto.org/webt/ap/cu/s9/apcus9m69i3qemivourwekvzfbu.png)
 
 <div align="center">
-<img src="https://img.shields.io/travis/whatsup/whatsup/master" alt="travis" />
+<img src="https://img.shields.io/github/workflow/status/whatsup/whatsup/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" />  
 <img src="https://img.shields.io/codecov/c/github/whatsup/whatsup/master" alt="codecov" />
-<img src="https://img.shields.io/bundlephobia/min/whatsup" alt="size" />
+<img src="https://img.shields.io/bundlephobia/minzip/whatsup" alt="npm bundle size" />
 <img src="https://img.shields.io/github/languages/top/whatsup/whatsup" alt="language" />
 <img src="https://img.shields.io/npm/l/whatsup" alt="npm" /> 
-<a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore">
-<img src="https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Ffract%2Fcore" alt="tweet">
+<a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Fwhatsup%2Fwhatsup">
+<img src="https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Fwhatsup%2Fwhatsup" alt="tweet" />
 </a> 
 </div>
 
