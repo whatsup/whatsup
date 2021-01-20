@@ -11,9 +11,15 @@
 
 ```bash
 npm i @whatsup/route
+
+// or
+
+yarn add @whatsup/route
 ```
 
 ## Usage
+
+Using the whatsup route is very simple. See this example:
 
 ```tsx
 import { fractal, Context, Cause } from 'whatsup'
@@ -52,6 +58,55 @@ const aboutPage = fractal(function* () {
             <div>
                 <p>About company info</p>
                 <a onClick={() => redirect('/user25')}>Go to user page</a>
+            </div>
+        )
+    }
+})
+
+render(app)
+```
+
+## Exact path
+
+The whatsup route path is worked over regular expression. To have exact paths, insert the `$` at the end of the inserted string or regular expression. Here's an example:
+
+```tsx
+import { fractal, Context, Cause } from 'whatsup'
+import { render } from '@whatsup/jsx'
+import { redirect } from '@whatsup/browser-pathname'
+import { route } from '@whatsup/route'
+
+const app = fractal(function* () {
+    const homeRoute = route('/$', homePage)
+    const aboutRoute = route('/about$', aboutPage)
+
+    while (true) {
+        yield (
+            <div>
+                {yield* homeRoute}
+                {yield* aboutRoute}
+            </div>
+        )
+    }
+})
+
+const homePage = fractal(function* () {
+    while (true) {
+        yield (
+            <div>
+                <p>Home</p>
+                <a onClick={() => redirect('/about')}>Go to about page</a>
+            </div>
+        )
+    }
+})
+
+const aboutPage = fractal(function* () {
+    while (true) {
+        yield (
+            <div>
+                <p>About company info</p>
+                <a onClick={() => redirect('/')}>Go to home page</a>
             </div>
         )
     }
