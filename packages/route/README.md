@@ -1,7 +1,7 @@
 # Route stream for organizing routing in a Whats Up application
 
 <div align="center">
-<img src="https://img.shields.io/travis/whatsup/route" alt="travis" />
+<img src="https://img.shields.io/github/workflow/status/whatsup/route/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" /> 
 <img src="https://img.shields.io/codecov/c/github/whatsup/route" alt="codecov" />
 <img src="https://img.shields.io/github/languages/top/whatsup/route" alt="language" />
 <img src="https://img.shields.io/npm/l/@whatsup/route" alt="license" />  

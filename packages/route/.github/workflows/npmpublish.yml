@@ -1,0 +1,25 @@
+name: Node.js Package
+
+on:
+    release:
+        types: [created]
+
+jobs:
+    npm-publish:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: 12
+                  registry-url: https://registry.npmjs.org/
+            - name: Install dependencies
+              run: npm install --frozen-lockfile
+            - name: Run tests and generate coverage report
+              run: npm run test:coverage
+            - name: Build
+              run: npm run build
+            - name: Npm publish
+              run: npm publish --access public
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.npm_token}}
