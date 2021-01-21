@@ -7,7 +7,7 @@
 <img src="https://img.shields.io/npm/l/@whatsup/babel-plugin-transform-jsx" alt="license" />  
 </div>
 
-This plugin transforms JSX code to whatsup compatible mutator factories. It is recommended to use this plugin for compiling JSX for WhatsUp apps.
+This plugin transforms JSX code to WhatsUp compatible mutator factories. It is recommended to use this plugin for compiling JSX for WhatsUp apps.
 
 ## Install
 
