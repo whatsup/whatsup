@@ -1,4 +1,4 @@
-# Route stream for organizing routing in a Whats Up application
+# Route stream for organizing routing in a WhatsUp application
 
 <div align="center">
 <img src="https://img.shields.io/github/workflow/status/whatsup/route/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" /> 
