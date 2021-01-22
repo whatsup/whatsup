@@ -15,8 +15,8 @@ jobs:
                   registry-url: https://registry.npmjs.org/
             - name: Install dependencies
               run: npm install --frozen-lockfile
-            - name: Run tests and generate coverage report
-              run: npm run test:coverage
+            - name: Run tests
+              run: npm run test
             - name: Build
               run: npm run build
             - name: Npm publish
