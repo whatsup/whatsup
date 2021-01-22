@@ -36,7 +36,7 @@ whatsup project
 3. Run the application:
 
 ```bash
-npm run start
+npm start
 # or
 yarn start
 ```
