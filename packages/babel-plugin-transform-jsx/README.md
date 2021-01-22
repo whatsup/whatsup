@@ -1,7 +1,7 @@
 # Whats Up JSX Babel plugin
 
 <div align="center">
-<img src="https://img.shields.io/github/workflow/status/whatsup/route/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" /> 
+<img src="https://img.shields.io/github/workflow/status/whatsup/babel-plugin-transform-jsx/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" /> 
 <img src="https://img.shields.io/codecov/c/github/whatsup/babel-plugin-transform-jsx" alt="codecov" />
 <img src="https://img.shields.io/github/languages/top/whatsup/babel-plugin-transform-jsx" alt="language" />
 <img src="https://img.shields.io/npm/l/@whatsup/babel-plugin-transform-jsx" alt="license" />  
