@@ -17,8 +17,28 @@ Whats Up is a front-end framework based on the ideas of streams and fractals. It
 
 ## Install
 
+Use the [WhatsUp CLI](https://github.com/whatsup/cli) to generate whatsup projects quickly. See below for the necessary steps:
+
+1. Install the WhatsUp CLI globally:
+
 ```bash
-npm i whatsup
+npm i -g @whatsup/cli
+# or
+yarn global add @whatsup/cli
+```
+
+2. Create a project:
+
+```bash
+whatsup project
+```
+
+3. Run the application:
+
+```bash
+npm run start
+# or
+yarn start
 ```
 
 ## Streams
