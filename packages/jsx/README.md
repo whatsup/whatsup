@@ -1,6 +1,7 @@
 # Whats Up Jsx mutator and renderer
 
 <div align="center">
+<img src="https://img.shields.io/github/workflow/status/whatsup/jsx/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" /> 
 <img src="https://img.shields.io/travis/whatsup/jsx" alt="travis" />
 <img src="https://img.shields.io/codecov/c/github/whatsup/jsx" alt="codecov" />
 <img src="https://img.shields.io/github/languages/top/whatsup/jsx" alt="language" />
@@ -11,6 +12,8 @@
 
 ```bash
 npm i @whatsup/jsx @whatsup/babel-plugin-transform-jsx
+# or
+yarn add @whatsup/jsx @whatsup/babel-plugin-transform-jsx
 ```
 
 ## Settings
