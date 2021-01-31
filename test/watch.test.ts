@@ -29,4 +29,13 @@ describe('Watcher', () => {
         expect(errMock).toBeCalledTimes(1)
         expect(errMock).lastCalledWith('Num less than 0')
     })
+
+    it(`should call conse watcher`, () => {
+        let value
+
+        const number = conse(1, (newValue) => (value = newValue))
+        number.set(2)
+
+        expect(value).toBe(2)
+    })
 })

@@ -2,13 +2,17 @@ import { Context } from './context'
 import { SCHEDULER } from './scheduler'
 import { Cause } from './cause'
 
+export type ConseWatch<T> = (value: T) => void
+
 export class Conse<T> extends Cause<T> {
     private contexts = new Set<Context>()
     private value: T
+    private watch?: ConseWatch<T>
 
-    constructor(value: T) {
+    constructor(value: T, watch?: ConseWatch<T>) {
         super()
         this.value = value
+        this.watch = watch
     }
 
     *whatsUp(context: Context) {
@@ -35,9 +39,13 @@ export class Conse<T> extends Cause<T> {
                 context.update()
             }
         })
+
+        if (this.watch) {
+            this.watch(value)
+        }
     }
 }
 
-export function conse<T>(value: T) {
-    return new Conse(value)
+export function conse<T>(value: T, watch?: ConseWatch<T>) {
+    return new Conse(value, watch)
 }
