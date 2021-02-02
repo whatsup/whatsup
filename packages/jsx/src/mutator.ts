@@ -8,6 +8,8 @@ export function Fragment(props: WhatsJSX.ComponentProps) {
 }
 
 const JSX_MUTATOR_ATTACH_KEY = Symbol('Jsx mutator attach key')
+const JSX_MOUNT_OBSERVER = Symbol('Jsx onMount observer')
+const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
 
 const FAKE_JSX_ELEMENT_MUTATOR: WhatsJSX.ElementMutatorLike<HTMLElement | SVGElement> = {
     props: {} as WhatsJSX.ElementProps,
@@ -20,22 +22,35 @@ const FAKE_JSX_COMPONENT_MUTATOR: WhatsJSX.ComponentMutatorLike<(HTMLElement | S
     reconcileMap: new ReconcileMap(),
 }
 
-export abstract class JsxMutator<T extends WhatsJSX.Type, R> extends Mutator<R> implements WhatsJSX.JsxMutatorLike<R> {
+export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | Text) | (Element | Text)[]>
+    extends Mutator<R>
+    implements WhatsJSX.JsxMutatorLike<R> {
     abstract doMutation(oldMutator: WhatsJSX.JsxMutatorLike<R> | void): R
 
     readonly type: T
     readonly uid: WhatsJSX.Uid
     readonly key: WhatsJSX.Key | undefined
     readonly ref: WhatsJSX.Ref | undefined
+    readonly onMount: ((el: Element) => void) | undefined
+    readonly onUnmount: ((el: Element) => void) | undefined
     readonly reconcileId: string
     result!: R
 
-    constructor(type: T, uid: WhatsJSX.Uid, key: WhatsJSX.Key | undefined, ref: WhatsJSX.Ref | undefined) {
+    constructor(
+        type: T,
+        uid: WhatsJSX.Uid,
+        key: WhatsJSX.Key | undefined,
+        ref: WhatsJSX.Ref | undefined,
+        onMount?: ((el: Element) => void) | undefined,
+        onUnmount?: ((el: Element) => void) | undefined
+    ) {
         super()
         this.type = type
         this.uid = uid
         this.key = key
         this.ref = ref
+        this.onMount = onMount
+        this.onUnmount = onUnmount
         this.reconcileId = key != null ? `${uid}|${key}` : uid
     }
 
@@ -48,7 +63,8 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R> extends Mutator<R> 
 
         const newData = this.doMutation(oldMutator)
 
-        this.attachTo(newData)
+        this.attachSelfTo(newData)
+        this.attachMountingCallbacks(newData)
         this.updateRef(newData)
 
         return (this.result = newData)
@@ -71,12 +87,28 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R> extends Mutator<R> 
         }
     }
 
-    private attachTo(target: R) {
-        ;(target as any)[JSX_MUTATOR_ATTACH_KEY] = this
+    private attachSelfTo(target: R) {
+        Reflect.set(target, JSX_MUTATOR_ATTACH_KEY, this)
+    }
+
+    private attachMountingCallbacks(target: R) {
+        const element: Element = !Array.isArray(target) ? target : target.length === 1 ? target[0] : null
+
+        if (element) {
+            if (this.onMount && !Reflect.has(element, JSX_MOUNT_OBSERVER)) {
+                const observer = createMountObserver(element, this.onMount)
+                Reflect.set(element, JSX_MOUNT_OBSERVER, observer)
+            }
+            if (this.onUnmount && !Reflect.has(element, JSX_MOUNT_OBSERVER)) {
+                const observer = createUnmountObserver(element, this.onUnmount)
+                Reflect.set(element, JSX_UNMOUNT_OBSERVER, observer)
+            }
+        }
     }
 }
 
-export abstract class JsxElementMutator extends JsxMutator<WhatsJSX.TagName, HTMLElement | SVGElement>
+export abstract class JsxElementMutator
+    extends JsxMutator<WhatsJSX.TagName, HTMLElement | SVGElement>
     implements WhatsJSX.ElementMutatorLike<HTMLElement | SVGElement> {
     protected abstract createElement(): HTMLElement | SVGElement
 
@@ -91,7 +123,8 @@ export abstract class JsxElementMutator extends JsxMutator<WhatsJSX.TagName, HTM
         props: WhatsJSX.ElementProps,
         children: WhatsJSX.Child[]
     ) {
-        super(type, uid, key, ref)
+        super(type, uid, key, ref, props.onMount, props.onUnmount)
+
         this.props = props
         this.children = new ComponentMutator(Fragment, uid, undefined, undefined, EMPTY_OBJ, children)
     }
@@ -123,7 +156,8 @@ export class HTMLElementMutator extends JsxElementMutator {
     }
 }
 
-export class ComponentMutator extends JsxMutator<WhatsJSX.Component, (HTMLElement | SVGElement | Text)[]>
+export class ComponentMutator
+    extends JsxMutator<WhatsJSX.Component, (HTMLElement | SVGElement | Text)[]>
     implements WhatsJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> {
     readonly children: WhatsJSX.Child[]
     readonly reconcileMap = new ReconcileMap()
@@ -136,8 +170,10 @@ export class ComponentMutator extends JsxMutator<WhatsJSX.Component, (HTMLElemen
         props: WhatsJSX.ComponentProps,
         children: WhatsJSX.Child[]
     ) {
-        super(type, uid, key, ref)
+        super(type, uid, key, ref, props.onMount, props.onUnmount)
+
         const childs = type.call(undefined, { ...props, children })
+
         this.children = Array.isArray(childs) ? childs : [childs]
     }
 
@@ -374,7 +410,7 @@ function isStyleProp(prop: string) {
 }
 
 function isIgnorableProp(prop: string) {
-    return prop === 'key' || prop === 'ref' || prop === 'children'
+    return prop === 'key' || prop === 'ref' || prop === 'children' || prop === 'onMount' || prop === 'onUnmount'
 }
 
 function isReadonlyProp(prop: string) {
@@ -386,4 +422,54 @@ function isReadonlyProp(prop: string) {
         prop === 'download' ||
         prop === 'href'
     )
+}
+
+function createMountObserver<T extends Element>(element: T, callback: (el: T) => void) {
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            const { addedNodes } = mutation
+
+            for (let i = 0; i < addedNodes.length; i++) {
+                const node = addedNodes.item(i)
+
+                if (node === element) {
+                    callback(element)
+                    observer.disconnect()
+                    return
+                }
+            }
+        }
+    })
+
+    observer.observe(document, {
+        childList: true,
+        subtree: true,
+    })
+
+    return observer
+}
+
+function createUnmountObserver<T extends Element>(element: T, callback: (el: T) => void) {
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            const { removedNodes } = mutation
+
+            for (let i = 0; i < removedNodes.length; i++) {
+                const node = removedNodes.item(i)
+
+                if (node === element) {
+                    callback(element)
+                    observer.disconnect()
+                    return
+                }
+            }
+        }
+    })
+
+    observer.observe(document, {
+        childList: true,
+        subtree: true,
+    })
+
+    return observer
 }

@@ -38,3 +38,20 @@ const App = fractal(function* () {
 
 render(App, document.getElementById('app'))
 ```
+
+## Handling mount events
+
+```tsx
+const App = fractal(function* () {
+    const onMount = (el) => console.log('Mounted', el)
+    const onUnmount = (el) => console.log('Unmounted', el)
+
+    while (true) {
+        yield (
+            <div onMount={onMount} onUnmount={onUnmount}>
+                Hello world
+            </div>
+        )
+    }
+})
+```
