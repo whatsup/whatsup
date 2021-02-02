@@ -12,7 +12,7 @@ describe('refs', function () {
         expect(createRef()).toMatchObject({ current: null })
     })
 
-    it('should define ref', async function () {
+    it('should define ref', function () {
         document.body.innerHTML = ''
 
         const ref = createRef()
