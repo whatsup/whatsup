@@ -30,7 +30,7 @@ Update the plugin section in your `.babelrc` file.
 ```tsx
 import { render } from '@whatsup/jsx'
 
-const App = fractal(async function* () {
+const App = fractal(function* () {
     while (true) {
         yield <div>Hello world</div>
     }
