@@ -1,7 +1,7 @@
 import { Stream } from './stream'
 import { Cause } from './cause'
 import { Atom } from './atom'
-import { build } from './scheduler'
+import { build } from './builder'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void

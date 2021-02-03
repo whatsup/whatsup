@@ -3,7 +3,8 @@ import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
 import { Err } from './result'
 import { Stream } from './stream'
-import { build, task } from './scheduler'
+import { task } from './scheduler'
+import { build } from './builder'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
