@@ -164,7 +164,7 @@ export class Context {
     }
 
     update() {
-        this.atom.update()
+        SCHEDULER.run((transaction) => transaction.add(this.atom))
     }
 
     dispose() {

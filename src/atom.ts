@@ -1,7 +1,6 @@
 import { StreamIterator, Stream } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { SCHEDULER } from './scheduler'
 import { Err, Data } from './result'
 import { Stack } from './stack'
 
@@ -29,10 +28,6 @@ export class Atom<T = unknown> {
 
     setCache(cache: Err | Data<T>) {
         return (this._cache = cache)
-    }
-
-    update() {
-        SCHEDULER.run((transaction) => transaction.add(this))
     }
 
     dispose(initiator?: Atom) {
