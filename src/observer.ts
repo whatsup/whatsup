@@ -34,7 +34,13 @@ export class Observer<T> extends Cause<void> {
 
     run() {
         const atom = new Atom(this, null)
-        atom.build()
+
+        atom.do(this.whatsUp, {
+            useSelfStack: true,
+            useDependencies: true,
+            ignoreCacheOnce: true,
+        })
+
         return () => atom.dispose()
     }
 }

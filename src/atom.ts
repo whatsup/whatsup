@@ -57,14 +57,6 @@ export class Atom<T = unknown> {
         }
     }
 
-    build(): Err | Data<T> {
-        return this.do(this.stream.whatsUp, {
-            useSelfStack: true,
-            useDependencies: true,
-            ignoreCacheOnce: true,
-        })
-    }
-
     do<U extends T>(generator: StreamGeneratorFunc<U>, options: DoOptions = {}): Err | Data<U> {
         const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
 

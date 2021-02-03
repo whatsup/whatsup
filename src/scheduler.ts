@@ -94,7 +94,11 @@ class Transaction {
                 const atom = queue[i++]
                 const oldCache = atom.getCache()
 
-                atom.build()
+                atom.do(atom.stream.whatsUp, {
+                    useSelfStack: true,
+                    useDependencies: true,
+                    ignoreCacheOnce: true,
+                })
 
                 const newCache = atom.getCache()!
                 const consumers = atom.getConsumers()
