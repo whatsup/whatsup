@@ -1,4 +1,4 @@
-import { transaction } from '../src/scheduler'
+import { action } from '../src/scheduler'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
 import { whatsUp } from '../src/observer'
@@ -40,7 +40,7 @@ describe('Scheduler', () => {
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
 
-        transaction(() => {
+        action(() => {
             a.set('A')
             b.set('B')
         })

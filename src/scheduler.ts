@@ -56,8 +56,6 @@ class Scheduler {
     }
 }
 
-export const SCHEDULER = new Scheduler()
-
 enum State {
     Initial,
     Executing,
@@ -169,8 +167,14 @@ class Task {
     }
 }
 
-export function transaction<T>(cb: () => T) {
-    return SCHEDULER.run(() => cb())
+export const SCHEDULER = new Scheduler()
+
+export function task<T>(cb: (task: Task) => T) {
+    return SCHEDULER.run((task) => cb(task))
+}
+
+export function action<T>(cb: () => T) {
+    return task(cb)
 }
 
 type BuildOptions = {

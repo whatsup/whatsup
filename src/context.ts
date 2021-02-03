@@ -3,7 +3,7 @@ import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
 import { Err } from './result'
 import { Stream } from './stream'
-import { build, SCHEDULER } from './scheduler'
+import { build, task } from './scheduler'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
@@ -164,7 +164,7 @@ export class Context {
     }
 
     update() {
-        SCHEDULER.run((task) => task.rebuild(this.atom))
+        task((task) => task.rebuild(this.atom))
     }
 
     dispose() {
