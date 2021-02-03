@@ -113,7 +113,7 @@ class Scheduler {
                 const { stream, multi } = value
                 const subAtom = atom.atomizer.get(stream, multi)
 
-                dependencies && (dependencies.add(subAtom), subAtom.addConsumer(atom))
+                dependencies && (dependencies.add(subAtom), subAtom.consumers.add(atom))
 
                 input = this.do(subAtom, subAtom.stream.whatsUp, options)
 
@@ -174,7 +174,7 @@ class Transaction {
     add(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
-            this.addConsumers(atom.getConsumers())
+            this.addConsumers(atom.consumers)
         }
     }
 
@@ -197,7 +197,7 @@ class Transaction {
                 })
 
                 const newCache = atom.cache!
-                const consumers = atom.getConsumers()
+                const consumers = atom.consumers
 
                 if (!newCache.equal(oldCache)) {
                     for (const consumer of consumers) {
@@ -222,7 +222,7 @@ class Transaction {
                 continue
             }
 
-            this.addConsumers(consumer.getConsumers())
+            this.addConsumers(consumer.consumers)
         }
     }
 
@@ -237,7 +237,7 @@ class Transaction {
                     continue
                 }
 
-                this.updateQueue(consumer.getConsumers())
+                this.updateQueue(consumer.consumers)
             }
         }
     }

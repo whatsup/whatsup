@@ -23,14 +23,6 @@ export class Atom<T = unknown> {
         this.dependencies = new Dependencies(this)
     }
 
-    addConsumer(consumer: Atom) {
-        this.consumers.add(consumer)
-    }
-
-    getConsumers() {
-        return this.consumers
-    }
-
     get cache() {
         return this._cache
     }
