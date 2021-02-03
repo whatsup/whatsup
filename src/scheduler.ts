@@ -81,7 +81,7 @@ class Task {
     //     throw 'Aborted'
     // }
 
-    add(atom: Atom) {
+    rebuild(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
             this.addConsumers(atom.consumers)
