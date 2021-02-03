@@ -100,7 +100,7 @@ class Task {
                 const atom = queue[i++]
                 const oldCache = atom.cache
 
-                build(atom, atom.stream.whatsUp, {
+                build(atom, null, {
                     useSelfStack: true,
                     useDependencies: true,
                     ignoreCacheOnce: true,
@@ -182,7 +182,7 @@ type BuildOptions = {
 
 export function build<T, U extends T>(
     atom: Atom<T>,
-    generator: StreamGeneratorFunc<U>,
+    generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
 ): Err | Data<U> {
     const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
@@ -200,7 +200,10 @@ export function build<T, U extends T>(
     dependencies && dependencies.swap()
 
     if (stack.empty) {
-        stack.push(generator.call(stream, context) as StreamIterator<U>)
+        if (!generator) {
+            generator = atom.stream.whatsUp as StreamGeneratorFunc<U>
+        }
+        stack.push(generator!.call(stream, context) as StreamIterator<U>)
     }
 
     let input: unknown
@@ -242,7 +245,7 @@ export function build<T, U extends T>(
 
             dependencies && (dependencies.add(subAtom), subAtom.consumers.add(atom))
 
-            input = build(subAtom, subAtom.stream.whatsUp, options)
+            input = build(subAtom, null, options)
 
             if (input instanceof Data && input.value instanceof Delegation) {
                 stack.push(input.value.stream[Symbol.iterator]())

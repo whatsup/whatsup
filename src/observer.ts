@@ -36,7 +36,7 @@ export class Observer<T> extends Cause<void> {
     run() {
         const atom = new Atom(this, null)
 
-        build(atom, this.whatsUp, {
+        build(atom, null, {
             useSelfStack: true,
             useDependencies: true,
             ignoreCacheOnce: true,
