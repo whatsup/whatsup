@@ -7,43 +7,43 @@ import { Stack } from './stack'
 import { StreamGeneratorFunc, StreamIterator } from './stream'
 
 class Scheduler {
-    private master: Transaction | null = null
-    private slave: Transaction | null = null
+    private master: Task | null = null
+    private slave: Task | null = null
 
-    run<T>(action: (transaction: Transaction) => T): T {
-        let key = Symbol('Transaction key')
-        let transaction: Transaction
+    run<T>(action: (task: Task) => T): T {
+        let key = Symbol('Task key')
+        let task: Task
 
         if (!this.master) {
-            transaction = this.master = new Transaction(key)
+            task = this.master = new Task(key)
         } else if (this.master.state === State.Initial) {
-            transaction = this.master
+            task = this.master
         } else if (!this.slave) {
-            transaction = this.slave = new Transaction(key)
+            task = this.slave = new Task(key)
         } else if (this.slave.state === State.Initial) {
-            transaction = this.slave
+            task = this.slave
         } else {
-            throw 'Transaction error'
+            throw 'Task error'
         }
 
-        const result = action(transaction)
+        const result = action(task)
 
         let counter = 0
 
-        while (transaction === this.master) {
+        while (task === this.master) {
             if (counter > 100) {
                 throw 'May be cycle?'
             }
 
-            transaction.run(key)
+            task.run(key)
 
-            if (transaction.state === State.Completed) {
+            if (task.state === State.Completed) {
                 this.master = this.slave
                 this.slave = null
 
                 if (this.master) {
-                    transaction = this.master
-                    key = transaction.key
+                    task = this.master
+                    key = task.key
                     counter++
                     continue
                 }
@@ -156,7 +156,7 @@ enum State {
     Completed,
 }
 
-class Transaction {
+class Task {
     state = State.Initial
     readonly key: symbol
     private readonly queue = [] as Atom[]
