@@ -98,14 +98,14 @@ export class Atom<T = unknown> {
             if (done || error) {
                 stack.pop()
 
-                const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as U))
+                const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as U, ignoreCache))
 
                 if (!stack.empty) {
                     input = result
                     continue
                 }
 
-                return (this.cache = result)
+                return ignoreCache ? result : (this.cache = result)
             }
             if (value instanceof InitCommand) {
                 const { stream, multi } = value
@@ -125,16 +125,16 @@ export class Atom<T = unknown> {
 
             dependencies && dependencies.disposeUnused()
 
-            const data = this.prepareNewData(value as U)
+            const data = this.prepareNewData(value as U, ignoreCache)
             const result = new Data(data)
 
-            return (this.cache = result)
+            return ignoreCache ? result : (this.cache = result)
         }
     }
 
-    private prepareNewData<U extends T>(value: U | Mutator<U>): U {
+    private prepareNewData<U extends T>(value: U | Mutator<U>, ignoreCache: boolean): U {
         if (value instanceof Mutator) {
-            const oldValue = this.cache && this.cache.value
+            const oldValue = ignoreCache ? undefined : this.cache && this.cache.value
             const newValue = value.mutate(oldValue as U) as U
             return newValue
         }
