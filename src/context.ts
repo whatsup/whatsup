@@ -3,6 +3,7 @@ import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
 import { Err } from './result'
 import { Stream } from './stream'
+import { SCHEDULER } from './scheduler'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
@@ -116,7 +117,7 @@ export class Context {
                 return generator.call(this, context, ...args)
             }
 
-            const result = this.atom.do<T>(executor, { ignoreCache: true })
+            const result = SCHEDULER.do(this.atom, executor, { ignoreCache: true })
 
             if (result instanceof Err) {
                 throw result.value

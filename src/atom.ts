@@ -1,21 +1,18 @@
-import { StreamIterator, Stream, StreamGeneratorFunc } from './stream'
+import { StreamIterator, Stream } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { Command, InitCommand } from './command'
-import { Mutator } from './mutator'
 import { SCHEDULER } from './scheduler'
 import { Err, Data } from './result'
 import { Stack } from './stack'
-import { Delegation } from './delegation'
 
 export class Atom<T = unknown> {
     readonly stream: Stream<T>
     readonly context: Context
-    private readonly stack: Stack<StreamIterator<T>>
-    private readonly atomizer: Atomizer
-    private readonly consumers: Set<Atom>
-    private readonly dependencies: Dependencies
-    private cache: Err | Data<T> | undefined
+    readonly stack: Stack<StreamIterator<T>>
+    readonly atomizer: Atomizer
+    readonly consumers: Set<Atom>
+    readonly dependencies: Dependencies
+    private _cache: Err | Data<T> | undefined
 
     constructor(stream: Stream<T>, parent: Atom | null) {
         this.stack = new Stack()
@@ -34,8 +31,12 @@ export class Atom<T = unknown> {
         return this.consumers
     }
 
-    getCache() {
-        return this.cache
+    get cache() {
+        return this._cache
+    }
+
+    setCache(cache: Err | Data<T>) {
+        return (this._cache = cache)
     }
 
     update() {
@@ -47,7 +48,7 @@ export class Atom<T = unknown> {
             this.consumers.delete(initiator)
         }
         if (this.consumers.size === 0) {
-            this.cache = undefined
+            this._cache = undefined
             this.context.dispose()
             this.dependencies.dispose()
 
@@ -56,98 +57,6 @@ export class Atom<T = unknown> {
             }
         }
     }
-
-    do<U extends T>(generator: StreamGeneratorFunc<U>, options: DoOptions = {}): Err | Data<U> {
-        const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
-
-        if (ignoreCacheOnce) {
-            options.ignoreCacheOnce = false
-        } else if (!ignoreCache && this.cache) {
-            return this.cache as Err | Data<U>
-        }
-
-        const { context, stream } = this
-        const stack = useSelfStack ? this.stack : new Stack<StreamIterator<U>>()
-        const dependencies = useDependencies ? this.dependencies : null
-
-        dependencies && dependencies.swap()
-
-        if (stack.empty) {
-            stack.push(generator.call(stream, context) as StreamIterator<U>)
-        }
-
-        let input: unknown
-
-        while (true) {
-            let done: boolean
-            let error: boolean
-            let value: U | Command | Delegation<U> | Mutator<U>
-
-            try {
-                const result = stack.last.next(input)
-
-                done = result.done!
-                error = false
-                value = result.value!
-            } catch (e) {
-                done = false
-                error = true
-                value = e
-            }
-
-            if (done || error) {
-                stack.pop()
-
-                const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as U, ignoreCache))
-
-                if (!stack.empty) {
-                    input = result
-                    continue
-                }
-
-                return ignoreCache ? result : (this.cache = result)
-            }
-            if (value instanceof InitCommand) {
-                const { stream, multi } = value
-                const atom = this.atomizer.get(stream, multi)
-
-                dependencies && dependencies.add(atom)
-                atom.addConsumer(this)
-
-                input = atom.do(atom.stream.whatsUp, options)
-
-                if (input instanceof Data && input.value instanceof Delegation) {
-                    stack.push(input.value.stream[Symbol.iterator]())
-                    input = undefined
-                }
-                continue
-            }
-
-            dependencies && dependencies.disposeUnused()
-
-            const data = this.prepareNewData(value as U, ignoreCache)
-            const result = new Data(data)
-
-            return ignoreCache ? result : (this.cache = result)
-        }
-    }
-
-    private prepareNewData<U extends T>(value: U | Mutator<U>, ignoreCache: boolean): U {
-        if (value instanceof Mutator) {
-            const oldValue = ignoreCache ? undefined : this.cache && this.cache.value
-            const newValue = value.mutate(oldValue as U) as U
-            return newValue
-        }
-
-        return value
-    }
-}
-
-type DoOptions = {
-    useSelfStack?: boolean
-    useDependencies?: boolean
-    ignoreCache?: boolean
-    ignoreCacheOnce?: boolean
 }
 
 // class AtomMap {
