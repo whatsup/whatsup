@@ -94,7 +94,7 @@ class Transaction {
                 const atom = queue[i++]
                 const oldCache = atom.getCache()
 
-                atom.rebuild()
+                atom.build()
 
                 const newCache = atom.getCache()!
                 const consumers = atom.getConsumers()

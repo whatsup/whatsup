@@ -58,10 +58,170 @@ export class Atom<T = unknown> {
     }
 
     exec<U extends T>(generator: StreamGeneratorFunc<U>): Data<U> | Err {
-        const { context, stream } = this
-        const stack = new Stack<StreamIterator<U>>()
+        return this.do(generator, { ignoreCache: true })
+        // const { context, stream } = this
+        // const stack = new Stack<StreamIterator<U>>()
 
-        stack.push(generator.call(stream, context) as StreamIterator<U>)
+        // stack.push(generator.call(stream, context) as StreamIterator<U>)
+
+        // let input: unknown
+
+        // while (true) {
+        //     let done: boolean
+        //     let error: boolean
+        //     let value: U | Command | Delegation<U> | Mutator<U>
+
+        //     try {
+        //         const result = stack.last.next(input)
+
+        //         done = result.done!
+        //         error = false
+        //         value = result.value!
+        //     } catch (e) {
+        //         done = false
+        //         error = true
+        //         value = e
+        //     }
+
+        //     if (done || error) {
+        //         stack.pop()
+
+        //         const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as U))
+
+        //         if (!stack.empty) {
+        //             input = result
+        //             continue
+        //         }
+
+        //         return result
+        //     }
+        //     if (value instanceof InitCommand) {
+        //         const { stream, multi } = value
+        //         const atom = this.atomizer.get(stream, multi)
+
+        //         input = atom.exec(function (this: Stream, ctx: Context) {
+        //             return this.whatsUp(ctx)
+        //         })
+
+        //         if (input instanceof Data && input.value instanceof Delegation) {
+        //             stack.push(input.value.stream[Symbol.iterator]())
+        //             input = undefined
+        //         }
+        //         continue
+        //     }
+
+        //     const data = this.prepareNewData(value as U)
+        //     const result = new Data(data)
+
+        //     return result
+        // }
+    }
+
+    // lazyBuild() {
+    //     if (!this.cache) {
+    //         this.rebuild()
+    //     }
+    //     return this.cache
+    // }
+
+    // rebuild() {
+    //     this.cache = this.build(function (this: Stream<T>, ctx: Context) {
+    //         return this.whatsUp(ctx)
+    //     })
+    // }
+
+    // rebuild(generator: StreamGeneratorFunc<T>): Err | Data<T> {
+    //     return this.do(generator, { useSelfStack: true, useDependencies: true, ignoreCacheOnce: true })
+    // }
+
+    build(): Err | Data<T> {
+        return this.do(this.stream.whatsUp, {
+            useSelfStack: true,
+            useDependencies: true,
+            ignoreCacheOnce: true,
+        })
+        // const { stack, dependencies, context, stream } = this
+
+        // dependencies.swap()
+
+        // if (stack.empty) {
+        //     stack.push(generator.call(stream, context) as StreamIterator<T>)
+        // }
+
+        // let input: unknown
+
+        // while (true) {
+        //     let done: boolean
+        //     let error: boolean
+        //     let value: T | Command | Delegation<T> | Mutator<T>
+
+        //     try {
+        //         const result = stack.last.next(input)
+
+        //         done = result.done!
+        //         error = false
+        //         value = result.value!
+        //     } catch (e) {
+        //         done = false
+        //         error = true
+        //         value = e
+        //     }
+
+        //     if (done || error) {
+        //         stack.pop()
+
+        //         const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as T))
+
+        //         if (!stack.empty) {
+        //             input = result
+        //             continue
+        //         }
+
+        //         return result
+        //     }
+        //     if (value instanceof InitCommand) {
+        //         const { stream, multi } = value
+        //         const atom = this.atomizer.get(stream, multi)
+
+        //         dependencies.add(atom)
+        //         atom.addConsumer(this)
+
+        //         input = atom.lazyBuild()
+
+        //         if (input instanceof Data && input.value instanceof Delegation) {
+        //             stack.push(input.value.stream[Symbol.iterator]())
+        //             input = undefined
+        //         }
+        //         continue
+        //     }
+
+        //     dependencies.disposeUnused()
+
+        //     const data = this.prepareNewData(value as T)
+        //     const result = new Data(data)
+
+        //     return result
+        // }
+    }
+
+    do<U extends T>(generator: StreamGeneratorFunc<U>, options: DoOptions = {}): Err | Data<U> {
+        const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
+
+        if (ignoreCacheOnce) {
+            options.ignoreCacheOnce = false
+        } else if (!ignoreCache && this.cache) {
+            return this.cache as Err | Data<U>
+        }
+
+        const { context, stream } = this
+        const stack = useSelfStack ? this.stack : new Stack<StreamIterator<U>>()
+        const dependencies = useDependencies ? this.dependencies : null
+
+        dependencies && dependencies.swap()
+
+        if (stack.empty) {
+            stack.push(generator.call(stream, context) as StreamIterator<U>)
+        }
 
         let input: unknown
 
@@ -92,15 +252,16 @@ export class Atom<T = unknown> {
                     continue
                 }
 
-                return result
+                return (this.cache = result)
             }
             if (value instanceof InitCommand) {
                 const { stream, multi } = value
                 const atom = this.atomizer.get(stream, multi)
 
-                input = atom.exec(function (this: Stream, ctx: Context) {
-                    return this.whatsUp(ctx)
-                })
+                dependencies && dependencies.add(atom)
+                atom.addConsumer(this)
+
+                input = atom.do(atom.stream.whatsUp, options)
 
                 if (input instanceof Data && input.value instanceof Delegation) {
                     stack.push(input.value.stream[Symbol.iterator]())
@@ -108,89 +269,13 @@ export class Atom<T = unknown> {
                 }
                 continue
             }
+
+            dependencies && dependencies.disposeUnused()
 
             const data = this.prepareNewData(value as U)
             const result = new Data(data)
 
-            return result
-        }
-    }
-
-    lazyBuild() {
-        if (!this.cache) {
-            this.rebuild()
-        }
-        return this.cache
-    }
-
-    rebuild() {
-        this.cache = this.build(function (this: Stream<T>, ctx: Context) {
-            return this.whatsUp(ctx)
-        })
-    }
-
-    build(generator: StreamGeneratorFunc<T>): Err | Data<T> {
-        const { stack, dependencies, context, stream } = this
-
-        dependencies.swap()
-
-        if (stack.empty) {
-            stack.push(generator.call(stream, context) as StreamIterator<T>)
-        }
-
-        let input: unknown
-
-        while (true) {
-            let done: boolean
-            let error: boolean
-            let value: T | Command | Delegation<T> | Mutator<T>
-
-            try {
-                const result = stack.last.next(input)
-
-                done = result.done!
-                error = false
-                value = result.value!
-            } catch (e) {
-                done = false
-                error = true
-                value = e
-            }
-
-            if (done || error) {
-                stack.pop()
-
-                const result = error ? new Err(value as Error) : new Data(this.prepareNewData(value as T))
-
-                if (!stack.empty) {
-                    input = result
-                    continue
-                }
-
-                return result
-            }
-            if (value instanceof InitCommand) {
-                const { stream, multi } = value
-                const atom = this.atomizer.get(stream, multi)
-
-                dependencies.add(atom)
-                atom.addConsumer(this)
-
-                input = atom.lazyBuild()
-
-                if (input instanceof Data && input.value instanceof Delegation) {
-                    stack.push(input.value.stream[Symbol.iterator]())
-                    input = undefined
-                }
-                continue
-            }
-
-            dependencies.disposeUnused()
-
-            const data = this.prepareNewData(value as T)
-            const result = new Data(data)
-
-            return result
+            return (this.cache = result)
         }
     }
 
@@ -203,6 +288,13 @@ export class Atom<T = unknown> {
 
         return value
     }
+}
+
+type DoOptions = {
+    useSelfStack?: boolean
+    useDependencies?: boolean
+    ignoreCache?: boolean
+    ignoreCacheOnce?: boolean
 }
 
 // class AtomMap {

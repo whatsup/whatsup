@@ -34,7 +34,7 @@ export class Observer<T> extends Cause<void> {
 
     run() {
         const atom = new Atom(this, null)
-        atom.lazyBuild()
+        atom.build()
         return () => atom.dispose()
     }
 }
