@@ -57,10 +57,6 @@ export class Atom<T = unknown> {
         }
     }
 
-    exec<U extends T>(generator: StreamGeneratorFunc<U>): Data<U> | Err {
-        return this.do(generator, { ignoreCache: true })
-    }
-
     build(): Err | Data<T> {
         return this.do(this.stream.whatsUp, {
             useSelfStack: true,

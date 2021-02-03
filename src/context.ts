@@ -112,9 +112,11 @@ export class Context {
 
     actor<T, A extends unknown[]>(generator: (this: Stream, context: Context, ...args: A) => Generator<T, T>) {
         return (...args: A) => {
-            const result = this.atom.exec<T>(function (this: Stream, context: Context) {
+            function executor(this: Stream, context: Context) {
                 return generator.call(this, context, ...args)
-            })
+            }
+
+            const result = this.atom.do<T>(executor, { ignoreCache: true })
 
             if (result instanceof Err) {
                 throw result.value
