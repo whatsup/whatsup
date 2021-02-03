@@ -1,7 +1,7 @@
 import { Stream } from './stream'
 import { Cause } from './cause'
 import { Atom } from './atom'
-import { SCHEDULER } from './scheduler'
+import { build } from './scheduler'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
@@ -36,7 +36,7 @@ export class Observer<T> extends Cause<void> {
     run() {
         const atom = new Atom(this, null)
 
-        SCHEDULER.do(atom, this.whatsUp, {
+        build(atom, this.whatsUp, {
             useSelfStack: true,
             useDependencies: true,
             ignoreCacheOnce: true,
