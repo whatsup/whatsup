@@ -90,16 +90,13 @@ class Task {
 
         while (i < queue.length) {
             const atom = queue[i++]
+            const consumers = atom.consumers
             const oldCache = atom.cache
-
-            build(atom, null, {
+            const newCache = build(atom, null, {
                 useSelfStack: true,
                 useDependencies: true,
                 ignoreCacheOnce: true,
             })
-
-            const newCache = atom.cache!
-            const consumers = atom.consumers
 
             if (!newCache.equal(oldCache)) {
                 for (const consumer of consumers) {
