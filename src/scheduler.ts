@@ -29,9 +29,9 @@ class Scheduler {
             if (counter > 100) {
                 throw 'May be cycle?'
             }
-
-            task.run(key)
-
+            if (task.key === key) {
+                task.run()
+            }
             if (task.state === State.Completed) {
                 this.master = this.slave
                 this.slave = null
@@ -81,40 +81,38 @@ class Task {
         }
     }
 
-    run(key: symbol) {
-        if (key === this.key) {
-            this.state = State.Executing
+    run() {
+        this.state = State.Executing
 
-            const { queue } = this
+        const { queue } = this
 
-            let i = 0
+        let i = 0
 
-            while (i < queue.length) {
-                const atom = queue[i++]
-                const oldCache = atom.cache
+        while (i < queue.length) {
+            const atom = queue[i++]
+            const oldCache = atom.cache
 
-                build(atom, null, {
-                    useSelfStack: true,
-                    useDependencies: true,
-                    ignoreCacheOnce: true,
-                })
+            build(atom, null, {
+                useSelfStack: true,
+                useDependencies: true,
+                ignoreCacheOnce: true,
+            })
 
-                const newCache = atom.cache!
-                const consumers = atom.consumers
+            const newCache = atom.cache!
+            const consumers = atom.consumers
 
-                if (!newCache.equal(oldCache)) {
-                    for (const consumer of consumers) {
-                        this.queueCandidates.add(consumer)
-                    }
+            if (!newCache.equal(oldCache)) {
+                for (const consumer of consumers) {
+                    this.queueCandidates.add(consumer)
                 }
-
-                this.updateQueue(consumers)
             }
 
-            this.state = State.Completed
-
-            //clearImmediate(this.abortTimer) // TODO Node.Immediate mzf
+            this.updateQueue(consumers)
         }
+
+        this.state = State.Completed
+
+        //clearImmediate(this.abortTimer) // TODO Node.Immediate mzf
     }
 
     private addConsumers(consumers: Iterable<Atom>) {
