@@ -1,4 +1,4 @@
-import { StreamIterator, Stream } from './stream'
+import { Stream, StreamIterator } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { Err, Data } from './result'

@@ -4,7 +4,7 @@ import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Err, Data } from './result'
 import { Stack } from './stack'
-import { StreamGeneratorFunc, StreamIterator } from './stream'
+import { StreamGeneratorFunc } from './stream'
 
 type BuildOptions = {
     useSelfStack?: boolean
@@ -18,33 +18,37 @@ export function build<T, U extends T>(
     generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
 ): Err | Data<U> {
-    const stack = new Stack()
+    const stack = new Stack<Generator<unknown, Err | Data<U>, any>>()
 
-    stack.push(generate(atom, generator, options))
+    main: while (true) {
+        const iterator = generate<T, U>(atom, generator, options)
 
-    let input: any
+        stack.push(iterator)
 
-    while (true) {
-        const { done, value } = stack.next(input)
+        let input = undefined
 
-        if (done) {
-            stack.pop()
+        while (true) {
+            const { done, value } = stack.next(input)
 
-            if (!stack.empty) {
-                input = value
-                continue
+            if (done) {
+                stack.pop()
+
+                if (!stack.empty) {
+                    input = value
+                    continue
+                }
+
+                return value as Err | Data<U>
             }
 
-            return value as Err | Data<U>
-        }
+            if (value instanceof Atom) {
+                atom = value
+                generator = value.stream.whatsUp
+                continue main
+            }
 
-        if (value instanceof Atom) {
-            stack.push(generate(value, null, options))
-            input = undefined
-            continue
+            throw 'Maz Afa-ka'
         }
-
-        throw 'Mazafaka'
     }
 }
 
@@ -62,7 +66,7 @@ export function* generate<T, U extends T>(
     }
 
     const { context, stream } = atom
-    const stack = useSelfStack ? atom.stack : new Stack<StreamIterator<U>>()
+    const stack = useSelfStack ? atom.stack : new Stack<any, any, any>()
 
     useDependencies && atom.dependencies.swap()
 
@@ -70,7 +74,7 @@ export function* generate<T, U extends T>(
         if (!generator) {
             generator = atom.stream.whatsUp as StreamGeneratorFunc<U>
         }
-        stack.push(generator!.call(stream, context) as StreamIterator<U>)
+        stack.push(generator!.call(stream, context))
     }
 
     let input: unknown
