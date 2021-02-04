@@ -1,5 +1,6 @@
 import { Atom } from './atom'
 import { build } from './builder'
+import { Stack } from './stack'
 
 class Scheduler {
     private master: Task | null = null
@@ -77,7 +78,33 @@ class Task {
     rebuild(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
-            this.addConsumers(atom.consumers)
+
+            const stack = new Stack()
+
+            stack.push(atom.consumers[Symbol.iterator]())
+
+            while (true) {
+                const { done, value } = stack.next(undefined)
+
+                if (done) {
+                    stack.pop()
+
+                    if (!stack.empty) {
+                        continue
+                    }
+
+                    return value
+                }
+
+                const counter = this.incrementCounter(value)
+
+                if (counter > 1) {
+                    continue
+                }
+
+                stack.push(value.consumers[Symbol.iterator]())
+                continue
+            }
         }
     }
 
@@ -112,17 +139,17 @@ class Task {
         //clearImmediate(this.abortTimer) // TODO Node.Immediate mzf
     }
 
-    private addConsumers(consumers: Iterable<Atom>) {
-        for (const consumer of consumers) {
-            const counter = this.incrementCounter(consumer)
+    // private addConsumers(consumers: Iterable<Atom>) {
+    //     for (const consumer of consumers) {
+    //         const counter = this.incrementCounter(consumer)
 
-            if (counter > 1) {
-                continue
-            }
+    //         if (counter > 1) {
+    //             continue
+    //         }
 
-            this.addConsumers(consumer.consumers)
-        }
-    }
+    //         this.addConsumers(consumer.consumers)
+    //     }
+    // }
 
     private updateQueue(consumers: Iterable<Atom>) {
         for (const consumer of consumers) {

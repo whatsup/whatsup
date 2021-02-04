@@ -18,18 +18,19 @@ export function build<T, U extends T>(
     generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
 ): Err | Data<U> {
-    const stack = [generate(atom, generator, options)]
+    const stack = new Stack()
+
+    stack.push(generate(atom, generator, options))
 
     let input: any
 
     while (true) {
-        const last = stack[stack.length - 1]
-        const { done, value } = last.next(input)
+        const { done, value } = stack.next(input)
 
         if (done) {
             stack.pop()
 
-            if (stack.length) {
+            if (!stack.empty) {
                 input = value
                 continue
             }
@@ -80,7 +81,7 @@ export function* generate<T, U extends T>(
         let value: U | Command | Delegation<U> | Mutator<U>
 
         try {
-            const result = stack.last.next(input)
+            const result = stack.next(input)
 
             done = result.done!
             error = false

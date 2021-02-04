@@ -1,23 +1,26 @@
-export class Stack<T> {
-    private cursor = -1
+export class Stack<T extends Iterator<any>> {
     private items = [] as T[]
+    private last: T | undefined
 
     get empty() {
-        return this.cursor === -1
+        return !this.last
     }
 
-    get last() {
-        return this.items[this.cursor]
+    next<U>(input: U) {
+        if (this.empty) {
+            throw 'Stack is empty'
+        }
+        return this.last!.next(input as any)
     }
 
     push(item: T) {
         this.items.push(item)
-        this.cursor++
+        this.last = item
     }
 
     pop() {
         const item = this.items.pop()
-        this.cursor--
+        this.last = this.items[this.items.length - 1]
         return item
     }
 }
