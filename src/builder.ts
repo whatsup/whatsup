@@ -18,6 +18,40 @@ export function build<T, U extends T>(
     generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
 ): Err | Data<U> {
+    const stack = [generate(atom, generator, options)]
+
+    let input: any
+
+    while (true) {
+        const last = stack[stack.length - 1]
+        const { done, value } = last.next(input)
+
+        if (done) {
+            stack.pop()
+
+            if (stack.length) {
+                input = value
+                continue
+            }
+
+            return value as Err | Data<U>
+        }
+
+        if (value instanceof Atom) {
+            stack.push(generate(value, null, options))
+            input = undefined
+            continue
+        }
+
+        throw 'Mazafaka'
+    }
+}
+
+export function* generate<T, U extends T>(
+    atom: Atom<T>,
+    generator: StreamGeneratorFunc<U> | null,
+    options: BuildOptions = {}
+): Generator<unknown, Err | Data<U>, any> {
     const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
 
     if (ignoreCacheOnce) {
@@ -28,9 +62,8 @@ export function build<T, U extends T>(
 
     const { context, stream } = atom
     const stack = useSelfStack ? atom.stack : new Stack<StreamIterator<U>>()
-    const dependencies = useDependencies ? atom.dependencies : null
 
-    dependencies && dependencies.swap()
+    useDependencies && atom.dependencies.swap()
 
     if (stack.empty) {
         if (!generator) {
@@ -76,9 +109,9 @@ export function build<T, U extends T>(
             const { stream, multi } = value
             const subAtom = atom.atomizer.get(stream, multi)
 
-            dependencies && (dependencies.add(subAtom), subAtom.consumers.add(atom))
+            useDependencies && (atom.dependencies.add(subAtom), subAtom.consumers.add(atom))
 
-            input = build(subAtom, null, options)
+            input = yield subAtom
 
             if (input instanceof Data && input.value instanceof Delegation) {
                 stack.push(input.value.stream[Symbol.iterator]())
@@ -87,7 +120,7 @@ export function build<T, U extends T>(
             continue
         }
 
-        dependencies && dependencies.disposeUnused()
+        useDependencies && atom.dependencies.disposeUnused()
 
         const data = prepareNewData(atom, value as U, ignoreCache)
         const result = new Data(data)
