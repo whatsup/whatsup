@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { SCHEDULER } from './scheduler'
+import { action } from './scheduler'
 import { Cause } from './cause'
 
 export class Conse<T> extends Cause<T> {
@@ -30,7 +30,7 @@ export class Conse<T> extends Cause<T> {
     set(value: T) {
         this.value = value
 
-        SCHEDULER.run(() => {
+        action(() => {
             for (const context of this.contexts) {
                 context.update()
             }

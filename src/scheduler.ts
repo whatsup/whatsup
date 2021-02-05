@@ -190,7 +190,7 @@ class Task {
     }
 }
 
-export const SCHEDULER = new Scheduler()
+const SCHEDULER = new Scheduler()
 
 export function task<T>(cb: (task: Task) => T) {
     return SCHEDULER.run(cb)
