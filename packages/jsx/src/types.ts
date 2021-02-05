@@ -76,6 +76,10 @@ export namespace WhatsJSX {
         target: EventTarget & T
     }
 
+    export interface InputEvent<T = Element> extends Event<T> {
+        target: EventTarget & T
+    }
+
     export interface KeyboardEvent<T = Element> extends Event<T> {
         altKey: boolean
         charCode: number
@@ -171,6 +175,7 @@ export namespace WhatsJSX {
     type FocusEventHandler<T = Element> = EventHandler<FocusEvent<T>>
     type FormEventHandler<T = Element> = EventHandler<FormEvent<T>>
     type ChangeEventHandler<T = Element> = EventHandler<ChangeEvent<T>>
+    type InputEventHandler<T = Element> = EventHandler<InputEvent<T>>
     type KeyboardEventHandler<T = Element> = EventHandler<KeyboardEvent<T>>
     type MouseEventHandler<T = Element> = EventHandler<MouseEvent<T>>
     type TouchEventHandler<T = Element> = EventHandler<TouchEvent<T>>
@@ -808,6 +813,7 @@ export namespace WhatsJSX {
         width?: number | string
 
         onChange?: ChangeEventHandler<T>
+        onInput?: InputEventHandler<T>
     }
 
     export interface KeygenHTMLAttributes<T> extends HTMLAttributes<T> {
