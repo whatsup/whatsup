@@ -79,7 +79,7 @@ class Task {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
 
-            const stack = new Stack()
+            const stack = new Stack<Iterator<Atom, any, any>, Atom, any, any>()
 
             main: while (true) {
                 stack.push(atom.consumers[Symbol.iterator]())
@@ -103,10 +103,10 @@ class Task {
                         continue
                     }
 
-                    if (value instanceof Atom) {
-                        atom = value
-                        continue main
-                    }
+                    // if (value instanceof Atom) {
+                    atom = value
+                    continue main
+                    //}
 
                     throw 'Maz Afa-ka'
                 }
@@ -193,9 +193,9 @@ class Task {
 export const SCHEDULER = new Scheduler()
 
 export function task<T>(cb: (task: Task) => T) {
-    return SCHEDULER.run((task) => cb(task))
+    return SCHEDULER.run(cb)
 }
 
 export function action<T>(cb: () => T) {
-    return task(cb)
+    return task(() => cb())
 }
