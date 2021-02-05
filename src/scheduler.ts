@@ -7,15 +7,17 @@ class Scheduler {
     private slave: Task | null = null
 
     run<T>(action: (task: Task) => T): T {
-        let key = Symbol('Task key')
+        let key: symbol
         let task: Task
 
         if (!this.master) {
-            task = this.master = new Task(key)
+            task = this.master = new Task()
+            key = task.key
         } else if (this.master.state === State.Initial) {
             task = this.master
         } else if (!this.slave) {
-            task = this.slave = new Task(key)
+            task = this.slave = new Task()
+            key = task.key
         } else if (this.slave.state === State.Initial) {
             task = this.slave
         } else {
@@ -26,13 +28,13 @@ class Scheduler {
 
         let counter = 0
 
-        while (task === this.master) {
+        while (task === this.master && task.key === key!) {
             if (counter > 100) {
                 throw 'May be cycle?'
             }
-            if (task.key === key) {
-                task.run()
-            }
+
+            task.run()
+
             if (task.state === State.Completed) {
                 this.master = this.slave
                 this.slave = null
@@ -66,8 +68,8 @@ class Task {
     private readonly counters = new WeakMap<Atom, number>()
     //private readonly abortTimer: number
 
-    constructor(key: symbol) {
-        this.key = key
+    constructor() {
+        this.key = Symbol('task key')
         //this.abortTimer = setImmediate(() => this.abort()) // TODO
     }
 
