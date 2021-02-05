@@ -81,29 +81,35 @@ class Task {
 
             const stack = new Stack()
 
-            stack.push(atom.consumers[Symbol.iterator]())
+            main: while (true) {
+                stack.push(atom.consumers[Symbol.iterator]())
 
-            while (true) {
-                const { done, value } = stack.next(undefined)
+                while (true) {
+                    const { done, value } = stack.next(undefined)
 
-                if (done) {
-                    stack.pop()
+                    if (done) {
+                        stack.pop()
 
-                    if (!stack.empty) {
+                        if (!stack.empty) {
+                            continue
+                        }
+
+                        return value
+                    }
+
+                    const counter = this.incrementCounter(value)
+
+                    if (counter > 1) {
                         continue
                     }
 
-                    return value
+                    if (value instanceof Atom) {
+                        atom = value
+                        continue main
+                    }
+
+                    throw 'Maz Afa-ka'
                 }
-
-                const counter = this.incrementCounter(value)
-
-                if (counter > 1) {
-                    continue
-                }
-
-                stack.push(value.consumers[Symbol.iterator]())
-                continue
             }
         }
     }
