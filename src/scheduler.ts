@@ -23,7 +23,7 @@ class Task {
                 stack.push(atom.consumers[Symbol.iterator]())
 
                 while (true) {
-                    const { done, value } = stack.peek().next(undefined)
+                    const { done, value } = stack.peek().next()
 
                     if (done) {
                         stack.pop()
