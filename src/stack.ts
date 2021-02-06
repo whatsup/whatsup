@@ -1,25 +1,27 @@
-class Item {
-    constructor(readonly iterator: any, readonly prev: Item | undefined) {}
+interface Item<T> {
+    readonly value: T
+    readonly prev: Item<T> | undefined
 }
 
-export class Stack<T extends Iterator<U, UR, UN>, U = any, UR = any, UN = any> {
-    private last: Item | undefined
+export class Stack<T> {
+    private item: Item<T> | undefined
 
     get empty() {
-        return this.last === undefined
+        return this.item === undefined
     }
 
-    next(input: UN) {
-        return this.last!.iterator.next(input)
+    peek() {
+        return this.item!.value
     }
 
-    push(iterator: T) {
-        this.last = new Item(iterator, this.last)
+    push(value: T) {
+        const prev = this.item
+        this.item = { value, prev }
     }
 
     pop() {
-        const { prev, iterator } = this.last!
-        this.last = prev
-        return iterator
+        const { prev, value } = this.item!
+        this.item = prev
+        return value
     }
 }

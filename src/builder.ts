@@ -4,7 +4,7 @@ import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Err, Data } from './result'
 import { Stack } from './stack'
-import { StreamGeneratorFunc } from './stream'
+import { StreamGeneratorFunc, StreamIterator } from './stream'
 
 type BuildOptions = {
     useSelfStack?: boolean
@@ -28,7 +28,7 @@ export function build<T, U extends T>(
         let input = undefined
 
         while (true) {
-            const { done, value } = stack.next(input)
+            const { done, value } = stack.peek().next(input)
 
             if (done) {
                 stack.pop()
@@ -66,7 +66,7 @@ export function* generate<T, U extends T>(
     }
 
     const { context, stream } = atom
-    const stack = useSelfStack ? atom.stack : new Stack<any, any, any>()
+    const stack = useSelfStack ? atom.stack : new Stack<StreamIterator<T>>()
 
     useDependencies && atom.dependencies.swap()
 
@@ -74,7 +74,7 @@ export function* generate<T, U extends T>(
         if (!generator) {
             generator = atom.stream.whatsUp as StreamGeneratorFunc<U>
         }
-        stack.push(generator!.call(stream, context))
+        stack.push(generator!.call(stream, context) as any)
     }
 
     let input: unknown
@@ -85,7 +85,7 @@ export function* generate<T, U extends T>(
         let value: U | Command | Delegation<U> | Mutator<U>
 
         try {
-            const result = stack.next(input)
+            const result = stack.peek().next(input)
 
             done = result.done!
             error = false

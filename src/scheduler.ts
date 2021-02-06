@@ -81,13 +81,13 @@ class Task {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
 
-            const stack = new Stack<Iterator<Atom, any, any>, Atom, any, any>()
+            const stack = new Stack<Iterator<Atom, any, any>>()
 
             main: while (true) {
                 stack.push(atom.consumers[Symbol.iterator]())
 
                 while (true) {
-                    const { done, value } = stack.next(undefined)
+                    const { done, value } = stack.peek().next(undefined)
 
                     if (done) {
                         stack.pop()
