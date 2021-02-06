@@ -2,80 +2,16 @@ import { Atom } from './atom'
 import { build } from './builder'
 import { Stack } from './stack'
 
-class Scheduler {
-    private master: Task | null = null
-    private slave: Task | null = null
-
-    run<T>(action: (task: Task) => T): T {
-        let key: symbol
-        let task: Task
-
-        if (!this.master) {
-            task = this.master = new Task()
-            key = task.key
-        } else if (this.master.state === State.Initial) {
-            task = this.master
-        } else if (!this.slave) {
-            task = this.slave = new Task()
-            key = task.key
-        } else if (this.slave.state === State.Initial) {
-            task = this.slave
-        } else {
-            throw 'Task error'
-        }
-
-        const result = action(task)
-
-        let counter = 0
-
-        while (task === this.master && task.key === key!) {
-            if (counter > 100) {
-                throw 'May be cycle?'
-            }
-
-            task.run()
-
-            if (task.state === State.Completed) {
-                this.master = this.slave
-                this.slave = null
-
-                if (this.master) {
-                    task = this.master
-                    key = task.key
-                    counter++
-                    continue
-                }
-            }
-
-            break
-        }
-
-        return result
-    }
-}
-
-enum State {
-    Initial,
-    Executing,
-    Completed,
-}
-
 class Task {
-    state = State.Initial
+    initializing = true
     readonly key: symbol
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new Map<Atom, number>()
-    //private readonly abortTimer: number
 
     constructor() {
         this.key = Symbol('task key')
-        //this.abortTimer = setImmediate(() => this.abort()) // TODO
     }
-
-    // abort() {
-    //     throw 'Aborted'
-    // }
 
     rebuild(atom: Atom) {
         if (!this.queue.includes(atom)) {
@@ -105,19 +41,15 @@ class Task {
                         continue
                     }
 
-                    // if (value instanceof Atom) {
                     atom = value
                     continue main
-                    //}
-
-                    throw 'Maz Afa-ka'
                 }
             }
         }
     }
 
     run() {
-        this.state = State.Executing
+        this.initializing = false
 
         const { queue } = this
 
@@ -141,23 +73,7 @@ class Task {
 
             this.updateQueue(consumers)
         }
-
-        this.state = State.Completed
-
-        //clearImmediate(this.abortTimer) // TODO Node.Immediate mzf
     }
-
-    // private addConsumers(consumers: Iterable<Atom>) {
-    //     for (const consumer of consumers) {
-    //         const counter = this.incrementCounter(consumer)
-
-    //         if (counter > 1) {
-    //             continue
-    //         }
-
-    //         this.addConsumers(consumer.consumers)
-    //     }
-    // }
 
     private updateQueue(consumers: Iterable<Atom>) {
         for (const consumer of consumers) {
@@ -192,10 +108,45 @@ class Task {
     }
 }
 
-const SCHEDULER = new Scheduler()
+let master: Task | null = null
+let slave: Task | null = null
 
-export function task<T>(cb: (task: Task) => T) {
-    return SCHEDULER.run(cb)
+export function task<T>(action: (task: Task) => T): T {
+    let key: symbol
+    let task: Task
+
+    if (master === null) {
+        task = master = new Task()
+        key = task.key
+    } else if (master.initializing) {
+        task = master
+    } else if (slave === null) {
+        task = slave = new Task()
+        key = task.key
+    } else if (slave.initializing) {
+        task = slave
+    } else {
+        throw 'Task error'
+    }
+
+    const result = action(task)
+
+    while (task === master && task.key === key!) {
+        task.run()
+
+        master = slave
+        slave = null
+
+        if (master !== null) {
+            task = master
+            key = task.key
+            continue
+        }
+
+        break
+    }
+
+    return result
 }
 
 export function action<T>(cb: () => T) {
