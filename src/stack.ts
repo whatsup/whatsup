@@ -1,31 +1,25 @@
-export class Stack<T extends Iterator<U, UR, UN>, U = any, UR = any, UN = any> {
-    private items: T[]
-    private last: T | undefined
+class Item {
+    constructor(readonly iterator: any, readonly prev: Item | undefined) {}
+}
 
-    constructor(...iterators: T[]) {
-        this.items = iterators
-        this.last = iterators[iterators.length - 1]
-    }
+export class Stack<T extends Iterator<U, UR, UN>, U = any, UR = any, UN = any> {
+    private last: Item | undefined
 
     get empty() {
-        return !this.last
+        return this.last === undefined
     }
 
     next(input: UN) {
-        if (this.empty) {
-            throw 'Stack is empty'
-        }
-        return this.last!.next(input)
+        return this.last!.iterator.next(input)
     }
 
-    push(item: T) {
-        this.items.push(item)
-        this.last = item
+    push(iterator: T) {
+        this.last = new Item(iterator, this.last)
     }
 
     pop() {
-        const item = this.items.pop()
-        this.last = this.items[this.items.length - 1]
-        return item
+        const { prev, iterator } = this.last!
+        this.last = prev
+        return iterator
     }
 }
