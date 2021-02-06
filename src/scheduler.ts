@@ -65,7 +65,7 @@ class Task {
     readonly key: symbol
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
-    private readonly counters = new WeakMap<Atom, number>()
+    private readonly counters = new Map<Atom, number>()
     //private readonly abortTimer: number
 
     constructor() {
