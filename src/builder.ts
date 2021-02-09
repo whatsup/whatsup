@@ -18,7 +18,7 @@ export function build<T, U extends T>(
     generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
 ): Err | Data<U> {
-    const stack = new Stack<Generator<unknown, Err | Data<U>, any>>()
+    const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
     main: while (true) {
         const iterator = generate<T, U>(atom, generator, options)
@@ -47,7 +47,7 @@ export function build<T, U extends T>(
                 continue main
             }
 
-            throw 'Maz Afa-ka'
+            throw 'What`s up? It shouldn`t have happened'
         }
     }
 }
@@ -56,7 +56,7 @@ export function* generate<T, U extends T>(
     atom: Atom<T>,
     generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
-): Generator<unknown, Err | Data<U>, any> {
+): Generator<unknown, Err | Data<U>> {
     const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
 
     if (ignoreCacheOnce) {
@@ -66,7 +66,7 @@ export function* generate<T, U extends T>(
     }
 
     const { context, stream } = atom
-    const stack = useSelfStack ? atom.stack : new Stack<StreamIterator<T>>()
+    const stack = useSelfStack ? atom.stack : new Stack<StreamIterator<U>>()
 
     useDependencies && atom.dependencies.swap()
 
@@ -74,7 +74,7 @@ export function* generate<T, U extends T>(
         if (!generator) {
             generator = atom.stream.whatsUp as StreamGeneratorFunc<U>
         }
-        stack.push(generator!.call(stream, context) as any)
+        stack.push(generator!.call(stream, context) as StreamIterator<U>)
     }
 
     let input: unknown

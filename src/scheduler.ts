@@ -17,7 +17,7 @@ class Task {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
 
-            const stack = new Stack<Iterator<Atom, any, any>>()
+            const stack = new Stack<Iterator<Atom>>()
 
             main: while (true) {
                 stack.push(atom.consumers[Symbol.iterator]())
