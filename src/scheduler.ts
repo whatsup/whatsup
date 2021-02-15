@@ -2,7 +2,7 @@ import { Atom } from './atom'
 import { build } from './builder'
 import { Stack } from './stack'
 
-class Task {
+class Transaction {
     initializing = true
     readonly key: symbol
     private readonly queue = [] as Atom[]
@@ -10,7 +10,7 @@ class Task {
     private readonly counters = new Map<Atom, number>()
 
     constructor() {
-        this.key = Symbol('task key')
+        this.key = Symbol('Transaction key')
     }
 
     rebuild(atom: Atom) {
@@ -108,38 +108,38 @@ class Task {
     }
 }
 
-let master: Task | null = null
-let slave: Task | null = null
+let master: Transaction | null = null
+let slave: Transaction | null = null
 
-export function task<T>(action: (task: Task) => T): T {
+export function transaction<T>(action: (transaction: Transaction) => T): T {
     let key: symbol
-    let task: Task
+    let transaction: Transaction
 
     if (master === null) {
-        task = master = new Task()
-        key = task.key
+        transaction = master = new Transaction()
+        key = transaction.key
     } else if (master.initializing) {
-        task = master
+        transaction = master
     } else if (slave === null) {
-        task = slave = new Task()
-        key = task.key
+        transaction = slave = new Transaction()
+        key = transaction.key
     } else if (slave.initializing) {
-        task = slave
+        transaction = slave
     } else {
         throw 'Task error'
     }
 
-    const result = action(task)
+    const result = action(transaction)
 
-    while (task === master && task.key === key!) {
-        task.run()
+    while (transaction === master && transaction.key === key!) {
+        transaction.run()
 
         master = slave
         slave = null
 
         if (master !== null) {
-            task = master
-            key = task.key
+            transaction = master
+            key = transaction.key
             continue
         }
 
@@ -150,5 +150,5 @@ export function task<T>(action: (task: Task) => T): T {
 }
 
 export function action<T>(cb: () => T) {
-    return task(() => cb())
+    return transaction(() => cb())
 }
