@@ -1,6 +1,42 @@
-import { Conse } from './conse'
+import { Cause } from './cause'
+import { Context } from './context'
+import { action } from './scheduler'
 
-export class List<T> extends Conse<T[]> {
+export class List<T> extends Cause<T[]> {
+    private contexts = new Set<Context>()
+    private items: T[]
+
+    constructor(items: T[]) {
+        super()
+        this.items = items
+    }
+
+    *whatsUp(context: Context) {
+        this.contexts.add(context)
+
+        try {
+            while (true) {
+                yield this.items
+            }
+        } finally {
+            this.contexts.delete(context)
+        }
+    }
+
+    get() {
+        return this.items
+    }
+
+    set(items: T[]) {
+        this.items = items
+
+        action(() => {
+            for (const context of this.contexts) {
+                context.update()
+            }
+        })
+    }
+
     splice(start: number, deleteCount?: number): this
     splice(start: number, deleteCount: number, ...items: T[]): this
     splice(start: number, ...other: any[]): this {
