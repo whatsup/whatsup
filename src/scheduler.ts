@@ -111,7 +111,7 @@ class Transaction {
 let master: Transaction | null = null
 let slave: Transaction | null = null
 
-export function transaction<T>(action: (transaction: Transaction) => T): T {
+export function transaction<T>(cb: (transaction: Transaction) => T): T {
     let key: symbol
     let transaction: Transaction
 
@@ -129,7 +129,7 @@ export function transaction<T>(action: (transaction: Transaction) => T): T {
         throw 'Task error'
     }
 
-    const result = action(transaction)
+    const result = cb(transaction)
 
     while (transaction === master && transaction.key === key!) {
         transaction.run()
