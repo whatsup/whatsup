@@ -24,8 +24,7 @@ Using the whatsup route is very simple. See this example:
 ```tsx
 import { fractal, Context, Cause } from 'whatsup'
 import { render } from '@whatsup/jsx'
-import { redirect } from '@whatsup/browser-pathname'
-import { route } from '@whatsup/route'
+import { route, redirect } from '@whatsup/route'
 
 const app = fractal(function* () {
     const aboutRoute = route('/about', aboutPage)
