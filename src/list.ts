@@ -1,6 +1,6 @@
 import { Cause } from './cause'
 import { Context } from './context'
-import { action } from './scheduler'
+import { transaction } from './scheduler'
 
 export class List<T> extends Cause<T[]> {
     private contexts = new Set<Context>()
@@ -30,7 +30,7 @@ export class List<T> extends Cause<T[]> {
     set(items: T[]) {
         this.items = items
 
-        action(() => {
+        transaction(() => {
             for (const context of this.contexts) {
                 context.update()
             }
