@@ -6,7 +6,7 @@ import { list, List } from '../src/list'
 import { whatsUp, Observer } from '../src/observer'
 import { factor, Factor } from '../src/factor'
 import { mutator, Mutator } from '../src/mutator'
-import { transaction, action } from '../src/scheduler'
+import { action } from '../src/scheduler'
 import { Event } from '../src/event'
 
 import {
@@ -19,7 +19,6 @@ import {
     Observer as _Observer,
     factor as _factor,
     Factor as _Factor,
-    transaction as _transaction,
     action as _action,
     mutator as _mutator,
     Mutator as _Mutator,
@@ -40,7 +39,6 @@ it('Exports', () => {
     expect(Observer).toBe(_Observer)
     expect(factor).toBe(_factor)
     expect(Factor).toBe(_Factor)
-    expect(transaction).toBe(_transaction)
     expect(action).toBe(_action)
     expect(mutator).toBe(_mutator)
     expect(Mutator).toBe(_Mutator)
