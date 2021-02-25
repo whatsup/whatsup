@@ -21,6 +21,7 @@ export function build<T, U extends T>(
     const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
     main: while (true) {
+        // TODO here we can control dependencies
         const iterator = generate<T, U>(atom, generator, options)
 
         stack.push(iterator)
@@ -101,10 +102,15 @@ export function* generate<T, U extends T>(
 
             const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U, ignoreCache))
 
+            // TODO: need dispose deps when generator finish
+            // useDependencies && (atom.dependencies.add(subAtom), subAtom.consumers.add(atom))
+
             if (!stack.empty) {
                 input = result
                 continue
             }
+
+            // TODO: ^^^ or here if stack empty
 
             !ignoreCache && atom.setCache(result)
 
