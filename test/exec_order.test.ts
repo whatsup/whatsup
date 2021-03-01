@@ -4,7 +4,7 @@ import { cause } from '../src/cause'
 import { whatsUp } from '../src/observer'
 
 describe('Execution order', () => {
-    it('normal updating from bottom to up', async () => {
+    it('normal updating from bottom to up', () => {
         const ids = [] as number[]
         const App = fractal(function* () {
             while (true) {
@@ -38,7 +38,7 @@ describe('Execution order', () => {
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 2, 1]))
     })
 
-    it(`should return 1, 2`, async () => {
+    it(`should return 1, 2`, () => {
         const mock = jest.fn()
         const a = conse(1)
 
@@ -53,7 +53,7 @@ describe('Execution order', () => {
         expect(mock).lastCalledWith(2)
     })
 
-    it(`should return 1 odd, 2 even, 3 odd`, async () => {
+    it(`should return 1 odd, 2 even, 3 odd`, () => {
         const mock = jest.fn()
         const a = conse(1)
         const b = cause(function* () {
