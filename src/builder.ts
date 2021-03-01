@@ -102,15 +102,12 @@ export function* generate<T, U extends T>(
 
             const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U, ignoreCache))
 
-            // TODO: need dispose deps when generator finish
-            // useDependencies && (atom.dependencies.add(subAtom), subAtom.consumers.add(atom))
-
             if (!stack.empty) {
                 input = result
                 continue
             }
 
-            // TODO: ^^^ or here if stack empty
+            useDependencies && atom.dependencies.disposeUnused()
 
             !ignoreCache && atom.setCache(result)
 

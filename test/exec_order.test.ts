@@ -82,49 +82,4 @@ describe('Execution order', () => {
         expect(mock).toBeCalledTimes(3)
         expect(mock).lastCalledWith('3 odd')
     })
-
-    it(`should dispose deps`, async () => {
-        const mock = jest.fn()
-        const mockA = jest.fn()
-        const mockB = jest.fn()
-        const mockC = jest.fn()
-        const a = cause(function* () {
-            try {
-                while (true) {
-                    yield 'A'
-                }
-            } finally {
-                mockA()
-            }
-        })
-        const b = cause(function* () {
-            try {
-                while (true) {
-                    yield `${yield* a}B`
-                }
-            } finally {
-                mockB()
-            }
-        })
-        const c = cause(function* () {
-            try {
-                while (true) {
-                    yield `${yield* a}${yield* b}C`
-                }
-            } finally {
-                mockC()
-            }
-        })
-
-        const dispose = whatsUp(c, mock)
-
-        expect(mock).toBeCalledTimes(1)
-        expect(mock).lastCalledWith('AABC')
-
-        dispose()
-
-        expect(mockA).toBeCalledTimes(1)
-        expect(mockB).toBeCalledTimes(1)
-        expect(mockC).toBeCalledTimes(1)
-    })
 })
