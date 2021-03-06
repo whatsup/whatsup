@@ -128,10 +128,10 @@ export function* generate<T, U extends T>(
             continue
         }
 
-        useDependencies && atom.dependencies.disposeUnused()
-
         const data = prepareNewData(atom, value as U, ignoreCache)
         const result = new Data(data)
+
+        useDependencies && atom.dependencies.disposeUnused()
 
         !ignoreCache && atom.setCache(result)
 
