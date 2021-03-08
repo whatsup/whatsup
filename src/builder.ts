@@ -20,7 +20,15 @@ export function build<T, U extends T>(
 ): Err | Data<U> {
     const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
+    //let isRoot = true
+
+    options.ignoreCacheOnce = true
+
     main: while (true) {
+        // if (isRoot) {
+        //     options = { ...options, ignoreCache: true }
+        //     isRoot = false
+        // }
         // TODO here we can control dependencies
         const iterator = generate<T, U>(atom, generator, options)
 
@@ -138,6 +146,113 @@ export function* generate<T, U extends T>(
         return result
     }
 }
+
+// export function* extractor<T, U extends T>(
+//     atom: Atom<T>,
+//     generator: StreamGeneratorFunc<U>,
+//     stack: Stack<StreamIterator<any>>
+// ): Generator<unknown, Err | Data<U>> {
+//     const { context, stream } = atom
+
+//     if (stack.empty) {
+//         if (!generator) {
+//             generator = atom.stream.whatsUp as StreamGeneratorFunc<U>
+//         }
+//         stack.push(generator!.call(stream, context) as StreamIterator<U>)
+//     }
+
+//     let input: unknown
+
+//     while (true) {
+//         if (input instanceof Data && input.value instanceof Delegation) {
+//             stack.push(input.value.stream[Symbol.iterator]())
+//             input = undefined
+//         }
+
+//         let done: boolean
+//         let error: boolean
+//         let value: U | Command | Delegation<U> | Mutator<U>
+
+//         try {
+//             const result = stack.peek().next(input)
+
+//             done = result.done!
+//             error = false
+//             value = result.value!
+//         } catch (e) {
+//             done = false
+//             error = true
+//             value = e
+//         }
+
+//         if (done || error) {
+//             stack.pop()
+
+//             if (error) {
+//                 value = new Err(value as Error)
+//             }
+
+//             const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U, ignoreCache))
+
+//             if (!stack.empty) {
+//                 input = result
+//                 continue
+//             }
+
+//             useDependencies && atom.dependencies.disposeUnused()
+
+//             !ignoreCache && atom.setCache(result)
+
+//             return result
+//         }
+
+//         input = yield value
+//     }
+// }
+
+// function* dependencies<T, U extends T>(atom: Atom<T>, iterator: StreamIterator<U>): Generator<unknown, any> {
+//     let input: unknown
+
+//     atom.dependencies.swap()
+
+//     while (true) {
+//         const { done, value } = iterator.next(input)
+
+//         if (done) {
+//             atom.dependencies.disposeUnused()
+//             return value
+//         }
+
+//         if (value instanceof Atom) {
+//             atom.dependencies.add(value)
+//             value.consumers.add(atom)
+//         }
+
+//         input = yield value
+//     }
+// }
+
+// function* init<T, U extends T>(atom: Atom<T>, iterator: StreamIterator<U>): Generator<unknown, any> {
+//     let input: unknown
+
+//     while (true) {
+//         const { done, value } = iterator.next(input)
+
+//         if (done) {
+//             return value
+//         }
+
+//         if (value instanceof InitCommand) {
+//             const { stream, multi } = value
+//             const subAtom = atom.atomizer.get(stream, multi)
+
+//             input = yield subAtom
+//             continue
+//         }
+
+//         input = yield value
+//     }
+// }
 
 function prepareNewData<T, U extends T>(atom: Atom<T>, value: U | Mutator<U>, ignoreCache: boolean): U {
     if (value instanceof Mutator) {
