@@ -118,7 +118,11 @@ export class Context {
                 return generator.call(this, context, ...args)
             }
 
-            const result = build(this.atom, executor, { ignoreCache: true })
+            const result = build(this.atom, executor, {
+                useSelfStack: false,
+                useDependencies: false,
+                useCache: false,
+            })
 
             if (result instanceof Err) {
                 throw result.value

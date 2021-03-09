@@ -7,16 +7,16 @@ import { Stack } from './stack'
 import { StreamGeneratorFunc, StreamIterator } from './stream'
 
 type BuildOptions = {
-    useSelfStack?: boolean
-    useDependencies?: boolean
-    ignoreCache?: boolean
+    useSelfStack: boolean
+    useDependencies: boolean
+    useCache: boolean
     //ignoreCacheOnce?: boolean
 }
 
 export function build<T, U extends T>(
     atom: Atom<T>,
     generator: StreamGeneratorFunc<U> | null,
-    options: BuildOptions = {}
+    options: BuildOptions
 ): Err | Data<U> {
     const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
@@ -51,7 +51,7 @@ export function build<T, U extends T>(
             }
 
             if (value instanceof Atom) {
-                if (!options.ignoreCache && value.cache) {
+                if (options.useCache && value.cache) {
                     input = value.cache
                     continue
                 }
@@ -69,9 +69,9 @@ export function build<T, U extends T>(
 export function* generate<T, U extends T>(
     atom: Atom<T>,
     generator: StreamGeneratorFunc<U> | null,
-    options: BuildOptions = {}
+    options: BuildOptions
 ): Generator<unknown, Err | Data<U>> {
-    const { useSelfStack = false, useDependencies = false, ignoreCache = false } = options
+    const { useSelfStack, useDependencies, useCache } = options
 
     // if (ignoreCacheOnce) {
     //     options.ignoreCacheOnce = false
@@ -113,7 +113,7 @@ export function* generate<T, U extends T>(
         if (done || error) {
             stack.pop()
 
-            const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U, ignoreCache))
+            const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U, useCache))
 
             if (!stack.empty) {
                 input = result
@@ -122,7 +122,7 @@ export function* generate<T, U extends T>(
 
             useDependencies && atom.dependencies.disposeUnused()
 
-            !ignoreCache && atom.setCache(result)
+            useCache && atom.setCache(result)
 
             return result
         }
@@ -141,12 +141,12 @@ export function* generate<T, U extends T>(
             continue
         }
 
-        const data = prepareNewData(atom, value as U, ignoreCache)
+        const data = prepareNewData(atom, value as U, useCache)
         const result = new Data(data)
 
         useDependencies && atom.dependencies.disposeUnused()
 
-        !ignoreCache && atom.setCache(result)
+        useCache && atom.setCache(result)
 
         return result
     }
@@ -259,9 +259,9 @@ export function* generate<T, U extends T>(
 //     }
 // }
 
-function prepareNewData<T, U extends T>(atom: Atom<T>, value: U | Mutator<U>, ignoreCache: boolean): U {
+function prepareNewData<T, U extends T>(atom: Atom<T>, value: U | Mutator<U>, useCache: boolean): U {
     if (value instanceof Mutator) {
-        const oldValue = ignoreCache ? undefined : atom.cache && atom.cache!.value
+        const oldValue = useCache && atom.cache ? atom.cache.value : undefined
         const newValue = value.mutate(oldValue as U) as U
         return newValue
     }

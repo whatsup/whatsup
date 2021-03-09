@@ -39,7 +39,7 @@ export class Observer<T> extends Cause<void> {
         build(atom, null, {
             useSelfStack: true,
             useDependencies: true,
-            ignoreCacheOnce: true,
+            useCache: true,
         })
 
         return () => atom.dispose()

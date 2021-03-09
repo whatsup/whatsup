@@ -62,6 +62,7 @@ class Transaction {
             const newCache = build(atom, null, {
                 useSelfStack: true,
                 useDependencies: true,
+                useCache: true,
             })
 
             if (!newCache.equal(oldCache)) {
