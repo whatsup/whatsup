@@ -10,7 +10,7 @@ type BuildOptions = {
     useSelfStack?: boolean
     useDependencies?: boolean
     ignoreCache?: boolean
-    ignoreCacheOnce?: boolean
+    //ignoreCacheOnce?: boolean
 }
 
 export function build<T, U extends T>(
@@ -22,7 +22,7 @@ export function build<T, U extends T>(
 
     //let isRoot = true
 
-    options.ignoreCacheOnce = true
+    // options.ignoreCacheOnce = true
 
     main: while (true) {
         // if (isRoot) {
@@ -51,6 +51,11 @@ export function build<T, U extends T>(
             }
 
             if (value instanceof Atom) {
+                if (!options.ignoreCache && value.cache) {
+                    input = value.cache
+                    continue
+                }
+
                 atom = value
                 generator = value.stream.whatsUp
                 continue main
@@ -66,13 +71,13 @@ export function* generate<T, U extends T>(
     generator: StreamGeneratorFunc<U> | null,
     options: BuildOptions = {}
 ): Generator<unknown, Err | Data<U>> {
-    const { useSelfStack = false, useDependencies = false, ignoreCacheOnce = false, ignoreCache = false } = options
+    const { useSelfStack = false, useDependencies = false, ignoreCache = false } = options
 
-    if (ignoreCacheOnce) {
-        options.ignoreCacheOnce = false
-    } else if (!ignoreCache && atom.cache) {
-        return atom.cache as Err | Data<U>
-    }
+    // if (ignoreCacheOnce) {
+    //     options.ignoreCacheOnce = false
+    // } else if (!ignoreCache && atom.cache) {
+    //     return atom.cache as Err | Data<U>
+    // }
 
     const { context, stream } = atom
     const stack = useSelfStack ? atom.stack : new Stack<StreamIterator<U>>()
