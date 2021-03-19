@@ -4,6 +4,31 @@ import { cause } from '../src/cause'
 import { whatsUp } from '../src/observer'
 
 describe('Execution order', () => {
+    it('should run build only in transaction', () => {
+        const App = fractal(function* () {
+            while (true) {
+                yield (yield* Two) + (yield* One)
+            }
+        })
+        const One = fractal(function* () {
+            while (true) {
+                Two.set(1)
+                yield 1
+            }
+        })
+        const Two = conse(0)
+
+        const mock = jest.fn()
+
+        whatsUp(App, mock)
+
+        expect(mock).toBeCalledTimes(2)
+
+        expect(mock.mock.calls).toEqual([
+            [1], // First call
+            [2], // Second call
+        ])
+    })
     it('normal updating from bottom to up', () => {
         const ids = [] as number[]
         const App = fractal(function* () {
