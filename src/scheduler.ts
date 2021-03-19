@@ -1,7 +1,6 @@
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Atom } from './atom'
-import { build } from './builder'
 import { Command, InitCommand } from './command'
 import { Err, Data } from './result'
 import { Stack } from './stack'
@@ -53,52 +52,47 @@ class Transaction {
         }
     }
 
-    build<T, U extends T>(atom: Atom<T>, useCache = true): Err | Data<U> {
-        const stack = new Stack<Generator<unknown, Err | Data<U>>>()
+    build<T, U extends T>(atom: Atom<T>): Err | Data<U> {
+        const { done, value } = live(memory(source(atom))).next()
 
-        //let isRoot = true
-
-        // options.ignoreCacheOnce = true
-
-        main: while (true) {
-            // if (isRoot) {
-            //     options = { ...options, ignoreCache: true }
-            //     isRoot = false
-            // }
-            // TODO here we can control dependencies
-            const iterator = liveBuilder<T, U>(atom)
-
-            stack.push(iterator)
-
-            let input = undefined
-
-            while (true) {
-                const { done, value } = stack.peek().next(input)
-
-                if (done) {
-                    stack.pop()
-
-                    if (!stack.empty) {
-                        input = value
-                        continue
-                    }
-
-                    return value as Err | Data<U>
-                }
-
-                if (value instanceof Atom) {
-                    if (useCache && value.cache) {
-                        input = value.cache
-                        continue
-                    }
-
-                    atom = value
-                    continue main
-                }
-
-                throw 'What`s up? It shouldn`t have happened'
-            }
+        if (!done) {
+            throw 'Whats? yield is bad here'
         }
+
+        return value
+        // const stack = new Stack<Generator<unknown, Err | Data<U>>>()
+        // //let isRoot = true
+        // // options.ignoreCacheOnce = true
+        // main: while (true) {
+        //     // if (isRoot) {
+        //     //     options = { ...options, ignoreCache: true }
+        //     //     isRoot = false
+        //     // }
+        //     // TODO here we can control dependencies
+        //     const iterator = liveBuilder<T, U>(atom)
+        //     stack.push(iterator)
+        //     let input = undefined
+        //     while (true) {
+        //         const { done, value } = stack.peek().next(input)
+        //         if (done) {
+        //             stack.pop()
+        //             if (!stack.empty) {
+        //                 input = value
+        //                 continue
+        //             }
+        //             return value as Err | Data<U>
+        //         }
+        //         if (value instanceof Atom) {
+        //             if (useCache && value.cache) {
+        //                 input = value.cache
+        //                 continue
+        //             }
+        //             atom = value
+        //             continue main
+        //         }
+        //         throw 'What`s up? It shouldn`t have happened'
+        //     }
+        // }
     }
 
     run() {
@@ -112,11 +106,10 @@ class Transaction {
             const atom = queue[i++]
             const consumers = atom.consumers
             const oldCache = atom.cache
-            const newCache = build(atom, null, {
-                useSelfStack: true,
-                useDependencies: true,
-                useCache: true,
-            })
+
+            live(source(atom)).next()
+
+            const newCache = atom.cache!
 
             if (!newCache.equal(oldCache)) {
                 for (const consumer of consumers) {
@@ -241,6 +234,177 @@ function prepareNewData<T, U extends T>(atom: Atom<T>, value: U | Mutator<U>): U
 
     return value
 }
+
+function* live<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): any {
+    const stack = new Stack<Generator<unknown, Err | Data<U>>>()
+
+    main: while (true) {
+        stack.push(iterator)
+
+        let input = undefined
+
+        while (true) {
+            const { done, value } = stack.peek().next(input)
+
+            if (done) {
+                stack.pop()
+
+                if (!stack.empty) {
+                    input = value
+                    continue
+                }
+
+                return value as Err | Data<U>
+            }
+
+            if (value instanceof Atom) {
+                if (value.cache) {
+                    input = value.cache
+                    continue
+                }
+
+                iterator = source(value)
+                continue main
+            }
+
+            return value as Err | Data<U>
+        }
+    }
+}
+
+function* source<T, U extends T>(atom: Atom<T>): Generator<unknown, Err | Data<U>> {
+    const { context, stream, stack } = atom
+
+    atom.dependencies.swap()
+
+    if (stack.empty) {
+        stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<U>)
+    }
+
+    let input: unknown
+
+    while (true) {
+        let done: boolean
+        let error: boolean
+        let value: U | Command | Delegation<U> | Mutator<U>
+
+        try {
+            const result = stack.peek().next(input)
+
+            done = result.done!
+            error = false
+            value = result.value!
+        } catch (e) {
+            done = false
+            error = true
+            value = e
+        }
+
+        if (done || error) {
+            stack.pop()
+
+            const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U))
+
+            if (!stack.empty) {
+                input = result
+                continue
+            }
+
+            atom.dependencies.disposeUnused()
+
+            atom.setCache(result)
+
+            return result
+        }
+        if (value instanceof InitCommand) {
+            const { stream, multi } = value
+            const subAtom = atom.atomizer.get(stream, multi)
+
+            atom.dependencies.add(subAtom)
+            subAtom.consumers.add(atom)
+
+            input = yield subAtom
+
+            if (input instanceof Data && input.value instanceof Delegation) {
+                stack.push(input.value.stream[Symbol.iterator]())
+                input = undefined
+            }
+            continue
+        }
+
+        const data = prepareNewData(atom, value as U)
+        const result = new Data(data)
+
+        atom.dependencies.disposeUnused()
+
+        atom.setCache(result)
+
+        return result
+    }
+}
+
+const MEMORY = new WeakMap()
+
+export function* memory<T>(iterator: StreamIterator<T>): any {
+    let input: unknown
+
+    while (true) {
+        const { done, value } = iterator.next(input)
+
+        if (done) {
+            return value
+        }
+
+        if (value instanceof Atom) {
+            if (MEMORY.has(value)) {
+                input = MEMORY.get(value)
+                continue
+            }
+
+            const result = yield Atom
+
+            MEMORY.set(value, result)
+
+            input = result
+
+            continue
+        }
+
+        throw `Unresolved yield`
+    }
+}
+
+// const CONSUMERS = new WeakMap()
+// const SOURCES = new WeakMap()
+
+// function* relations<T, U extends T>(iterator: StreamIterator<T>): any {
+//     let input: unknown
+
+//     while (true) {
+//         const { done, value } = iterator.next(input)
+
+//         if (done) {
+//             return value
+//         }
+
+//         if (value instanceof Atom) {
+//             if (MEMORY.has(value)) {
+//                 input = MEMORY.get(value)
+//                 continue
+//             }
+
+//             const result = yield Atom
+
+//             MEMORY.set(value, result)
+
+//             input = result
+
+//             continue
+//         }
+
+//         throw `Unresolved yield`
+//     }
+// }
 
 // function* liveBuilder1<T>(atom: Atom<T>) {
 //     return yield* memory(atom)
