@@ -1,6 +1,11 @@
+import { Delegation } from './delegation'
+import { Mutator } from './mutator'
 import { Atom } from './atom'
 import { build } from './builder'
+import { Command, InitCommand } from './command'
+import { Err, Data } from './result'
 import { Stack } from './stack'
+import { StreamIterator } from './stream'
 
 class Transaction {
     initializing = true
@@ -44,6 +49,54 @@ class Transaction {
                     atom = value
                     continue main
                 }
+            }
+        }
+    }
+
+    build<T, U extends T>(atom: Atom<T>, useCache = true): Err | Data<U> {
+        const stack = new Stack<Generator<unknown, Err | Data<U>>>()
+
+        //let isRoot = true
+
+        // options.ignoreCacheOnce = true
+
+        main: while (true) {
+            // if (isRoot) {
+            //     options = { ...options, ignoreCache: true }
+            //     isRoot = false
+            // }
+            // TODO here we can control dependencies
+            const iterator = liveBuilder<T, U>(atom)
+
+            stack.push(iterator)
+
+            let input = undefined
+
+            while (true) {
+                const { done, value } = stack.peek().next(input)
+
+                if (done) {
+                    stack.pop()
+
+                    if (!stack.empty) {
+                        input = value
+                        continue
+                    }
+
+                    return value as Err | Data<U>
+                }
+
+                if (value instanceof Atom) {
+                    if (useCache && value.cache) {
+                        input = value.cache
+                        continue
+                    }
+
+                    atom = value
+                    continue main
+                }
+
+                throw 'What`s up? It shouldn`t have happened'
             }
         }
     }
@@ -107,6 +160,93 @@ class Transaction {
         return counter
     }
 }
+
+export function* liveBuilder<T, U extends T>(atom: Atom<T>): Generator<unknown, Err | Data<U>> {
+    const { context, stream, stack } = atom
+
+    atom.dependencies.swap()
+
+    if (stack.empty) {
+        stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<U>)
+    }
+
+    let input: unknown
+
+    while (true) {
+        let done: boolean
+        let error: boolean
+        let value: U | Command | Delegation<U> | Mutator<U>
+
+        try {
+            const result = stack.peek().next(input)
+
+            done = result.done!
+            error = false
+            value = result.value!
+        } catch (e) {
+            done = false
+            error = true
+            value = e
+        }
+
+        if (done || error) {
+            stack.pop()
+
+            const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U))
+
+            if (!stack.empty) {
+                input = result
+                continue
+            }
+
+            atom.dependencies.disposeUnused()
+
+            atom.setCache(result)
+
+            return result
+        }
+        if (value instanceof InitCommand) {
+            const { stream, multi } = value
+            const subAtom = atom.atomizer.get(stream, multi)
+
+            atom.dependencies.add(subAtom)
+            subAtom.consumers.add(atom)
+
+            input = yield subAtom
+
+            if (input instanceof Data && input.value instanceof Delegation) {
+                stack.push(input.value.stream[Symbol.iterator]())
+                input = undefined
+            }
+            continue
+        }
+
+        const data = prepareNewData(atom, value as U)
+        const result = new Data(data)
+
+        atom.dependencies.disposeUnused()
+
+        atom.setCache(result)
+
+        return result
+    }
+}
+
+function prepareNewData<T, U extends T>(atom: Atom<T>, value: U | Mutator<U>): U {
+    if (value instanceof Mutator) {
+        const oldValue = atom.cache && atom.cache.value
+        const newValue = value.mutate(oldValue as U) as U
+        return newValue
+    }
+
+    return value
+}
+
+// function* liveBuilder1<T>(atom: Atom<T>) {
+//     return yield* memory(atom)
+// }
+
+// function* memory<T>(atom: Atom<T>) {}
 
 let master: Transaction | null = null
 let slave: Transaction | null = null
