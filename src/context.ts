@@ -169,7 +169,7 @@ export class Context {
     }
 
     update() {
-        transaction((task) => task.rebuild(this.atom))
+        transaction((task) => task.take(this.atom))
     }
 
     dispose() {

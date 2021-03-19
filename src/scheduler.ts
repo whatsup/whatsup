@@ -13,7 +13,7 @@ class Transaction {
         this.key = Symbol('Transaction key')
     }
 
-    rebuild(atom: Atom) {
+    take(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
 
