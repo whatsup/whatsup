@@ -1,7 +1,7 @@
 import { Stream } from './stream'
 import { Cause } from './cause'
 import { Atom } from './atom'
-import { build } from './builder'
+import { transaction } from './scheduler'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
@@ -36,11 +36,7 @@ export class Observer<T> extends Cause<void> {
     run() {
         const atom = new Atom(this, null)
 
-        build(atom, null, {
-            useSelfStack: true,
-            useDependencies: true,
-            useCache: true,
-        })
+        transaction((t) => t.take(atom))
 
         return () => atom.dispose()
     }
