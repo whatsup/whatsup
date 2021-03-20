@@ -1,8 +1,8 @@
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Atom } from './atom'
-import { Command, InitCommand } from './command'
-import { Err, Data } from './result'
+import { Command, Handshake } from './command'
+import { Err, Data, Result } from './result'
 import { Stack } from './stack'
 import { StreamIterator } from './stream'
 
@@ -52,49 +52,6 @@ class Transaction {
         }
     }
 
-    build<T, U extends T>(atom: Atom<T>): Err | Data<U> {
-        const { done, value } = live(memory(source(atom))).next()
-
-        if (!done) {
-            throw 'Whats? yield is bad here'
-        }
-
-        return value
-        // const stack = new Stack<Generator<unknown, Err | Data<U>>>()
-        // //let isRoot = true
-        // // options.ignoreCacheOnce = true
-        // main: while (true) {
-        //     // if (isRoot) {
-        //     //     options = { ...options, ignoreCache: true }
-        //     //     isRoot = false
-        //     // }
-        //     // TODO here we can control dependencies
-        //     const iterator = liveBuilder<T, U>(atom)
-        //     stack.push(iterator)
-        //     let input = undefined
-        //     while (true) {
-        //         const { done, value } = stack.peek().next(input)
-        //         if (done) {
-        //             stack.pop()
-        //             if (!stack.empty) {
-        //                 input = value
-        //                 continue
-        //             }
-        //             return value as Err | Data<U>
-        //         }
-        //         if (value instanceof Atom) {
-        //             if (useCache && value.cache) {
-        //                 input = value.cache
-        //                 continue
-        //             }
-        //             atom = value
-        //             continue main
-        //         }
-        //         throw 'What`s up? It shouldn`t have happened'
-        //     }
-        // }
-    }
-
     run() {
         this.initializing = false
 
@@ -107,7 +64,7 @@ class Transaction {
             const consumers = atom.consumers
             const oldCache = atom.cache
 
-            live(source(atom)).next()
+            build(memory.call(atom, relations.call(atom, source.call(atom, atom)), true)).next()
 
             const newCache = atom.cache!
 
@@ -154,88 +111,7 @@ class Transaction {
     }
 }
 
-export function* liveBuilder<T, U extends T>(atom: Atom<T>): Generator<unknown, Err | Data<U>> {
-    const { context, stream, stack } = atom
-
-    atom.dependencies.swap()
-
-    if (stack.empty) {
-        stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<U>)
-    }
-
-    let input: unknown
-
-    while (true) {
-        let done: boolean
-        let error: boolean
-        let value: U | Command | Delegation<U> | Mutator<U>
-
-        try {
-            const result = stack.peek().next(input)
-
-            done = result.done!
-            error = false
-            value = result.value!
-        } catch (e) {
-            done = false
-            error = true
-            value = e
-        }
-
-        if (done || error) {
-            stack.pop()
-
-            const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U))
-
-            if (!stack.empty) {
-                input = result
-                continue
-            }
-
-            atom.dependencies.disposeUnused()
-
-            atom.setCache(result)
-
-            return result
-        }
-        if (value instanceof InitCommand) {
-            const { stream, multi } = value
-            const subAtom = atom.atomizer.get(stream, multi)
-
-            atom.dependencies.add(subAtom)
-            subAtom.consumers.add(atom)
-
-            input = yield subAtom
-
-            if (input instanceof Data && input.value instanceof Delegation) {
-                stack.push(input.value.stream[Symbol.iterator]())
-                input = undefined
-            }
-            continue
-        }
-
-        const data = prepareNewData(atom, value as U)
-        const result = new Data(data)
-
-        atom.dependencies.disposeUnused()
-
-        atom.setCache(result)
-
-        return result
-    }
-}
-
-function prepareNewData<T, U extends T>(atom: Atom<T>, value: U | Mutator<U>): U {
-    if (value instanceof Mutator) {
-        const oldValue = atom.cache && atom.cache.value
-        const newValue = value.mutate(oldValue as U) as U
-        return newValue
-    }
-
-    return value
-}
-
-function* live<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): any {
+function* build<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): any {
     const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
     main: while (true) {
@@ -258,12 +134,7 @@ function* live<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): any
             }
 
             if (value instanceof Atom) {
-                if (value.cache) {
-                    input = value.cache
-                    continue
-                }
-
-                iterator = source(value)
+                iterator = memory.call(value, relations.call(value, source.call(value, value)))
                 continue main
             }
 
@@ -272,10 +143,66 @@ function* live<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): any
     }
 }
 
-function* source<T, U extends T>(atom: Atom<T>): Generator<unknown, Err | Data<U>> {
-    const { context, stream, stack } = atom
+export function* memory<T>(this: Atom, iterator: StreamIterator<T>, force = false): any {
+    const hasCache = !!this.cache
+    const oldValue = hasCache && this.cache?.value
 
-    atom.dependencies.swap()
+    if (!force && hasCache) {
+        return this.cache
+    }
+
+    let input: unknown
+
+    while (true) {
+        const { done, value } = iterator.next(input)
+
+        if (value instanceof Result) {
+            this.setCache(value)
+        }
+
+        if (value instanceof Mutator) {
+            input = value.mutate(oldValue as T)
+            continue
+        }
+
+        if (done) {
+            return value
+        }
+
+        input = yield value
+    }
+}
+
+export function* relations<T>(this: Atom, iterator: StreamIterator<T>): any {
+    let input: unknown
+
+    this.dependencies.swap()
+
+    while (true) {
+        const { done, value } = iterator.next(input)
+
+        if (done) {
+            this.dependencies.disposeUnused()
+            return value
+        }
+
+        if (value instanceof Handshake) {
+            const { stream, multi } = value
+            const subAtom = this.atomizer.get(stream, multi)
+
+            this.dependencies.add(subAtom)
+            subAtom.consumers.add(this)
+
+            input = yield subAtom
+            continue
+        }
+
+        input = yield value
+    }
+}
+
+function* source<T, U extends T>(this: Atom<T>, atom: Atom<T>): Generator<unknown, Err | Data<U>> {
+    const { context, stream, stack } = atom
 
     if (stack.empty) {
         stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<U>)
@@ -284,6 +211,11 @@ function* source<T, U extends T>(atom: Atom<T>): Generator<unknown, Err | Data<U
     let input: unknown
 
     while (true) {
+        if (input instanceof Data && input.value instanceof Delegation) {
+            stack.push(input.value.stream[Symbol.iterator]())
+            input = undefined
+        }
+
         let done: boolean
         let error: boolean
         let value: U | Command | Delegation<U> | Mutator<U>
@@ -291,126 +223,41 @@ function* source<T, U extends T>(atom: Atom<T>): Generator<unknown, Err | Data<U
         try {
             const result = stack.peek().next(input)
 
+            value = result.value!
             done = result.done!
             error = false
-            value = result.value!
         } catch (e) {
-            done = false
-            error = true
             value = e
+            done = true
+            error = true
         }
-
-        if (done || error) {
-            stack.pop()
-
-            const result = error ? new Err(value as Error) : new Data(prepareNewData(atom, value as U))
-
-            if (!stack.empty) {
-                input = result
-                continue
-            }
-
-            atom.dependencies.disposeUnused()
-
-            atom.setCache(result)
-
-            return result
-        }
-        if (value instanceof InitCommand) {
-            const { stream, multi } = value
-            const subAtom = atom.atomizer.get(stream, multi)
-
-            atom.dependencies.add(subAtom)
-            subAtom.consumers.add(atom)
-
-            input = yield subAtom
-
-            if (input instanceof Data && input.value instanceof Delegation) {
-                stack.push(input.value.stream[Symbol.iterator]())
-                input = undefined
-            }
-            continue
-        }
-
-        const data = prepareNewData(atom, value as U)
-        const result = new Data(data)
-
-        atom.dependencies.disposeUnused()
-
-        atom.setCache(result)
-
-        return result
-    }
-}
-
-const MEMORY = new WeakMap()
-
-export function* memory<T>(iterator: StreamIterator<T>): any {
-    let input: unknown
-
-    while (true) {
-        const { done, value } = iterator.next(input)
 
         if (done) {
-            return value
+            stack.pop()
         }
 
-        if (value instanceof Atom) {
-            if (MEMORY.has(value)) {
-                input = MEMORY.get(value)
-                continue
-            }
-
-            const result = yield Atom
-
-            MEMORY.set(value, result)
-
-            input = result
-
+        if (value instanceof Handshake) {
+            input = yield value
             continue
         }
 
-        throw `Unresolved yield`
+        if (error) {
+            input = new Err(value as Error)
+        } else if (value instanceof Mutator) {
+            input = new Data(yield value)
+        } else {
+            input = new Data(value)
+        }
+
+        if (done && !stack.empty) {
+            continue
+        }
+
+        return input as any
     }
 }
 
-// const CONSUMERS = new WeakMap()
-// const SOURCES = new WeakMap()
-
-// function* relations<T, U extends T>(iterator: StreamIterator<T>): any {
-//     let input: unknown
-
-//     while (true) {
-//         const { done, value } = iterator.next(input)
-
-//         if (done) {
-//             return value
-//         }
-
-//         if (value instanceof Atom) {
-//             if (MEMORY.has(value)) {
-//                 input = MEMORY.get(value)
-//                 continue
-//             }
-
-//             const result = yield Atom
-
-//             MEMORY.set(value, result)
-
-//             input = result
-
-//             continue
-//         }
-
-//         throw `Unresolved yield`
-//     }
-// }
-
-// function* liveBuilder1<T>(atom: Atom<T>) {
-//     return yield* memory(atom)
-// }
-
-// function* memory<T>(atom: Atom<T>) {}
+//const MEMORY = new WeakMap<Atom>()
 
 let master: Transaction | null = null
 let slave: Transaction | null = null
@@ -456,3 +303,42 @@ export function transaction<T>(cb: (transaction: Transaction) => T): T {
 export function action<T>(cb: () => T) {
     return transaction(() => cb())
 }
+
+/*
+
+Кран раздает крипту FRL
+
+Фракталы и фракции
+
+Пользователь вкладывает деньги в распределенную сеть покупая на эти деньги
+фьючерсы фракталов и фракций, которые торгуются на бирже 
+
+Деньги идут на работу бота - каждая успешная операция бота 
+генерирует новый фрактал, он делится на 100 000 000 фракций
+
+Полученные деньги из цепочки распределяются между участниками
+10% суммы делится между всеми участниками разработки
+внесшими вклад на гитхаб получают процент
+т.е. кто-то вкладывает, кто-то 
+
+90% которых
+распределяются на всех участников в процентном соотношении от вклада
+вырученные деньги также делятся между всеми в процентном соотношении
+
+исходный код бота открыт для всех по лицензии такой что
+его можно копировать редактировать и использовать как либо только с целью
+внести вклад в развитие проекта, никакого коммерческого использования,
+создания "клонов" и т.д.
+
+оставшиеся 10% распределяются между всеми участниками команды разработки - бонус
+
+фракталы и фракции нужно добавить на биржу в начальном количестве 
+
+как только фьючерсы откупились они становятся настоящими токенами
+
+фьючерс - цепочка заранее предопределенных токенов 
+еще не реализованая в сети но точно пойдущая по заранее заданному сценарию
+
+
+
+*/

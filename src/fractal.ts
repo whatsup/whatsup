@@ -1,9 +1,9 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
-import { InitCommand } from './command'
+import { Handshake } from './command'
 import { Result } from './result'
 
-const init = new InitCommand(true)
+const init = new Handshake(true)
 
 export abstract class Fractal<T> extends Stream<T> {
     [Symbol.iterator](): Generator<never, T, Result> {

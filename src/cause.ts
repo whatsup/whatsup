@@ -1,9 +1,9 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
-import { InitCommand } from './command'
+import { Handshake } from './command'
 import { Result } from './result'
 
-const init = new InitCommand(false)
+const init = new Handshake(false)
 
 export abstract class Cause<T> extends Stream<T> {
     [Symbol.iterator](): Generator<never, T, Result> {

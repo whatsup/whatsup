@@ -1,6 +1,6 @@
 import { Err, Result } from './result'
 import { Context } from './context'
-import { Command, InitCommand } from './command'
+import { Command, Handshake } from './command'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 
@@ -32,7 +32,7 @@ whatsUp(user, (v)=> console.log(v))
 export abstract class Stream<T = unknown> {
     abstract whatsUp(context?: Context): StreamGenerator<T>
 
-    *[Symbol.iterator](command?: InitCommand): Generator<never, T, unknown> {
+    *[Symbol.iterator](command?: Handshake): Generator<never, T, unknown> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //                            really is Generator<Command, T, Result> ... may be ;)
         if (!command) {

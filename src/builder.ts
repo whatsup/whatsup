@@ -1,5 +1,5 @@
 import { Atom } from './atom'
-import { Command, InitCommand } from './command'
+import { Command, Handshake } from './command'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Err, Data } from './result'
@@ -126,7 +126,7 @@ export function* generate<T, U extends T>(
 
             return result
         }
-        if (value instanceof InitCommand) {
+        if (value instanceof Handshake) {
             const { stream, multi } = value
             const subAtom = atom.atomizer.get(stream, multi)
 
