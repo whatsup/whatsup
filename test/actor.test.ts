@@ -1,8 +1,8 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { Stream } from '../src/stream'
-import { whatsUp } from '../src/observer'
+import { Stream, StreamLike } from '../src/stream'
+import { whatsUp } from '../src/whatsUp'
 import { delegate } from '../src/delegation'
 
 describe('Actor', () => {
@@ -70,7 +70,7 @@ describe('Actor', () => {
     it(`should keep context`, () => {
         const mock = jest.fn()
         let sourceThis: Stream<any>
-        let actorThis: Stream<any>
+        let actorThis: StreamLike<any>
         let def: (arg: any) => void
 
         const ups = cause(function* (this: Stream<any>, ctx) {
@@ -78,7 +78,7 @@ describe('Actor', () => {
 
             sourceThis = this
 
-            def = ctx.actor(function* (this: Stream<any>, _, arg) {
+            def = ctx.actor(function* (this: StreamLike<any>, _, arg) {
                 actorThis = this
 
                 const newValue = yield* one

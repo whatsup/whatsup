@@ -1,4 +1,4 @@
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsUp'
 import { list } from '../src/list'
 
 describe('List', () => {

@@ -29,7 +29,11 @@ whatsUp(user, (v)=> console.log(v))
 //> {name: 'John'}
 */
 
-export abstract class Stream<T = unknown> {
+export interface StreamLike<T = unknown> {
+    whatsUp(context?: Context): StreamGenerator<T>
+}
+
+export abstract class Stream<T = unknown> implements StreamLike<T> {
     abstract whatsUp(context?: Context): StreamGenerator<T>
 
     *[Symbol.iterator](command?: Handshake): Generator<never, T, unknown> {

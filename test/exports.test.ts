@@ -3,7 +3,7 @@ import { fractal, Fractal } from '../src/fractal'
 import { cause, Cause } from '../src/cause'
 import { conse, Conse } from '../src/conse'
 import { list, List } from '../src/list'
-import { whatsUp, Observer } from '../src/observer'
+import { whatsUp } from '../src/whatsUp'
 import { factor, Factor } from '../src/factor'
 import { mutator, Mutator } from '../src/mutator'
 import { action } from '../src/scheduler'
@@ -16,7 +16,6 @@ import {
     list as _list,
     List as _List,
     whatsUp as _whatsUp,
-    Observer as _Observer,
     factor as _factor,
     Factor as _Factor,
     action as _action,
@@ -36,7 +35,6 @@ it('Exports', () => {
     expect(list).toBe(_list)
     expect(List).toBe(_List)
     expect(whatsUp).toBe(_whatsUp)
-    expect(Observer).toBe(_Observer)
     expect(factor).toBe(_factor)
     expect(Factor).toBe(_Factor)
     expect(action).toBe(_action)

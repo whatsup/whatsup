@@ -1,7 +1,7 @@
 import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { delegate } from '../src/delegation'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsUp'
 
 describe('Disposing', () => {
     it(`should dispose deps when dispose callback called`, () => {

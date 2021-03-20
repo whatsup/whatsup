@@ -1,7 +1,7 @@
 import { action } from '../src/scheduler'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsUp'
 
 describe('Scheduler', () => {
     it(`Should run every change in personal transaction`, () => {

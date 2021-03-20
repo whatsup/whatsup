@@ -2,9 +2,8 @@ import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
 import { Err } from './result'
-import { Stream } from './stream'
-import { transaction } from './scheduler'
-import { build } from './builder'
+import { StreamLike } from './stream'
+import { once, transaction } from './scheduler'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
@@ -112,17 +111,16 @@ export class Context {
         }
     }
 
-    actor<T, A extends unknown[]>(generator: (this: Stream, context: Context, ...args: A) => Generator<T, T>) {
+    actor<T, A extends unknown[]>(generator: (this: StreamLike<T>, context: Context, ...args: A) => Generator<T, T>) {
         return (...args: A) => {
-            function executor(this: Stream, context: Context) {
-                return generator.call(this, context, ...args)
-            }
-
-            const result = build(this.atom, executor, {
-                useSelfStack: false,
-                useDependencies: false,
-                useCache: false,
-            })
+            const self = this.atom.stream as StreamLike<T>
+            const source = {
+                whatsUp(context: Context) {
+                    return generator.call(self, context, ...args)
+                },
+            } as StreamLike<T>
+            const atom = new Atom(source, null)
+            const result = once(atom).value
 
             if (result instanceof Err) {
                 throw result.value

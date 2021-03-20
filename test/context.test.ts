@@ -2,7 +2,7 @@ import { Factor, factor } from '../src/factor'
 import { Event } from '../src/event'
 import { fractal } from '../src/fractal'
 import { Context } from '../src/context'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsUp'
 
 describe('Context', () => {
     let context1: Context

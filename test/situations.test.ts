@@ -1,7 +1,7 @@
 import { factor } from '../src/factor'
 import { fractal } from '../src/fractal'
 import { conse } from '../src/conse'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsUp'
 
 describe('Situations', () => {
     describe('test reactions with initial values', () => {

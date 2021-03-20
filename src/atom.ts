@@ -1,11 +1,11 @@
-import { Stream, StreamIterator } from './stream'
+import { StreamIterator, StreamLike } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { Err, Data } from './result'
 import { Stack } from './stack'
 
 export class Atom<T = unknown> {
-    readonly stream: Stream<T>
+    readonly stream: StreamLike<T>
     readonly context: Context
     readonly stack: Stack<StreamIterator<T>>
     readonly atomizer: Atomizer
@@ -13,7 +13,7 @@ export class Atom<T = unknown> {
     readonly dependencies: Dependencies
     private _cache: Err | Data<T> | undefined
 
-    constructor(stream: Stream<T>, parent: Atom | null) {
+    constructor(stream: StreamLike<T>, parent: Atom | null) {
         this.stack = new Stack()
         this.stream = stream
         this.context = new Context(this, parent && parent.context)
@@ -63,17 +63,17 @@ export class Atom<T = unknown> {
 // }
 
 class Atomizer {
-    static readonly map = new WeakMap<Stream, Atom>()
+    static readonly map = new WeakMap<StreamLike, Atom>()
 
     private readonly root: Atom
-    private readonly map: WeakMap<Stream, Atom>
+    private readonly map: WeakMap<StreamLike, Atom>
 
     constructor(root: Atom) {
         this.root = root
         this.map = new WeakMap()
     }
 
-    get<T>(stream: Stream<T>, multi: boolean): Atom<T> {
+    get<T>(stream: StreamLike<T>, multi: boolean): Atom<T> {
         if (multi) {
             if (!this.map.has(stream)) {
                 const atom = new Atom(stream, this.root)

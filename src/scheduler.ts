@@ -64,7 +64,9 @@ class Transaction {
             const consumers = atom.consumers
             const oldCache = atom.cache
 
-            build(memory.call(atom, relations.call(atom, source.call(atom, atom)), true)).next()
+            build
+                .call(atom, memory.call(atom, relations.call(atom, source.call(atom)), true), [memory, relations])
+                .next()
 
             const newCache = atom.cache!
 
@@ -111,7 +113,7 @@ class Transaction {
     }
 }
 
-function* build<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): any {
+function* build<T, U extends T>(this: Atom, iterator: Generator<unknown, Err | Data<U>>, layers: any[]): any {
     const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
     main: while (true) {
@@ -134,12 +136,43 @@ function* build<T, U extends T>(iterator: Generator<unknown, Err | Data<U>>): an
             }
 
             if (value instanceof Atom) {
-                iterator = memory.call(value, relations.call(value, source.call(value, value)))
+                iterator = layers.reduceRight((acc, layer) => layer.call(value, acc), source.call(value))
+                //iterator = memory.call(value, relations.call(value, source.call(value, value)))
                 continue main
             }
 
-            return value as Err | Data<U>
+            throw 'What`s up? It shouldn`t have happened'
         }
+    }
+}
+
+export function once(atom: Atom) {
+    return build.call(atom, clean.call(atom, source.call(atom)), [clean]).next()
+}
+
+export function* clean<T>(this: Atom, iterator: StreamIterator<T>): any {
+    let input: unknown
+
+    while (true) {
+        const { done, value } = iterator.next(input)
+
+        if (value instanceof Mutator) {
+            input = value.mutate()
+            continue
+        }
+        if (value instanceof Handshake) {
+            const { stream, multi } = value
+            const subAtom = this.atomizer.get(stream, multi)
+
+            input = yield subAtom
+            continue
+        }
+
+        if (done) {
+            return value
+        }
+
+        input = yield value
     }
 }
 
@@ -201,8 +234,8 @@ export function* relations<T>(this: Atom, iterator: StreamIterator<T>): any {
     }
 }
 
-function* source<T, U extends T>(this: Atom<T>, atom: Atom<T>): Generator<unknown, Err | Data<U>> {
-    const { context, stream, stack } = atom
+function* source<T, U extends T>(this: Atom<T>): Generator<unknown, Err | Data<U>> {
+    const { context, stream, stack } = this
 
     if (stack.empty) {
         stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<U>)
