@@ -29,7 +29,7 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
 
     const atom = new Atom(root, null)
 
-    transaction((t) => t.take(atom))
+    transaction((t) => t.include(atom))
 
     return () => atom.dispose()
 }

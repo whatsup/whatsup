@@ -122,6 +122,8 @@ export class Context {
             const atom = new Atom(source, null)
             const result = once(atom).value
 
+            atom.dispose()
+
             if (result instanceof Err) {
                 throw result.value
             }
@@ -167,7 +169,7 @@ export class Context {
     }
 
     update() {
-        transaction((task) => task.take(this.atom))
+        transaction((t) => t.include(this.atom))
     }
 
     dispose() {
