@@ -64,9 +64,7 @@ class Transaction {
             const consumers = atom.consumers
             const oldCache = atom.cache
 
-            build
-                .call(atom, memory.call(atom, relations.call(atom, source.call(atom)), true), [memory, relations])
-                .next()
+            build.call(atom, memory.call(atom, relations.call(atom, source.call(atom))), [memory, relations]).next()
 
             const newCache = atom.cache!
 
@@ -176,14 +174,7 @@ export function* clean<T>(this: Atom, iterator: StreamIterator<T>): any {
     }
 }
 
-export function* memory<T>(this: Atom, iterator: StreamIterator<T>, force = false): any {
-    const hasCache = !!this.cache
-    const oldValue = hasCache && this.cache?.value
-
-    if (!force && hasCache) {
-        return this.cache
-    }
-
+export function* memory<T>(this: Atom, iterator: StreamIterator<T>): any {
     let input: unknown
 
     while (true) {
@@ -194,7 +185,12 @@ export function* memory<T>(this: Atom, iterator: StreamIterator<T>, force = fals
         }
 
         if (value instanceof Mutator) {
-            input = value.mutate(oldValue as T)
+            input = value.mutate(this.cache?.value as T | undefined)
+            continue
+        }
+
+        if (value instanceof Atom && value.cache) {
+            input = value.cache
             continue
         }
 
