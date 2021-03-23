@@ -117,4 +117,52 @@ describe('Scheduler', () => {
         expect(mockD).toBeCalledTimes(3)
         expect(mockD).lastCalledWith('Ab')
     })
+
+    describe('should recalc only dirty streams', () => {
+        const mock = jest.fn()
+        const mockWallet = jest.fn()
+        const mockUser = jest.fn()
+        const Balance = conse(100)
+        const Name = conse<string>('John')
+        const Wallet = cause(function* () {
+            while (true) {
+                mockWallet()
+                yield `Wallet ${yield* Balance}`
+            }
+        })
+        const User = cause(function* () {
+            while (true) {
+                mockUser()
+                yield `User ${yield* Name}`
+            }
+        })
+        const App = cause(function* () {
+            while (true) yield `App ${yield* User} ${yield* Wallet}`
+        })
+
+        whatsUp(App, mock)
+
+        it(`mock to be called 1 time with "App User John Wallet 100"`, () => {
+            expect(mock).toBeCalledTimes(1)
+            expect(mockWallet).toBeCalledTimes(1)
+            expect(mockUser).toBeCalledTimes(1)
+            expect(mock).lastCalledWith('App User John Wallet 100')
+        })
+
+        it(`"Barry" as Name and mockWallet to not be called`, () => {
+            Name.set('Barry')
+            expect(mock).toBeCalledTimes(2)
+            expect(mockWallet).toBeCalledTimes(1)
+            expect(mockUser).toBeCalledTimes(2)
+            expect(mock).lastCalledWith('App User Barry Wallet 100')
+        })
+
+        it(`"200" as Balance and mockUser to not be called`, () => {
+            Balance.set(200)
+            expect(mock).toBeCalledTimes(3)
+            expect(mockWallet).toBeCalledTimes(2)
+            expect(mockUser).toBeCalledTimes(2)
+            expect(mock).lastCalledWith('App User Barry Wallet 200')
+        })
+    })
 })
