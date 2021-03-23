@@ -111,6 +111,7 @@ export class Context {
         }
     }
 
+    /* experimental! do not use it*/
     actor<T, A extends unknown[]>(generator: (this: StreamLike<T>, context: Context, ...args: A) => Generator<T, T>) {
         return (...args: A) => {
             const self = this.atom.stream as StreamLike<T>
