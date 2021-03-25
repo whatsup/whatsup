@@ -64,7 +64,7 @@ class Transaction {
             const consumers = atom.consumers
             const oldCache = atom.cache
 
-            build.call(atom, memory.call(atom, relations.call(atom, source.call(atom))), [memory, relations]).next()
+            build(atom, memory, relations)
 
             const newCache = atom.cache!
 
@@ -111,10 +111,12 @@ class Transaction {
     }
 }
 
-function* build<T, U extends T>(this: Atom, iterator: Generator<unknown, Err | Data<U>>, layers: any[]): any {
+function build<T, U extends T>(atom: Atom, ...layers: any[]): any {
     const stack = new Stack<Generator<unknown, Err | Data<U>>>()
 
     main: while (true) {
+        const iterator = layers.reduceRight((it, layer) => layer.call(atom, it), source.call(atom))
+
         stack.push(iterator)
 
         let input = undefined
@@ -134,8 +136,7 @@ function* build<T, U extends T>(this: Atom, iterator: Generator<unknown, Err | D
             }
 
             if (value instanceof Atom) {
-                iterator = layers.reduceRight((acc, layer) => layer.call(value, acc), source.call(value))
-                //iterator = memory.call(value, relations.call(value, source.call(value, value)))
+                atom = value
                 continue main
             }
 
@@ -145,7 +146,7 @@ function* build<T, U extends T>(this: Atom, iterator: Generator<unknown, Err | D
 }
 
 export function once(atom: Atom) {
-    return build.call(atom, clean.call(atom, source.call(atom)), [clean]).next()
+    return build(atom, clean)
 }
 
 export function* clean<T>(this: Atom, iterator: StreamIterator<T>): any {

@@ -121,7 +121,7 @@ export class Context {
                 },
             } as StreamLike<T>
             const atom = new Atom(source, null)
-            const result = once(atom).value
+            const result = once(atom)
 
             atom.dispose()
 
