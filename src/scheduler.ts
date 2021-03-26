@@ -2,9 +2,9 @@ import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Atom } from './atom'
 import { Command, Handshake } from './command'
-import { Err, Data, Result } from './result'
+import { Err, Data, Cache } from './cache'
 import { Stack } from './stack'
-import { StreamIterator } from './stream'
+import { Payload, StreamIterator } from './stream'
 
 class Transaction {
     initializing = true
@@ -62,24 +62,22 @@ class Transaction {
         while (i < queue.length) {
             const atom = queue[i++]
             const consumers = atom.consumers
-            const oldCache = atom.cache
+            const oldCache = atom.getCache()
+            const newCache = build(atom, cache, relations)
+            const equalCaches = newCache.equal(oldCache)
 
-            build(atom, memory, relations)
-
-            const newCache = atom.cache!
-
-            if (!newCache.equal(oldCache)) {
-                for (const consumer of consumers) {
-                    this.queueCandidates.add(consumer)
-                }
-            }
-
-            this.updateQueue(consumers)
+            this.updateQueue(consumers, !equalCaches)
         }
     }
 
-    private updateQueue(consumers: Iterable<Atom>) {
+    private updateQueue(consumers: Iterable<Atom>, fill = false) {
         for (const consumer of consumers) {
+            // TODO: need to find a more beautiful solution
+
+            if (fill) {
+                this.queueCandidates.add(consumer)
+            }
+
             const counter = this.decrementCounter(consumer)
 
             if (counter === 0) {
@@ -111,11 +109,13 @@ class Transaction {
     }
 }
 
-function build<T, U extends T>(atom: Atom, ...layers: any[]): any {
-    const stack = new Stack<Generator<unknown, Err | Data<U>>>()
+type Layer<T> = (this: Atom<T>, iterator: StreamIterator<T>) => StreamIterator<T>
+
+function build<T>(atom: Atom<T>, ...layers: Layer<T>[]): Err | Data<T> {
+    const stack = new Stack<StreamIterator<T>>()
 
     main: while (true) {
-        const iterator = layers.reduceRight((it, layer) => layer.call(atom, it), source.call(atom))
+        const iterator = layers.reduceRight((it, layer) => layer.call(atom, it), source.call(atom) as StreamIterator<T>)
 
         stack.push(iterator)
 
@@ -132,7 +132,7 @@ function build<T, U extends T>(atom: Atom, ...layers: any[]): any {
                     continue
                 }
 
-                return value as Err | Data<U>
+                return value as Err | Data<T>
             }
 
             if (value instanceof Atom) {
@@ -149,7 +149,7 @@ export function once(atom: Atom) {
     return build(atom, clean)
 }
 
-export function* clean<T>(this: Atom, iterator: StreamIterator<T>): any {
+export function* clean<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
     let input: unknown
 
     while (true) {
@@ -168,42 +168,43 @@ export function* clean<T>(this: Atom, iterator: StreamIterator<T>): any {
         }
 
         if (done) {
-            return value
+            return value as Payload<T>
         }
 
         input = yield value
     }
 }
 
-export function* memory<T>(this: Atom, iterator: StreamIterator<T>): any {
+export function* cache<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
     let input: unknown
 
     while (true) {
         const { done, value } = iterator.next(input)
 
-        if (value instanceof Result) {
+        if (value instanceof Cache) {
             this.setCache(value)
         }
 
         if (value instanceof Mutator) {
-            input = value.mutate(this.cache?.value as T | undefined)
+            const prevValue = this.hasCache() ? this.getCache()!.value : undefined
+            input = value.mutate(prevValue as T | undefined)
             continue
         }
 
-        if (value instanceof Atom && value.cache) {
-            input = value.cache
+        if (value instanceof Atom && value.hasCache()) {
+            input = value.getCache()
             continue
         }
 
         if (done) {
-            return value
+            return value as Payload<T>
         }
 
         input = yield value
     }
 }
 
-export function* relations<T>(this: Atom, iterator: StreamIterator<T>): any {
+export function* relations<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
     let input: unknown
 
     this.dependencies.swap()
@@ -213,7 +214,7 @@ export function* relations<T>(this: Atom, iterator: StreamIterator<T>): any {
 
         if (done) {
             this.dependencies.disposeUnused()
-            return value
+            return value as Payload<T>
         }
 
         if (value instanceof Handshake) {
@@ -231,11 +232,11 @@ export function* relations<T>(this: Atom, iterator: StreamIterator<T>): any {
     }
 }
 
-function* source<T, U extends T>(this: Atom<T>): Generator<unknown, Err | Data<U>> {
+function* source<T>(this: Atom<T>): StreamIterator<T> {
     const { context, stream, stack } = this
 
     if (stack.empty) {
-        stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<U>)
+        stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<T>)
     }
 
     let input: unknown
@@ -248,7 +249,7 @@ function* source<T, U extends T>(this: Atom<T>): Generator<unknown, Err | Data<U
 
         let done: boolean
         let error: boolean
-        let value: U | Command | Delegation<U> | Mutator<U>
+        let value: Command | Payload<T> | Error
 
         try {
             const result = stack.peek().next(input)
@@ -266,7 +267,7 @@ function* source<T, U extends T>(this: Atom<T>): Generator<unknown, Err | Data<U
             stack.pop()
         }
 
-        if (value instanceof Handshake) {
+        if (value instanceof Command) {
             input = yield value
             continue
         }
@@ -283,7 +284,7 @@ function* source<T, U extends T>(this: Atom<T>): Generator<unknown, Err | Data<U
             continue
         }
 
-        return input as any
+        return input as Payload<T>
     }
 }
 

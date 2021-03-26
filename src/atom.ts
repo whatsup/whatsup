@@ -1,7 +1,7 @@
 import { StreamIterator, StreamLike } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { Err, Data } from './result'
+import { Cache } from './cache'
 import { Stack } from './stack'
 
 export class Atom<T = unknown> {
@@ -11,7 +11,7 @@ export class Atom<T = unknown> {
     readonly atomizer: Atomizer
     readonly consumers: Set<Atom>
     readonly dependencies: Dependencies
-    private _cache: Err | Data<T> | undefined
+    private cache: Cache<T> | undefined
 
     constructor(stream: StreamLike<T>, parent: Atom | null) {
         this.stack = new Stack()
@@ -22,12 +22,16 @@ export class Atom<T = unknown> {
         this.dependencies = new Dependencies(this)
     }
 
-    get cache() {
-        return this._cache
+    hasCache() {
+        return this.cache !== undefined
     }
 
-    setCache(cache: Err | Data<T>) {
-        return (this._cache = cache)
+    getCache() {
+        return this.cache
+    }
+
+    setCache(cache: Cache<T>) {
+        return (this.cache = cache)
     }
 
     dispose(initiator?: Atom) {
@@ -35,7 +39,7 @@ export class Atom<T = unknown> {
             this.consumers.delete(initiator)
         }
         if (this.consumers.size === 0) {
-            this._cache = undefined
+            this.cache = undefined
             this.context.dispose()
             this.dependencies.dispose()
 

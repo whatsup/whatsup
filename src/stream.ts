@@ -1,4 +1,4 @@
-import { Err, Result } from './result'
+import { Err, Cache } from './cache'
 import { Context } from './context'
 import { Command, Handshake } from './command'
 import { Delegation } from './delegation'
@@ -43,7 +43,7 @@ export abstract class Stream<T = unknown> implements StreamLike<T> {
             throw 'Initial command of stream iterator is undefined'
         }
 
-        const result = (yield command as never) as Result<T>
+        const result = (yield command as never) as Cache<T>
 
         if (result instanceof Err) {
             throw result.value

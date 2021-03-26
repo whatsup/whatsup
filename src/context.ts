@@ -1,7 +1,7 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
-import { Err } from './result'
+import { Err } from './cache'
 import { StreamLike } from './stream'
 import { once, transaction } from './scheduler'
 
