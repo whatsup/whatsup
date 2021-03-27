@@ -16,7 +16,7 @@ export class Atom<T = unknown> {
     constructor(stream: StreamLike<T>, parent: Atom | null) {
         this.stack = new Stack()
         this.stream = stream
-        this.context = new Context(this, parent && parent.context)
+        this.context = new Context(this, parent ? parent.context : null)
         this.atomizer = new Atomizer(this)
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)
@@ -69,18 +69,18 @@ export class Atom<T = unknown> {
 class Atomizer {
     static readonly map = new WeakMap<StreamLike, Atom>()
 
-    private readonly root: Atom
+    private readonly atom: Atom
     private readonly map: WeakMap<StreamLike, Atom>
 
-    constructor(root: Atom) {
-        this.root = root
+    constructor(atom: Atom) {
+        this.atom = atom
         this.map = new WeakMap()
     }
 
     get<T>(stream: StreamLike<T>, multi: boolean): Atom<T> {
         if (multi) {
             if (!this.map.has(stream)) {
-                const atom = new Atom(stream, this.root)
+                const atom = new Atom(stream, this.atom)
                 this.map.set(stream, atom)
             }
 
