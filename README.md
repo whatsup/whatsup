@@ -486,7 +486,7 @@ class App extends Fractal<string> {
 
 class Page extends Fractal<string> {
     *whatsUp(ctx: Context) {
-        const session = ctx.find(Session) // get Session instance
+        const session = ctx.get(Session) // get Session instance
 
         while (true) {
             yield `Page ${session.token}`
@@ -497,6 +497,8 @@ class Page extends Fractal<string> {
 whatsUp(new App(), (d) => console.log(d))
 //> App Page Secret token
 ```
+
+There is also a `find` method. It looks for objects with `instanceof`.
 
 ## Sharing with factors
 
@@ -522,7 +524,7 @@ class App extends Fractal<string> {
 
 class Page extends Fractal<string> {
     *whatsUp(ctx: Context) {
-        const theme = ctx.find(Theme) // get Theme shared value
+        const theme = ctx.get(Theme) // get Theme shared value
         // when no factor is found (not shared in parents)
         // the default value is returned - 'light'
 
