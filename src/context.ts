@@ -1,9 +1,7 @@
 import { Factor } from './factor'
 import { Event, EventCtor, EventListener } from './event'
 import { Atom } from './atom'
-import { Err } from './cache'
-import { StreamLike } from './stream'
-import { once, transaction } from './scheduler'
+import { transaction } from './scheduler'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
@@ -128,28 +126,6 @@ export class Context {
 
         if (this.parent instanceof Context && !event.isPropagationStopped()) {
             this.parent.dispath(event)
-        }
-    }
-
-    /* experimental! do not use it*/
-    actor<T, A extends unknown[]>(generator: (this: StreamLike<T>, context: Context, ...args: A) => Generator<T, T>) {
-        return (...args: A) => {
-            const self = this.atom.stream as StreamLike<T>
-            const source = {
-                whatsUp(context: Context) {
-                    return generator.call(self, context, ...args)
-                },
-            } as StreamLike<T>
-            const atom = new Atom(source, null)
-            const result = once(atom)
-
-            atom.dispose()
-
-            if (result instanceof Err) {
-                throw result.value
-            }
-
-            return result.value
         }
     }
 

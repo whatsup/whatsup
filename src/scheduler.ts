@@ -140,36 +140,6 @@ function build<T>(atom: Atom<T>, ...layers: Layer<T>[]): Err | Data<T> {
     }
 }
 
-export function once(atom: Atom) {
-    return build(atom, clean)
-}
-
-export function* clean<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
-    let input: unknown
-
-    while (true) {
-        const { done, value } = iterator.next(input)
-
-        if (value instanceof Mutator) {
-            input = value.mutate()
-            continue
-        }
-        if (value instanceof Handshake) {
-            const { stream, multi } = value
-            const subAtom = this.atomizer.get(stream, multi)
-
-            input = yield subAtom
-            continue
-        }
-
-        if (done) {
-            return value as Payload<T>
-        }
-
-        input = yield value
-    }
-}
-
 export function* cache<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
     let input: unknown
 
