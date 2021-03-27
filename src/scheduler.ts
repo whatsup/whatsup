@@ -60,20 +60,19 @@ class Transaction {
             const consumers = atom.consumers
             const oldCache = atom.getCache()
             const newCache = build(atom, cache, relations)
-            const equalCaches = newCache.equal(oldCache)
 
-            this.updateQueue(consumers, !equalCaches)
+            if (!newCache.equal(oldCache)) {
+                for (const consumer of consumers) {
+                    this.queueCandidates.add(consumer)
+                }
+            }
+
+            this.updateQueue(consumers)
         }
     }
 
-    private updateQueue(consumers: Iterable<Atom>, fill = false) {
+    private updateQueue(consumers: Iterable<Atom>) {
         for (const consumer of consumers) {
-            // TODO: need to find a more beautiful solution
-
-            if (fill) {
-                this.queueCandidates.add(consumer)
-            }
-
             const counter = this.decrementCounter(consumer)
 
             if (counter === 0) {
