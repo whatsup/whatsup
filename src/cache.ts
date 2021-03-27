@@ -5,8 +5,8 @@ export abstract class Cache<T = unknown> {
         this.value = value
     }
 
-    equal(result: Cache | undefined) {
-        return result != null && result instanceof this.constructor && result.value === this.value
+    equal(cache: Cache | undefined) {
+        return cache != null && cache instanceof this.constructor && cache.value === this.value
     }
 }
 

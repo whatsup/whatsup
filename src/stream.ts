@@ -38,7 +38,7 @@ export abstract class Stream<T = unknown> implements StreamLike<T> {
 
     *[Symbol.iterator](command?: Handshake): Generator<never, T, unknown> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //                            really is Generator<Command, T, Result> ... may be ;)
+        //                            really is Generator<Command, T, Cache> ... may be ;)
         if (!command) {
             throw 'Initial command of stream iterator is undefined'
         }

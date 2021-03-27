@@ -8,14 +8,10 @@ import { Payload, StreamIterator } from './stream'
 
 class Transaction {
     initializing = true
-    readonly key: symbol
+    readonly key = Symbol('Transaction key')
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new Map<Atom, number>()
-
-    constructor() {
-        this.key = Symbol('Transaction key')
-    }
 
     include(atom: Atom) {
         if (!this.queue.includes(atom)) {
@@ -236,7 +232,7 @@ function* source<T>(this: Atom<T>): StreamIterator<T> {
     const { context, stream, stack } = this
 
     if (stack.empty) {
-        stack.push(stream.whatsUp!.call(stream, context) as StreamIterator<T>)
+        stack.push(stream.whatsUp.call(stream, context) as StreamIterator<T>)
     }
 
     let input: unknown

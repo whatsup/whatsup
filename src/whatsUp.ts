@@ -33,18 +33,3 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
 
     return () => atom.dispose()
 }
-
-// function normalizeSource<T>(source: Stream<T> | StreamGeneratorFunc<T>): Stream<T> {
-//     if (source instanceof Stream) {
-//         return source
-//     }
-//     return cause(source)
-// }
-
-// export function run<T>(source: Stream<T> | StreamGeneratorFunc<T>) {
-//     const normalized = normalizeSource(source)
-//     const onData = () => {}
-//     const observer = new Observer(normalized, onData)
-
-//     return observer.run()
-// }
