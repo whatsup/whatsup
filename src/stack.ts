@@ -1,27 +1,20 @@
-interface Item<T> {
-    readonly value: T
-    readonly prev: Item<T> | undefined
-}
-
 export class Stack<T> {
-    private item: Item<T> | undefined
+    private readonly items = [] as T[]
 
     get empty() {
-        return this.item === undefined
+        return this.items.length === 0
     }
 
     peek() {
-        return this.item!.value
+        const index = this.items.length - 1
+        return this.items[index]
     }
 
-    push(value: T) {
-        const prev = this.item
-        this.item = { value, prev }
+    push(item: T) {
+        this.items.push(item)
     }
 
     pop() {
-        const { prev, value } = this.item!
-        this.item = prev
-        return value
+        return this.items.pop()
     }
 }
