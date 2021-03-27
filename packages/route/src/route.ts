@@ -5,7 +5,7 @@ export type RouteGeneratorFunc<T> =
     | ((context: Context, ...args: Cause<string>[]) => StreamGenerator<T>)
     | (() => StreamGenerator<T>)
 
-export const PATHNAME = factor<Stream<string>>()
+export const PATHNAME = factor<Stream<string>>(undefined)
 export const DEFAULT_ROUTE_VALUE = factor(null)
 
 abstract class Route<T> extends Fractal<T> {
@@ -24,8 +24,8 @@ abstract class Route<T> extends Fractal<T> {
 
     *whatsUp(ctx: Context) {
         const { regexp } = this
-        const defaultValue = ctx.find(DEFAULT_ROUTE_VALUE)!
-        const path = ctx.find(PATHNAME) || pathname
+        const defaultValue = ctx.get(DEFAULT_ROUTE_VALUE)!
+        const path = ctx.get(PATHNAME) || pathname
         const match = cause(function* () {
             while (true) {
                 const result = (yield* path).match(regexp)
@@ -57,7 +57,7 @@ abstract class Route<T> extends Fractal<T> {
         })
         const nested = this.getNestedFractal(matched, match)
         const wrapped = fractal(function* (ctx) {
-            ctx.define(PATHNAME, tail)
+            ctx.share(PATHNAME, tail)
 
             while (true) {
                 yield yield* nested

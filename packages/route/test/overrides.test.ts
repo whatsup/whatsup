@@ -11,7 +11,7 @@ describe('Overrides', () => {
         const mock = jest.fn()
         const pathname = conse('/')
         const app = fractal(function* (ctx: Context) {
-            ctx.define(PATHNAME, pathname)
+            ctx.share(PATHNAME, pathname)
 
             while (true) {
                 yield yield* appRoute
@@ -41,7 +41,7 @@ describe('Overrides', () => {
     describe('Override default value', () => {
         const mock = jest.fn()
         const app = fractal(function* (ctx: Context) {
-            ctx.define(DEFAULT_ROUTE_VALUE, ':default:')
+            ctx.share(DEFAULT_ROUTE_VALUE, ':default:')
 
             while (true) {
                 yield yield* appRoute
