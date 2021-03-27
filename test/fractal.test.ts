@@ -1,4 +1,4 @@
-import { whatsUp } from '../src/whatsUp'
+import { whatsUp } from '../src/whatsup'
 import { fractal } from '../src/fractal'
 
 describe('Fractal', () => {

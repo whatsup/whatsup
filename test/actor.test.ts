@@ -2,7 +2,7 @@ import { cause } from '../src/cause'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
 import { Stream, StreamLike } from '../src/stream'
-import { whatsUp } from '../src/whatsUp'
+import { whatsUp } from '../src/whatsup'
 import { delegate } from '../src/delegation'
 
 describe('Actor', () => {

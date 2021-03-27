@@ -1,6 +1,6 @@
 import { fractal } from '../src/fractal'
 import { mutator, Mutator } from '../src/mutator'
-import { whatsUp } from '../src/whatsUp'
+import { whatsUp } from '../src/whatsup'
 
 describe('Mutators', () => {
     describe('test mutators', () => {

@@ -8,21 +8,21 @@ import { once, transaction } from './scheduler'
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
 export class Context {
-    /**@internal */
+    /** @internal */
     readonly parent: Context | null
 
+    /** @internal */
+    shared: Map<Factor<unknown> | Ctor<unknown>, unknown> | undefined
+
+    /** @internal */
+    listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined
+
+    /** @internal */
     private readonly atom: Atom
-    private shared: WeakMap<Factor<unknown> | Ctor<unknown>, unknown> | undefined
-    private listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined
 
     constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
         this.parent = parent
-    }
-
-    /**@internal */
-    getShared() {
-        return this.shared
     }
 
     share<T>(key: Factor<T>, value: T): void
@@ -40,19 +40,19 @@ export class Context {
         }
 
         if (!this.shared) {
-            this.shared = new WeakMap()
+            this.shared = new Map()
         }
 
         this.shared.set(key, value)
     }
 
-    find<T>(key: Factor<T>): T | undefined
-    find<T>(key: Ctor<T>): T | undefined
-    find<T>(key: Factor<T> | Ctor<T>): T | undefined {
-        let parent = this.parent as Context | null
+    get<T>(key: Factor<T>): T
+    get<T>(key: Ctor<T>): T
+    get<T>(key: Factor<T> | Ctor<T>): T {
+        let { parent } = this
 
         while (parent) {
-            const shared = parent.getShared()
+            const { shared } = parent
 
             if (shared && shared.has(key)) {
                 return shared.get(key) as T
@@ -61,11 +61,31 @@ export class Context {
             parent = parent.parent
         }
 
-        if (key instanceof Factor) {
-            return key.defaultValue
+        if (key instanceof Factor && key.hasDefaultValue) {
+            return key.defaultValue!
         }
 
-        return undefined
+        throw `${key} not found in context`
+    }
+
+    find<T>(ctor: Ctor<T>): T {
+        let { parent } = this
+
+        while (parent) {
+            const { shared } = parent
+
+            if (shared) {
+                for (const item of shared.values()) {
+                    if (item instanceof ctor) {
+                        return item as T
+                    }
+                }
+            }
+
+            parent = parent.parent
+        }
+
+        throw `Instance of ${ctor} not found in context`
     }
 
     on<T extends Event>(ctor: EventCtor<T>, listener: EventListener<T>) {
@@ -148,6 +168,7 @@ export class Context {
     ctx.defer(()=>                          порядке )
     */
 
+    /** @internal */
     private deferred: Promise<unknown> | null = null
 
     defer<T>(deffered: () => Promise<T>) {
@@ -173,6 +194,7 @@ export class Context {
         transaction((t) => t.include(this.atom))
     }
 
+    /** @internal */
     dispose() {
         this.shared = undefined
         this.listeners = undefined

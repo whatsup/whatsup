@@ -1,6 +1,6 @@
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { whatsUp } from '../src/whatsUp'
+import { whatsUp } from '../src/whatsup'
 
 describe('Watcher', () => {
     it(`should call onError when error`, () => {

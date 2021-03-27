@@ -18,8 +18,6 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
                 } catch (e) {
                     if (onError) {
                         onError(e)
-                    } else {
-                        throw e
                     }
                 }
                 yield

@@ -1,11 +1,11 @@
-import { whatsUp } from '../src/whatsUp'
+import { whatsUp } from '../src/whatsup'
 import { list } from '../src/list'
 
 describe('List', () => {
     let result: number[]
     const li = list<number>()
 
-    whatsUp(li, (r) => (result = r))
+    const dispose = whatsUp(li, (r) => (result = r))
 
     it(`should return 1, 2, 3`, () => {
         li.insert(1, 2, 3)
@@ -45,5 +45,9 @@ describe('List', () => {
     it(`should return 1, 2, 4, 8`, () => {
         li.sort((a, b) => a - b)
         expect(result).toEqual([1, 2, 4])
+    })
+
+    it(`should clear contexts map on dispose (line 22 coverage)`, () => {
+        dispose()
     })
 })

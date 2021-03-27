@@ -1,7 +1,7 @@
 import { fractal } from '../src/fractal'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { whatsUp } from '../src/whatsUp'
+import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
     it('should run build only in transaction', () => {
