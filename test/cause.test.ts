@@ -1,4 +1,4 @@
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 import { cause } from '../src/cause'
 
 describe('Cause', () => {

@@ -1,5 +1,5 @@
 {
-    "include": ["src"],
+    "include": ["src", "test"],
     "compilerOptions": {
         "module": "esnext",
         "target": "ES2019",
@@ -16,7 +16,6 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "declarationDir": "./dist",
-        "rootDir": "./src",
         "baseUrl": "./"
     }
 }

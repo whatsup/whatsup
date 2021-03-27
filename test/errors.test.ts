@@ -1,7 +1,7 @@
 import { delegate } from '../src/delegation'
 import { conse } from '../src/conse'
 import { fractal } from '../src/fractal'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {

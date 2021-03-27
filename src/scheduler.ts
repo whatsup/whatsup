@@ -1,128 +1,73 @@
+import { Delegation } from './delegation'
+import { Mutator } from './mutator'
 import { Atom } from './atom'
-
-class Scheduler {
-    private master: Transaction | null = null
-    private slave: Transaction | null = null
-
-    run<T>(action: (transaction: Transaction) => T): T {
-        let key = Symbol('Transaction key')
-        let transaction: Transaction
-
-        if (!this.master) {
-            transaction = this.master = new Transaction(key)
-        } else if (this.master.state === State.Initial) {
-            transaction = this.master
-        } else if (!this.slave) {
-            transaction = this.slave = new Transaction(key)
-        } else if (this.slave.state === State.Initial) {
-            transaction = this.slave
-        } else {
-            throw 'Transaction error'
-        }
-
-        const result = action(transaction)
-
-        let counter = 0
-
-        while (transaction === this.master) {
-            if (counter > 100) {
-                throw 'May be cycle?'
-            }
-
-            transaction.run(key)
-
-            if (transaction.state === State.Completed) {
-                this.master = this.slave
-                this.slave = null
-
-                if (this.master) {
-                    transaction = this.master
-                    key = transaction.key
-                    counter++
-                    continue
-                }
-            }
-
-            break
-        }
-
-        return result
-    }
-}
-
-export const SCHEDULER = new Scheduler()
-
-enum State {
-    Initial,
-    Executing,
-    Completed,
-}
+import { Command, Handshake } from './command'
+import { Err, Data, Cache } from './cache'
+import { Stack } from './stack'
+import { Payload, StreamIterator } from './stream'
 
 class Transaction {
-    state = State.Initial
-    readonly key: symbol
+    initializing = true
+    readonly key = Symbol('Transaction key')
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
-    private readonly counters = new WeakMap<Atom, number>()
-    //private readonly abortTimer: number
+    private readonly counters = new Map<Atom, number>()
 
-    constructor(key: symbol) {
-        this.key = key
-        //this.abortTimer = setImmediate(() => this.abort()) // TODO
-    }
-
-    // abort() {
-    //     throw 'Aborted'
-    // }
-
-    add(atom: Atom) {
+    include(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
-            this.addConsumers(atom.getConsumers())
-        }
-    }
 
-    run(key: symbol) {
-        if (key === this.key) {
-            this.state = State.Executing
+            const stack = new Stack<Iterator<Atom>>()
 
-            const { queue } = this
+            main: while (true) {
+                stack.push(atom.consumers[Symbol.iterator]())
 
-            let i = 0
+                while (true) {
+                    const { done, value } = stack.peek().next()
 
-            while (i < queue.length) {
-                const atom = queue[i++]
-                const oldCache = atom.getCache()
+                    if (done) {
+                        stack.pop()
 
-                atom.rebuild()
+                        if (!stack.empty) {
+                            continue
+                        }
 
-                const newCache = atom.getCache()!
-                const consumers = atom.getConsumers()
-
-                if (!newCache.equal(oldCache)) {
-                    for (const consumer of consumers) {
-                        this.queueCandidates.add(consumer)
+                        return value
                     }
+
+                    const counter = this.incrementCounter(value)
+
+                    if (counter > 1) {
+                        continue
+                    }
+
+                    atom = value
+                    continue main
                 }
-
-                this.updateQueue(consumers)
             }
-
-            this.state = State.Completed
-
-            //clearImmediate(this.abortTimer) // TODO Node.Immediate mzf
         }
     }
 
-    private addConsumers(consumers: Iterable<Atom>) {
-        for (const consumer of consumers) {
-            const counter = this.incrementCounter(consumer)
+    run() {
+        this.initializing = false
 
-            if (counter > 1) {
-                continue
+        const { queue } = this
+
+        let i = 0
+
+        while (i < queue.length) {
+            const atom = queue[i++]
+            const consumers = atom.consumers
+            const oldCache = atom.getCache()
+            const newCache = build(atom, cache, relations)
+
+            if (!newCache.equal(oldCache)) {
+                for (const consumer of consumers) {
+                    this.queueCandidates.add(consumer)
+                }
             }
 
-            this.addConsumers(consumer.getConsumers())
+            this.updateQueue(consumers)
         }
     }
 
@@ -137,7 +82,7 @@ class Transaction {
                     continue
                 }
 
-                this.updateQueue(consumer.getConsumers())
+                this.updateQueue(consumer.consumers)
             }
         }
     }
@@ -159,6 +104,196 @@ class Transaction {
     }
 }
 
-export function transaction<T>(cb: () => T) {
-    return SCHEDULER.run(() => cb())
+type Layer<T> = (this: Atom<T>, iterator: StreamIterator<T>) => StreamIterator<T>
+
+function build<T>(atom: Atom<T>, ...layers: Layer<T>[]): Err | Data<T> {
+    const stack = new Stack<StreamIterator<T>>()
+
+    main: while (true) {
+        const iterator = layers.reduceRight((it, layer) => layer.call(atom, it), source.call(atom) as StreamIterator<T>)
+
+        stack.push(iterator)
+
+        let input = undefined
+
+        while (true) {
+            const { done, value } = stack.peek().next(input)
+
+            if (done) {
+                stack.pop()
+
+                if (!stack.empty) {
+                    input = value
+                    continue
+                }
+
+                return value as Err | Data<T>
+            }
+
+            if (value instanceof Atom) {
+                atom = value
+                continue main
+            }
+
+            throw 'What`s up? It shouldn`t have happened'
+        }
+    }
+}
+
+export function* cache<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
+    let input: unknown
+
+    while (true) {
+        const { done, value } = iterator.next(input)
+
+        if (value instanceof Cache) {
+            this.setCache(value)
+        }
+
+        if (value instanceof Mutator) {
+            const prevValue = this.hasCache() ? this.getCache()!.value : undefined
+            input = value.mutate(prevValue as T | undefined)
+            continue
+        }
+
+        if (value instanceof Atom && value.hasCache()) {
+            input = value.getCache()
+            continue
+        }
+
+        if (done) {
+            return value as Payload<T>
+        }
+
+        input = yield value
+    }
+}
+
+export function* relations<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
+    let input: unknown
+
+    this.dependencies.swap()
+
+    while (true) {
+        const { done, value } = iterator.next(input)
+
+        if (done) {
+            this.dependencies.disposeUnused()
+            return value as Payload<T>
+        }
+
+        if (value instanceof Handshake) {
+            const { stream, multi } = value
+            const subAtom = this.atomizer.get(stream, multi)
+
+            this.dependencies.add(subAtom)
+            subAtom.consumers.add(this)
+
+            input = yield subAtom
+            continue
+        }
+
+        input = yield value
+    }
+}
+
+function* source<T>(this: Atom<T>): StreamIterator<T> {
+    const { context, stream, stack } = this
+
+    if (stack.empty) {
+        stack.push(stream.whatsUp.call(stream, context) as StreamIterator<T>)
+    }
+
+    let input: unknown
+
+    while (true) {
+        if (input instanceof Data && input.value instanceof Delegation) {
+            stack.push(input.value.stream[Symbol.iterator]())
+            input = undefined
+        }
+
+        let done: boolean
+        let error: boolean
+        let value: Command | Payload<T> | Error
+
+        try {
+            const result = stack.peek().next(input)
+
+            value = result.value!
+            done = result.done!
+            error = false
+        } catch (e) {
+            value = e
+            done = true
+            error = true
+        }
+
+        if (done) {
+            stack.pop()
+        }
+
+        if (value instanceof Command) {
+            input = yield value
+            continue
+        }
+
+        if (error) {
+            input = new Err(value as Error)
+        } else if (value instanceof Mutator) {
+            input = new Data(yield value)
+        } else {
+            input = new Data(value)
+        }
+
+        if (done && !stack.empty) {
+            continue
+        }
+
+        return input as Payload<T>
+    }
+}
+
+let master: Transaction | null = null
+let slave: Transaction | null = null
+
+export function transaction<T>(cb: (transaction: Transaction) => T): T {
+    let key: symbol
+    let transaction: Transaction
+
+    if (master === null) {
+        transaction = master = new Transaction()
+        key = transaction.key
+    } else if (master.initializing) {
+        transaction = master
+    } else if (slave === null) {
+        transaction = slave = new Transaction()
+        key = transaction.key
+    } else if (slave.initializing) {
+        transaction = slave
+    } else {
+        throw 'Task error'
+    }
+
+    const result = cb(transaction)
+
+    while (transaction === master && transaction.key === key!) {
+        transaction.run()
+
+        master = slave
+        slave = null
+
+        if (master !== null) {
+            transaction = master
+            key = transaction.key
+            continue
+        }
+
+        break
+    }
+
+    return result
+}
+
+export function action<T>(cb: () => T) {
+    return transaction(() => cb())
 }

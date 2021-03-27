@@ -2,7 +2,7 @@ import { Factor, factor } from '../src/factor'
 import { Event } from '../src/event'
 import { fractal } from '../src/fractal'
 import { Context } from '../src/context'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 
 describe('Context', () => {
     let context1: Context
@@ -45,24 +45,29 @@ describe('Context', () => {
         })
 
         it('should return defaultValue when factor is not defined', () => {
-            const value = context1.find(testFactor)
+            const value = context1.get(testFactor)
             expect(value).toBe('default')
+        })
+
+        it('should throw error when factor without defaultValue not exist in context', () => {
+            const testFactor = new Factor()
+            expect(() => context2.get(testFactor)).toThrow()
         })
 
         it('should return test value on child levels', () => {
             context1.share(testFactor, 'hello')
 
-            expect(context2.find(testFactor)).toBe('hello')
-            expect(context3.find(testFactor)).toBe('hello')
-            expect(context4.find(testFactor)).toBe('hello')
+            expect(context2.get(testFactor)).toBe('hello')
+            expect(context3.get(testFactor)).toBe('hello')
+            expect(context4.get(testFactor)).toBe('hello')
         })
 
         it('should override factor for child levels', () => {
             context3.share(testFactor, 'world')
 
-            expect(context2.find(testFactor)).toBe('hello')
-            expect(context3.find(testFactor)).toBe('hello')
-            expect(context4.find(testFactor)).toBe('world')
+            expect(context2.get(testFactor)).toBe('hello')
+            expect(context3.get(testFactor)).toBe('hello')
+            expect(context4.get(testFactor)).toBe('world')
         })
 
         it('factor("test") should return instance of factor', () => {
@@ -75,17 +80,51 @@ describe('Context', () => {
 
             context1.share(instance)
 
-            expect(context2.find(Instance)).toBe(instance)
-            expect(context3.find(Instance)).toBe(instance)
-            expect(context4.find(Instance)).toBe(instance)
+            expect(context2.get(Instance)).toBe(instance)
+            expect(context3.get(Instance)).toBe(instance)
+            expect(context4.get(Instance)).toBe(instance)
         })
 
-        it('should return undefined when shared instance not found', () => {
+        it('should throw error when shared instance not exist', () => {
             class Instance {}
 
-            expect(context2.find(Instance)).toBe(undefined)
-            expect(context3.find(Instance)).toBe(undefined)
-            expect(context4.find(Instance)).toBe(undefined)
+            expect(() => context2.get(Instance)).toThrow()
+            expect(() => context3.get(Instance)).toThrow()
+            expect(() => context4.get(Instance)).toThrow()
+        })
+
+        it('should find instance in context', () => {
+            class Base {}
+            class Local extends Base {}
+
+            const instance = new Local()
+
+            context1.share(instance)
+
+            expect(context2.find(Base)).toBe(instance)
+            expect(context3.find(Base)).toBe(instance)
+            expect(context4.find(Base)).toBe(instance)
+        })
+
+        it('should find instance in context', () => {
+            class Base {}
+            class Local extends Base {}
+
+            const instance = new Local()
+
+            context1.share(instance)
+
+            expect(context2.find(Base)).toBe(instance)
+            expect(context3.find(Base)).toBe(instance)
+            expect(context4.find(Base)).toBe(instance)
+        })
+
+        it('should throw error when shared instance not found', () => {
+            class Instance {}
+
+            expect(() => context2.find(Instance)).toThrow()
+            expect(() => context3.find(Instance)).toThrow()
+            expect(() => context4.find(Instance)).toThrow()
         })
     })
 

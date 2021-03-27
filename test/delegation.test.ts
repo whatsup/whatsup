@@ -1,7 +1,7 @@
 import { delegate } from '../src/delegation'
 import { fractal } from '../src/fractal'
 import { conse } from '../src/conse'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 
 describe('Delegating', () => {
     describe('test delegation', () => {

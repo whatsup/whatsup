@@ -1,7 +1,7 @@
 import { factor } from '../src/factor'
 import { fractal } from '../src/fractal'
 import { conse } from '../src/conse'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 
 describe('Situations', () => {
     describe('test reactions with initial values', () => {
@@ -95,14 +95,14 @@ describe('Situations', () => {
         const fac = factor('default')
         const One = fractal(function* (ctx) {
             ctx!.share(fac, 'hello')
-            mock1(ctx!.find(fac))
+            mock1(ctx!.get(fac))
 
             while (true) {
                 yield yield* Two
             }
         })
         const Two = fractal(function* (ctx) {
-            mock2(ctx!.find(fac))
+            mock2(ctx!.get(fac))
             ctx!.share(fac, 'world')
 
             while (true) {
@@ -111,7 +111,7 @@ describe('Situations', () => {
             }
         })
         const Thr = fractal(function* (ctx) {
-            mock3(ctx!.find(fac))
+            mock3(ctx!.get(fac))
 
             while (true) {
                 yield ''
@@ -119,7 +119,7 @@ describe('Situations', () => {
         })
         const Four = fractal(function* (ctx) {
             ctx!.share(fac, 'delegator')
-            mock2(ctx!.find(fac))
+            mock2(ctx!.get(fac))
 
             while (true) {
                 yield ''

@@ -1,5 +1,5 @@
 import { cause } from '../src/cause'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 
 describe('Defer', () => {
     const delay = <T>(t: number) => new Promise<T>((r) => setTimeout(r, t))

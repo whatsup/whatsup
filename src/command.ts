@@ -2,7 +2,7 @@ import { Stream } from './stream'
 
 export class Command {}
 
-export class InitCommand extends Command {
+export class Handshake extends Command {
     readonly multi!: boolean
     stream!: Stream
 

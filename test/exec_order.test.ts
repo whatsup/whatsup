@@ -1,10 +1,35 @@
 import { fractal } from '../src/fractal'
 import { conse } from '../src/conse'
 import { cause } from '../src/cause'
-import { whatsUp } from '../src/observer'
+import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
-    it('normal updating from bottom to up', async () => {
+    it('should run build only in transaction', () => {
+        const App = fractal(function* () {
+            while (true) {
+                yield (yield* Two) + (yield* One)
+            }
+        })
+        const One = fractal(function* () {
+            while (true) {
+                Two.set(1)
+                yield 1
+            }
+        })
+        const Two = conse(0)
+
+        const mock = jest.fn()
+
+        whatsUp(App, mock)
+
+        expect(mock).toBeCalledTimes(2)
+
+        expect(mock.mock.calls).toEqual([
+            [1], // First call
+            [2], // Second call
+        ])
+    })
+    it('normal updating from bottom to up', () => {
         const ids = [] as number[]
         const App = fractal(function* () {
             while (true) {
@@ -38,7 +63,7 @@ describe('Execution order', () => {
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 2, 1]))
     })
 
-    it(`should return 1, 2`, async () => {
+    it(`should return 1, 2`, () => {
         const mock = jest.fn()
         const a = conse(1)
 
@@ -53,7 +78,7 @@ describe('Execution order', () => {
         expect(mock).lastCalledWith(2)
     })
 
-    it(`should return 1 odd, 2 even, 3 odd`, async () => {
+    it(`should return 1 odd, 2 even, 3 odd`, () => {
         const mock = jest.fn()
         const a = conse(1)
         const b = cause(function* () {
@@ -81,50 +106,5 @@ describe('Execution order', () => {
 
         expect(mock).toBeCalledTimes(3)
         expect(mock).lastCalledWith('3 odd')
-    })
-
-    it(`should dispose deps`, async () => {
-        const mock = jest.fn()
-        const mockA = jest.fn()
-        const mockB = jest.fn()
-        const mockC = jest.fn()
-        const a = cause(function* () {
-            try {
-                while (true) {
-                    yield 'A'
-                }
-            } finally {
-                mockA()
-            }
-        })
-        const b = cause(function* () {
-            try {
-                while (true) {
-                    yield `${yield* a}B`
-                }
-            } finally {
-                mockB()
-            }
-        })
-        const c = cause(function* () {
-            try {
-                while (true) {
-                    yield `${yield* a}${yield* b}C`
-                }
-            } finally {
-                mockC()
-            }
-        })
-
-        const dispose = whatsUp(c, mock)
-
-        expect(mock).toBeCalledTimes(1)
-        expect(mock).lastCalledWith('AABC')
-
-        dispose()
-
-        expect(mockA).toBeCalledTimes(1)
-        expect(mockB).toBeCalledTimes(1)
-        expect(mockC).toBeCalledTimes(1)
     })
 })

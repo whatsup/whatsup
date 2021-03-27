@@ -1,23 +1,27 @@
+interface Item<T> {
+    readonly value: T
+    readonly prev: Item<T> | undefined
+}
+
 export class Stack<T> {
-    private cursor = -1
-    private items = [] as T[]
+    private item: Item<T> | undefined
 
     get empty() {
-        return this.cursor === -1
+        return this.item === undefined
     }
 
-    get last() {
-        return this.items[this.cursor]
+    peek() {
+        return this.item!.value
     }
 
-    push(item: T) {
-        this.items.push(item)
-        this.cursor++
+    push(value: T) {
+        const prev = this.item
+        this.item = { value, prev }
     }
 
     pop() {
-        const item = this.items.pop()
-        this.cursor--
-        return item
+        const { prev, value } = this.item!
+        this.item = prev
+        return value
     }
 }

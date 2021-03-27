@@ -1,6 +1,6 @@
-import { Err, Result } from './result'
+import { Err, Cache } from './cache'
 import { Context } from './context'
-import { Command, InitCommand } from './command'
+import { Command, Handshake } from './command'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 
@@ -29,17 +29,21 @@ whatsUp(user, (v)=> console.log(v))
 //> {name: 'John'}
 */
 
-export abstract class Stream<T = unknown> {
+export interface StreamLike<T = unknown> {
+    whatsUp(context?: Context): StreamGenerator<T>
+}
+
+export abstract class Stream<T = unknown> implements StreamLike<T> {
     abstract whatsUp(context?: Context): StreamGenerator<T>
 
-    *[Symbol.iterator](command?: InitCommand): Generator<never, T, unknown> {
+    *[Symbol.iterator](command?: Handshake): Generator<never, T, unknown> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
-        //                            really is Generator<Command, T, Result> ... may be ;)
+        //                            really is Generator<Command, T, Cache> ... may be ;)
         if (!command) {
             throw 'Initial command of stream iterator is undefined'
         }
 
-        const result = (yield command as never) as Result<T>
+        const result = (yield command as never) as Cache<T>
 
         if (result instanceof Err) {
             throw result.value
