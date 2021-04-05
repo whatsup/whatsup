@@ -138,7 +138,7 @@ describe('Context', () => {
         it('mock should to be called with "hello"', () => {
             const mock = jest.fn()
             const dispose = context1.on(TestEvent, (e) => mock(e.payload))
-            context1.dispath(new TestEvent('hello'))
+            context1.dispatch(new TestEvent('hello'))
 
             expect(mock).toBeCalledTimes(1)
             expect(mock).lastCalledWith('hello')
@@ -149,7 +149,7 @@ describe('Context', () => {
         it('mock should to be called with "world" when event dispatch in deep', () => {
             const mock = jest.fn()
             const dispose = context1.on(TestEvent, (e) => mock(e.payload))
-            context3.dispath(new TestEvent('world'))
+            context3.dispatch(new TestEvent('world'))
 
             expect(mock).toBeCalledTimes(1)
             expect(mock).lastCalledWith('world')
@@ -162,7 +162,7 @@ describe('Context', () => {
             const mock2 = jest.fn()
             const dispose1 = context1.on(TestEvent, (e) => mock1(e.payload))
             const dispose2 = context2.on(TestEvent, (e) => mock2(e.payload))
-            context3.dispath(new TestEvent('world'))
+            context3.dispatch(new TestEvent('world'))
 
             expect(mock1).toBeCalledTimes(1)
             expect(mock1).lastCalledWith('world')
@@ -178,7 +178,7 @@ describe('Context', () => {
             const mock2 = jest.fn()
             const dispose1 = context1.on(TestEvent, (e) => mock1(e.payload))
             const dispose2 = context1.on(TestEvent, (e) => mock2(e.payload))
-            context3.dispath(new TestEvent('world'))
+            context3.dispatch(new TestEvent('world'))
 
             expect(mock1).toBeCalledTimes(1)
             expect(mock1).lastCalledWith('world')
@@ -197,7 +197,7 @@ describe('Context', () => {
                 mock2(e.payload)
                 e.stopPropagation()
             })
-            context3.dispath(new TestEvent('world'))
+            context3.dispatch(new TestEvent('world'))
 
             expect(mock1).toBeCalledTimes(0)
             expect(mock2).toBeCalledTimes(1)
@@ -217,7 +217,7 @@ describe('Context', () => {
                 e.stopImmediatePropagation()
             })
             const dispose3 = context2.on(TestEvent, (e) => mock3(e.payload))
-            context3.dispath(new TestEvent('world'))
+            context3.dispatch(new TestEvent('world'))
 
             expect(mock1).toBeCalledTimes(0)
             expect(mock2).toBeCalledTimes(1)
@@ -233,7 +233,7 @@ describe('Context', () => {
             const mock = jest.fn()
             context1.on(TestEvent, mock)
             context1.off(TestEvent, mock)
-            context2.dispath(new TestEvent('world'))
+            context2.dispatch(new TestEvent('world'))
 
             expect(mock).toBeCalledTimes(0)
         })
@@ -244,7 +244,7 @@ describe('Context', () => {
             context1.on(TestEvent, mock1)
             context1.on(TestEvent, mock2)
             context1.off(TestEvent)
-            context2.dispath(new TestEvent('world'))
+            context2.dispatch(new TestEvent('world'))
 
             expect(mock1).toBeCalledTimes(0)
             expect(mock2).toBeCalledTimes(0)

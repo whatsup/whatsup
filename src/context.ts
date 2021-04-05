@@ -109,7 +109,7 @@ export class Context {
         }
     }
 
-    dispath<T extends Event>(event: T) {
+    dispatch<T extends Event>(event: T) {
         const ctor = event.constructor as EventCtor<T>
 
         if (this.listeners && this.listeners.has(ctor)) {
@@ -125,7 +125,7 @@ export class Context {
         }
 
         if (this.parent instanceof Context && !event.isPropagationStopped()) {
-            this.parent.dispath(event)
+            this.parent.dispatch(event)
         }
     }
 
