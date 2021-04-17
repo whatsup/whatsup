@@ -61,7 +61,20 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
             return data!
         }
 
-        const newData = this.doMutation(oldMutator)
+        let newData = this.doMutation(oldMutator)
+
+        if (
+            Array.isArray(data) &&
+            Array.isArray(newData) &&
+            data.length === newData.length &&
+            data.every((item, i) => item === (newData as (Element | Text)[])[i])
+        ) {
+            /*
+                reuse old data container
+                to prevent recalculation of top-level stream
+            */
+            return data
+        }
 
         this.attachSelfTo(newData)
         this.attachMountingCallbacks(newData)
