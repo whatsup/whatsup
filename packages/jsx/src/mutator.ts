@@ -73,7 +73,7 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
                 reuse old data container
                 to prevent recalculation of top-level stream
             */
-            return data
+            newData = data
         }
 
         this.attachSelfTo(newData)
