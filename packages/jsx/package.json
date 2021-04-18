@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/jsx",
     "description": "WhatsUp Jsx mutator and renderer",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
