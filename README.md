@@ -1,4 +1,4 @@
-![](https://hsto.org/webt/ap/cu/s9/apcus9m69i3qemivourwekvzfbu.png)
+![](https://hsto.org/webt/9u/xg/1b/9uxg1b_uh8t7f91aj91evmfosuc.png)
 
 <div align="center">
 <img src="https://img.shields.io/github/workflow/status/whatsup/whatsup/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" />  
