@@ -13,7 +13,7 @@
 
 # What is it?
 
-Whats Up is a front-end framework based on the ideas of streams and fractals. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
+Whats Up is a framework based on the ideas of streams and fractals. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
 
 ## Install
 
