@@ -191,4 +191,11 @@ describe('props', function () {
 
         expect(phase!).toBe(1)
     })
+
+    it('should normalize svg className prop', function () {
+        const mutator = svg('svg', '', '', undefined, { className: 'test' })
+        const element = mutator.mutate()
+
+        expect(element.className.baseVal).toBe('test')
+    })
 })

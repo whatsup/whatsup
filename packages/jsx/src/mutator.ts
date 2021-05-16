@@ -313,6 +313,13 @@ function mutateProp<T extends WhatsJSX.ElementProps, K extends keyof T & string>
     value: T[K] | undefined,
     oldValue: T[K] | undefined
 ) {
+    if (isSVG(node)) {
+        // Normalize incorrect prop usage for SVG
+        // Thanks prettier team
+        // https://github.com/preactjs/preact/blob/master/src/diff/props.js#L106
+        prop = (prop as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
+    }
+
     switch (true) {
         case isIgnorableProp(prop):
             break
