@@ -223,7 +223,7 @@ function* source<T>(this: Atom<T>): StreamIterator<T> {
             done = result.done!
             error = false
         } catch (e) {
-            value = e
+            value = e as Error
             done = true
             error = true
         }
