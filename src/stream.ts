@@ -33,10 +33,13 @@ export interface StreamLike<T = unknown> {
     whatsUp(context?: Context): StreamGenerator<T>
 }
 
+export const iterator = Symbol('whatsup iterator')
+
 export abstract class Stream<T = unknown> implements StreamLike<T> {
     abstract whatsUp(context?: Context): StreamGenerator<T>
+    abstract [Symbol.iterator](): Generator<never, T, unknown>
 
-    *[Symbol.iterator](command?: Handshake): Generator<never, T, unknown> {
+    *[iterator](command: Handshake): Generator<never, T, unknown> {
         //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference
         //                            really is Generator<Command, T, Cache> ... may be ;)
         if (!command) {

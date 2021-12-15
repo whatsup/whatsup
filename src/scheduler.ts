@@ -183,8 +183,7 @@ export function* relations<T>(this: Atom, iterator: StreamIterator<T>): StreamIt
         }
 
         if (value instanceof Handshake) {
-            const { stream, multi } = value
-            const subAtom = this.atomizer.get(stream, multi)
+            const subAtom = value.do(this)
 
             this.dependencies.add(subAtom)
             subAtom.consumers.add(this)

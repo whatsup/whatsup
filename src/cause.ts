@@ -1,13 +1,13 @@
-import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
+import { Stream, StreamGenerator, StreamGeneratorFunc, iterator } from './stream'
 import { Context } from './context'
-import { Handshake } from './command'
+import { SimpleHandshake } from './command'
 import { Cache } from './cache'
 
-const init = new Handshake(false)
+const handshake = new SimpleHandshake()
 
 export abstract class Cause<T> extends Stream<T> {
     [Symbol.iterator](): Generator<never, T, Cache> {
-        return super[Symbol.iterator](init.reuseWith(this))
+        return super[iterator](handshake.reuseWith(this))
     }
 }
 

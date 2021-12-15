@@ -8,7 +8,6 @@ export class Atom<T = unknown> {
     readonly stream: StreamLike<T>
     readonly context: Context
     readonly stack: Stack<StreamIterator<T>>
-    readonly atomizer: Atomizer
     readonly consumers: Set<Atom>
     readonly dependencies: Dependencies
     private cache: Cache<T> | undefined
@@ -17,7 +16,6 @@ export class Atom<T = unknown> {
         this.stack = new Stack()
         this.stream = stream
         this.context = new Context(this, parent ? parent.context : null)
-        this.atomizer = new Atomizer(this)
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)
     }
@@ -47,50 +45,5 @@ export class Atom<T = unknown> {
                 this.stack.pop()!.return!()
             }
         }
-    }
-}
-
-// class AtomMap {
-//     readonly key = Symbol()
-
-//     has<T>(stream: Stream<T>) {
-//         return Reflect.has(stream, this.key)
-//     }
-
-//     get<T>(stream: Stream<T>) {
-//         return Reflect.get(stream, this.key)
-//     }
-
-//     set<T>(stream: Stream<T>, atom: Atom<T>) {
-//         return Reflect.set(stream, this.key, atom)
-//     }
-// }
-
-class Atomizer {
-    static readonly map = new WeakMap<StreamLike, Atom>()
-
-    private readonly atom: Atom
-    private readonly map: WeakMap<StreamLike, Atom>
-
-    constructor(atom: Atom) {
-        this.atom = atom
-        this.map = new WeakMap()
-    }
-
-    get<T>(stream: StreamLike<T>, multi: boolean): Atom<T> {
-        if (multi) {
-            if (!this.map.has(stream)) {
-                const atom = new Atom(stream, this.atom)
-                this.map.set(stream, atom)
-            }
-
-            return this.map.get(stream) as Atom<T>
-        }
-
-        if (!Atomizer.map.has(stream)) {
-            Atomizer.map.set(stream, new Atom(stream, null))
-        }
-
-        return Atomizer.map.get(stream) as Atom<T>
     }
 }
