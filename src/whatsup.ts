@@ -1,6 +1,7 @@
 import { Stream, StreamLike } from './stream'
 import { Atom } from './atom'
 import { transaction } from './scheduler'
+import { Context } from './context'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
@@ -17,7 +18,7 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
                     }
                 } catch (e) {
                     if (onError) {
-                        onError(e)
+                        onError(e as Error)
                     }
                 }
                 yield
@@ -25,7 +26,8 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
         },
     } as StreamLike<T>
 
-    const atom = new Atom(root, null)
+    const context = new Context()
+    const atom = new Atom(root, context)
 
     transaction((t) => t.include(atom))
 

@@ -5,7 +5,7 @@ import { transaction } from './scheduler'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
-export class Context {
+export class Context implements Context {
     /** @internal */
     readonly parent: Context | null
 
@@ -16,11 +16,21 @@ export class Context {
     listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined
 
     /** @internal */
-    private readonly atom: Atom
+    private atom!: Atom
 
-    constructor(atom: Atom, parent: Context | null) {
-        this.atom = atom
+    constructor(parent: Context | null = null) {
         this.parent = parent
+    }
+
+    /** @internal */
+    attachTo(atom: Atom) {
+        if (this.atom) {
+            throw new Error(`Context already attached to Atom`)
+        }
+
+        this.atom = atom
+
+        return this
     }
 
     share<T>(key: Factor<T>, value: T): void

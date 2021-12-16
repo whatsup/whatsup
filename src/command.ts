@@ -1,3 +1,4 @@
+import { Context } from './context'
 import { Atom } from './atom'
 import { StreamLike } from './stream'
 
@@ -21,7 +22,8 @@ export class SimpleHandshake extends Handshake {
 
     do() {
         if (!this.map.has(this.stream)) {
-            const subatom = new Atom(this.stream, null)
+            const context = new Context()
+            const subatom = new Atom(this.stream, context)
             this.map.set(this.stream, subatom)
         }
 
@@ -40,7 +42,8 @@ export class MultiHandshake extends Handshake {
         const submap = this.map.get(this.stream)!
 
         if (!submap.has(atom)) {
-            const subatom = new Atom(this.stream, atom)
+            const context = new Context(atom.context)
+            const subatom = new Atom(this.stream, context)
             submap.set(atom, subatom)
         }
 

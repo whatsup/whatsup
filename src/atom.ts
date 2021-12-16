@@ -12,10 +12,10 @@ export class Atom<T = unknown> {
     readonly dependencies: Dependencies
     private cache: Cache<T> | undefined
 
-    constructor(stream: StreamLike<T>, parent: Atom | null) {
-        this.stack = new Stack()
+    constructor(stream: StreamLike<T>, context: Context) {
         this.stream = stream
-        this.context = new Context(this, parent ? parent.context : null)
+        this.context = context.attachTo(this)
+        this.stack = new Stack()
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)
     }
