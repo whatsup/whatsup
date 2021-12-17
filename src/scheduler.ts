@@ -294,5 +294,5 @@ export function transaction<T>(cb: (transaction: Transaction) => T): T {
 }
 
 export function action<T>(cb: () => T) {
-    return transaction(() => cb())
+    return transaction(cb)
 }
