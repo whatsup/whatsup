@@ -1,21 +1,18 @@
-import { StreamIterator, StreamLike } from './stream'
 import { Context } from './context'
 import { Dependencies } from './dependencies'
 import { Cache } from './cache'
-import { Stack } from './stack'
+import { Builder } from './builder'
 
 export class Atom<T = unknown> {
-    readonly stream: StreamLike<T>
+    readonly builder: Builder<T>
     readonly context: Context
-    readonly stack: Stack<StreamIterator<T>>
     readonly consumers: Set<Atom>
     readonly dependencies: Dependencies
     private cache: Cache<T> | undefined
 
-    constructor(stream: StreamLike<T>, context: Context) {
-        this.stream = stream
+    constructor(builder: Builder<T>, context: Context) {
+        this.builder = builder.attachTo(this)
         this.context = context.attachTo(this)
-        this.stack = new Stack()
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)
     }
@@ -40,10 +37,7 @@ export class Atom<T = unknown> {
             this.cache = undefined
             this.context.dispose()
             this.dependencies.dispose()
-
-            while (!this.stack.empty) {
-                this.stack.pop()!.return!()
-            }
+            this.builder.dispose()
         }
     }
 }

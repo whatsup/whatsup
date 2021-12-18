@@ -1,10 +1,5 @@
-import { Delegation } from './delegation'
-import { Mutator } from './mutator'
 import { Atom } from './atom'
-import { Command, Handshake } from './command'
-import { Err, Data, Cache } from './cache'
 import { Stack } from './stack'
-import { Payload, StreamIterator } from './stream'
 
 class Transaction {
     initializing = true
@@ -59,7 +54,7 @@ class Transaction {
             const atom = queue[i++]
             const consumers = atom.consumers
             const oldCache = atom.getCache()
-            const newCache = build(atom, cache, relations)
+            const newCache = atom.builder.build()
 
             if (!newCache.equal(oldCache)) {
                 for (const consumer of consumers) {
@@ -101,154 +96,6 @@ class Transaction {
         this.counters.set(consumer, counter)
 
         return counter
-    }
-}
-
-type Layer<T> = (this: Atom<T>, iterator: StreamIterator<T>) => StreamIterator<T>
-
-function build<T>(atom: Atom<T>, ...layers: Layer<T>[]): Err | Data<T> {
-    const stack = new Stack<StreamIterator<T>>()
-
-    main: while (true) {
-        const iterator = layers.reduceRight((it, layer) => layer.call(atom, it), source.call(atom) as StreamIterator<T>)
-
-        stack.push(iterator)
-
-        let input = undefined
-
-        while (true) {
-            const { done, value } = stack.peek().next(input)
-
-            if (done) {
-                stack.pop()
-
-                if (!stack.empty) {
-                    input = value
-                    continue
-                }
-
-                return value as Err | Data<T>
-            }
-
-            if (value instanceof Atom) {
-                atom = value
-                continue main
-            }
-
-            throw 'What`s up? It shouldn`t have happened'
-        }
-    }
-}
-
-export function* cache<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
-    let input: unknown
-
-    while (true) {
-        const { done, value } = iterator.next(input)
-
-        if (value instanceof Cache) {
-            this.setCache(value)
-        }
-
-        if (value instanceof Mutator) {
-            const prevValue = this.hasCache() ? this.getCache()!.value : undefined
-            input = value.mutate(prevValue as T | undefined)
-            continue
-        }
-
-        if (value instanceof Atom && value.hasCache()) {
-            input = value.getCache()
-            continue
-        }
-
-        if (done) {
-            return value as Payload<T>
-        }
-
-        input = yield value
-    }
-}
-
-export function* relations<T>(this: Atom, iterator: StreamIterator<T>): StreamIterator<T> {
-    let input: unknown
-
-    this.dependencies.swap()
-
-    while (true) {
-        const { done, value } = iterator.next(input)
-
-        if (done) {
-            this.dependencies.disposeUnused()
-            return value as Payload<T>
-        }
-
-        if (value instanceof Handshake) {
-            const subAtom = value.do(this)
-
-            this.dependencies.add(subAtom)
-            subAtom.consumers.add(this)
-
-            input = yield subAtom
-            continue
-        }
-
-        input = yield value
-    }
-}
-
-function* source<T>(this: Atom<T>): StreamIterator<T> {
-    const { context, stream, stack } = this
-
-    if (stack.empty) {
-        stack.push(stream.whatsUp.call(stream, context) as StreamIterator<T>)
-    }
-
-    let input: unknown
-
-    while (true) {
-        if (input instanceof Data && input.value instanceof Delegation) {
-            stack.push(input.value.stream[Symbol.iterator]())
-            input = undefined
-        }
-
-        let done: boolean
-        let error: boolean
-        let value: Command | Payload<T> | Error
-
-        try {
-            const result = stack.peek().next(input)
-
-            value = result.value!
-            done = result.done!
-            error = false
-        } catch (e) {
-            value = e as Error
-            done = true
-            error = true
-        }
-
-        if (done) {
-            stack.pop()
-        }
-
-        if (value instanceof Command) {
-            input = yield value
-            continue
-        }
-
-        if (error) {
-            input = new Err(value as Error)
-        } else if (value instanceof Mutator) {
-            input = new Data(yield value)
-        } else {
-            input = new Data(value)
-        }
-
-        if (done && !stack.empty) {
-            continue
-        }
-
-        return input as Payload<T>
     }
 }
 

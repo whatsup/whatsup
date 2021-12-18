@@ -1,6 +1,7 @@
 import { Context } from './context'
 import { Atom } from './atom'
 import { StreamLike } from './stream'
+import { GenerativeBuilder } from './builder'
 
 export class Command {}
 
@@ -23,7 +24,8 @@ export class SimpleHandshake extends Handshake {
     do() {
         if (!this.map.has(this.stream)) {
             const context = new Context()
-            const subatom = new Atom(this.stream, context)
+            const builder = new GenerativeBuilder(this.stream.whatsUp, this.stream)
+            const subatom = new Atom(builder, context)
             this.map.set(this.stream, subatom)
         }
 
@@ -43,7 +45,8 @@ export class MultiHandshake extends Handshake {
 
         if (!submap.has(atom)) {
             const context = new Context(atom.context)
-            const subatom = new Atom(this.stream, context)
+            const builder = new GenerativeBuilder(this.stream.whatsUp, this.stream)
+            const subatom = new Atom(builder, context)
             submap.set(atom, subatom)
         }
 

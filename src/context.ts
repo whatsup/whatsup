@@ -25,7 +25,7 @@ export class Context implements Context {
     /** @internal */
     attachTo(atom: Atom) {
         if (this.atom) {
-            throw new Error(`Context already attached to Atom`)
+            throw new Error(`Context already attached to another Atom`)
         }
 
         this.atom = atom
