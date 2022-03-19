@@ -23,7 +23,7 @@ export class Observable<T = unknown> {
     }
 
     get() {
-        if (spider.watch(this.atom)) {
+        if (spider.watch(this.atom) || this.atom.consumers.size > 0) {
             if (!this.atom.hasCache()) {
                 this.atom.builder.build()
             }
@@ -45,4 +45,8 @@ export class Observable<T = unknown> {
 
         transaction((t) => t.include(this.atom))
     }
+}
+
+export function observable<T>(value: T) {
+    return new Observable(value)
 }

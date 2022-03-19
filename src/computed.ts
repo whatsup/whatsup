@@ -19,7 +19,7 @@ export class Computed<T = unknown> {
     }
 
     get() {
-        if (spider.watch(this.atom)) {
+        if (spider.watch(this.atom) || this.atom.consumers.size > 0) {
             if (!this.atom.hasCache()) {
                 this.atom.builder.build()
             }
@@ -33,6 +33,10 @@ export class Computed<T = unknown> {
             return cache!.value
         }
 
-        return (this.atom.builder as FunctionalBuilder).calc()
+        return (this.atom.builder as FunctionalBuilder<T>).calc()
     }
+}
+
+export function computed<T>(cb: (context?: Context) => T) {
+    return new Computed(cb)
 }

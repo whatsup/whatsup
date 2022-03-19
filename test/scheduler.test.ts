@@ -85,37 +85,42 @@ describe('Scheduler', () => {
         const a = conse('a')
         const b = cause(function* () {
             while (true) {
-                c.set(`${yield* a}b`)
-                d.set(`${yield* a}b`)
+                c.set(`${yield* a}c`)
+                d.set(`${yield* a}d`)
                 yield `${yield* a}b`
             }
         })
         const c = conse('c')
         const d = conse('d')
 
-        whatsUp(d, mockD)
-
-        expect(mockD).toBeCalledTimes(1)
-        expect(mockD).lastCalledWith('d')
-
         whatsUp(c, mockC)
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
+
+        whatsUp(d, mockD)
+
+        expect(mockD).toBeCalledTimes(1)
+        expect(mockD).lastCalledWith('d')
 
         whatsUp(b, mockB)
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')
 
+        expect(mockC).toBeCalledTimes(2)
+        expect(mockC).lastCalledWith('ac')
+        expect(mockD).toBeCalledTimes(2)
+        expect(mockD).lastCalledWith('ad')
+
         a.set('A')
 
         expect(mockB).toBeCalledTimes(2)
         expect(mockB).lastCalledWith('Ab')
+        expect(mockC).toBeCalledTimes(3)
+        expect(mockC).lastCalledWith('Ac')
         expect(mockD).toBeCalledTimes(3)
-        expect(mockD).lastCalledWith('Ab')
-        expect(mockD).toBeCalledTimes(3)
-        expect(mockD).lastCalledWith('Ab')
+        expect(mockD).lastCalledWith('Ad')
     })
 
     describe('should recalc only dirty streams', () => {

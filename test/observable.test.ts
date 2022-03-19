@@ -14,4 +14,10 @@ describe('Observable', () => {
 
         expect(mock).toBeCalledWith(2)
     })
+
+    it(`should return current value`, () => {
+        const name = new Observable('John')
+
+        expect(name.get()).toBe('John')
+    })
 })

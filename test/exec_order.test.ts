@@ -5,18 +5,18 @@ import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
     it('should run build only in transaction', () => {
-        const App = fractal(function* () {
+        const App = fractal(function* App() {
             while (true) {
                 yield (yield* Two) + (yield* One)
             }
         })
-        const One = fractal(function* () {
+        const One = fractal(function* One() {
             while (true) {
-                Two.set(1)
-                yield 1
+                Two.set(6)
+                yield 3
             }
         })
-        const Two = conse(0)
+        const Two = conse(5)
 
         const mock = jest.fn()
 
@@ -25,8 +25,8 @@ describe('Execution order', () => {
         expect(mock).toBeCalledTimes(2)
 
         expect(mock.mock.calls).toEqual([
-            [1], // First call
-            [2], // Second call
+            [8], // First call
+            [9], // Second call
         ])
     })
     it('normal updating from bottom to up', () => {

@@ -1,6 +1,6 @@
 import { Atom } from './atom'
 import { Cache, Data, Err } from './cache'
-import { Command, Handshake } from './command'
+import { Command, PushThrough, GetConsumer } from './command'
 import { Context } from './context'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
@@ -48,7 +48,7 @@ export abstract class Builder<T = unknown> {
                         continue
                     }
 
-                    return value as Err | Data<T>
+                    return (value as any) as Err | Data<T> // TODO: remove any
                 }
 
                 if (value instanceof Atom) {
@@ -114,8 +114,9 @@ export class GenerativeBuilder<T = unknown> extends Builder<T> {
 
         let input: unknown
 
-        spider.start()
         atom.dependencies.swap()
+
+        spider.start()
 
         while (true) {
             const { done, value } = iterator.next(input)
@@ -130,11 +131,26 @@ export class GenerativeBuilder<T = unknown> extends Builder<T> {
                 return value as Payload<T>
             }
 
-            if (value instanceof Handshake) {
-                const subAtom = value.do(atom)
+            // if (value instanceof Handshake) {
+            //     const subAtom = value.do(atom)
 
-                atom.dependencies.add(subAtom)
-                subAtom.consumers.add(atom)
+            //     atom.dependencies.add(subAtom)
+            //     subAtom.consumers.add(atom)
+
+            //     input = yield subAtom
+            //     continue
+            // }
+
+            if (value instanceof GetConsumer) {
+                input = atom
+                continue
+            }
+
+            if (value instanceof PushThrough) {
+                const subAtom = value.atom
+
+                //atom.dependencies.add(subAtom)
+                //subAtom.consumers.add(atom)
 
                 input = yield subAtom
                 continue

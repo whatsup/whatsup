@@ -11,35 +11,6 @@ class Transaction {
     include(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
-
-            const stack = new Stack<Iterator<Atom>>()
-
-            main: while (true) {
-                stack.push(atom.consumers[Symbol.iterator]())
-
-                while (true) {
-                    const { done, value } = stack.peek().next()
-
-                    if (done) {
-                        stack.pop()
-
-                        if (!stack.empty) {
-                            continue
-                        }
-
-                        return value
-                    }
-
-                    const counter = this.incrementCounter(value)
-
-                    if (counter > 1) {
-                        continue
-                    }
-
-                    atom = value
-                    continue main
-                }
-            }
         }
     }
 
@@ -47,6 +18,8 @@ class Transaction {
         this.initializing = false
 
         const { queue } = this
+
+        this.incrementCounters()
 
         let i = 0
 
@@ -63,6 +36,40 @@ class Transaction {
             }
 
             this.updateQueue(consumers)
+        }
+    }
+
+    private incrementCounters() {
+        root: for (let atom of this.queue) {
+            const stack = new Stack<Iterator<Atom>>()
+
+            loop: while (true) {
+                stack.push(atom.consumers[Symbol.iterator]())
+
+                while (true) {
+                    const { done, value } = stack.peek().next()
+
+                    if (done) {
+                        stack.pop()
+
+                        if (!stack.empty) {
+                            continue
+                        }
+
+                        continue root
+                    }
+
+                    const counter = this.incrementCounter(value)
+
+                    if (counter > 1 || value.consumers.size === 0) {
+                        continue
+                    }
+
+                    atom = value
+
+                    continue loop
+                }
+            }
         }
     }
 
