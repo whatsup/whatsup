@@ -2,7 +2,7 @@ import { Stream } from './stream'
 import { Atom } from './atom'
 import { transaction } from './scheduler'
 import { Context } from './context'
-import { GenerativeBuilder } from './builder'
+import { GenBuilder } from './builder'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
@@ -26,7 +26,7 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
     }
 
     const context = new Context()
-    const builder = new GenerativeBuilder(generator, undefined)
+    const builder = new GenBuilder(generator, undefined)
     const atom = new Atom(builder, context)
 
     transaction((t) => t.include(atom))

@@ -2,7 +2,7 @@ import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { Cache, Err } from './cache'
 import { Atom } from './atom'
-import { GenerativeBuilder } from './builder'
+import { GenBuilder } from './builder'
 import { PushThrough } from './command'
 import { spider } from './spider'
 
@@ -13,7 +13,7 @@ export abstract class Cause<T> extends Stream<T> {
 
     constructor() {
         super()
-        const builder = new GenerativeBuilder(this.whatsUp, this)
+        const builder = new GenBuilder(this.whatsUp, this)
         const context = new Context()
         this.atom = new Atom(builder, context)
     }

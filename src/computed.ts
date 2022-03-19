@@ -1,5 +1,5 @@
 import { Atom } from './atom'
-import { FunctionalBuilder } from './builder'
+import { FunBuilder } from './builder'
 import { Cache, Err } from './cache'
 import { Context } from './context'
 import { spider } from './spider'
@@ -8,7 +8,7 @@ export class Computed<T = unknown> {
     private atom: Atom<T>
 
     constructor(cb: (context?: Context) => T) {
-        const builder = new FunctionalBuilder(cb, this)
+        const builder = new FunBuilder(cb, this)
         const context = new Context()
 
         this.atom = new Atom(builder, context)
@@ -33,7 +33,7 @@ export class Computed<T = unknown> {
             return cache!.value
         }
 
-        return (this.atom.builder as FunctionalBuilder<T>).calc()
+        return (this.atom.builder as FunBuilder<T>).calc()
     }
 }
 

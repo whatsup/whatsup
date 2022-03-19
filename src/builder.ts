@@ -62,7 +62,7 @@ export abstract class Builder<T = unknown> {
     }
 }
 
-export class GenerativeBuilder<T = unknown> extends Builder<T> {
+export class GenBuilder<T = unknown> extends Builder<T> {
     private readonly stack: Stack<StreamIterator<T>>
     private readonly generator: StreamGeneratorFunc<T>
     private readonly thisArg: unknown
@@ -131,16 +131,6 @@ export class GenerativeBuilder<T = unknown> extends Builder<T> {
                 return value as Payload<T>
             }
 
-            // if (value instanceof Handshake) {
-            //     const subAtom = value.do(atom)
-
-            //     atom.dependencies.add(subAtom)
-            //     subAtom.consumers.add(atom)
-
-            //     input = yield subAtom
-            //     continue
-            // }
-
             if (value instanceof GetConsumer) {
                 input = atom
                 continue
@@ -148,9 +138,6 @@ export class GenerativeBuilder<T = unknown> extends Builder<T> {
 
             if (value instanceof PushThrough) {
                 const subAtom = value.atom
-
-                //atom.dependencies.add(subAtom)
-                //subAtom.consumers.add(atom)
 
                 input = yield subAtom
                 continue
@@ -224,7 +211,7 @@ export class GenerativeBuilder<T = unknown> extends Builder<T> {
     }
 }
 
-export class FunctionalBuilder<T = unknown> extends Builder<T> {
+export class FunBuilder<T = unknown> extends Builder<T> {
     private readonly cb: (context?: Context) => T
     private readonly thisArg: unknown
 

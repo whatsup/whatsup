@@ -1,5 +1,5 @@
 import { Atom } from './atom'
-import { FunctionalBuilder } from './builder'
+import { FunBuilder } from './builder'
 import { Cache, Err } from './cache'
 import { Context } from './context'
 import { spider } from './spider'
@@ -11,7 +11,7 @@ export class Observable<T = unknown> {
 
     constructor(value: T) {
         const cb = () => this.value
-        const builder = new FunctionalBuilder(cb, this)
+        const builder = new FunBuilder(cb, this)
         const context = new Context()
 
         this.atom = new Atom(builder, context)
@@ -37,7 +37,7 @@ export class Observable<T = unknown> {
             return cache!.value
         }
 
-        return (this.atom.builder as FunctionalBuilder<T>).calc()
+        return (this.atom.builder as FunBuilder<T>).calc()
     }
 
     set(value: T) {

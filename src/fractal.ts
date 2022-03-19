@@ -3,7 +3,7 @@ import { Context } from './context'
 import { PushThrough, GetConsumer } from './command'
 import { Cache, Err } from './cache'
 import { Atom } from './atom'
-import { GenerativeBuilder } from './builder'
+import { GenBuilder } from './builder'
 import { spider } from './spider'
 
 //const handshake = new MultiHandshake()
@@ -22,7 +22,7 @@ export abstract class Fractal<T> extends Stream<T> {
         const consumer = ((yield getConsumer as never) as any) as Atom
 
         if (!this.atoms.has(consumer)) {
-            const builder = new GenerativeBuilder(this.whatsUp, this)
+            const builder = new GenBuilder(this.whatsUp, this)
             const context = new Context(consumer.context)
             const atom = new Atom(builder, context)
 
