@@ -4,7 +4,6 @@ import { Cache, Err } from './cache'
 import { Atom } from './atom'
 import { GenBuilder } from './builder'
 import { PushThrough } from './command'
-import { spider } from './spider'
 
 const pushThrough = new PushThrough()
 
@@ -19,7 +18,7 @@ export abstract class Cause<T> extends Stream<T> {
     }
 
     *[Symbol.iterator](): Generator<never, T, Cache> {
-        spider.watch(this.atom)
+        this.atom.dependencies.register()
 
         const result = yield pushThrough.reuseWith(this.atom) as never
 

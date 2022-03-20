@@ -4,7 +4,6 @@ import { PushThrough, GetConsumer } from './command'
 import { Cache, Err } from './cache'
 import { Atom } from './atom'
 import { GenBuilder } from './builder'
-import { spider } from './spider'
 
 //const handshake = new MultiHandshake()
 const getConsumer = new GetConsumer()
@@ -31,7 +30,7 @@ export abstract class Fractal<T> extends Stream<T> {
 
         const atom = this.atoms.get(consumer)!
 
-        spider.watch(atom)
+        atom.dependencies.register()
 
         const result = yield pushThrough.reuseWith(atom) as never
 

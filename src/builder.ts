@@ -5,7 +5,6 @@ import { Context } from './context'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Stack } from './stack'
-import { spider } from './spider'
 import { Payload, StreamIterator, StreamGeneratorFunc } from './stream'
 
 export abstract class Builder<T = unknown> {
@@ -31,9 +30,7 @@ export abstract class Builder<T = unknown> {
         const stack = new Stack<[Atom<T>, StreamIterator<T>]>()
 
         main: while (true) {
-            atom.dependencies.swap()
-
-            spider.start()
+            atom.dependencies.watch()
 
             const iterator = atom.builder.iterator()
 
@@ -48,12 +45,7 @@ export abstract class Builder<T = unknown> {
                 if (done) {
                     ;[atom] = stack.pop()!
 
-                    for (const dependency of spider.stop()) {
-                        atom.dependencies.add(dependency)
-                        dependency.consumers.add(atom)
-                    }
-
-                    atom.dependencies.disposeUnused()
+                    atom.dependencies.normalize()
 
                     if (!stack.empty) {
                         input = value

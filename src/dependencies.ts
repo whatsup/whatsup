@@ -1,5 +1,7 @@
 import { Atom } from './atom'
 
+const STACK = [] as Set<Atom>[]
+
 export class Dependencies {
     private readonly atom: Atom
     private current = new Set<Atom>()
@@ -9,15 +11,28 @@ export class Dependencies {
         this.atom = atom
     }
 
-    add(atom: Atom) {
-        this.current.add(atom)
-        this.fusty.delete(atom)
+    watch() {
+        STACK.push(new Set())
+        this.swap()
     }
 
-    swap() {
-        const { current, fusty } = this
-        this.current = fusty
-        this.fusty = current
+    register() {
+        if (STACK.length) {
+            STACK[STACK.length - 1].add(this.atom)
+            return true
+        }
+        return false
+    }
+
+    normalize() {
+        const atoms = STACK.pop()!
+
+        for (const dependency of atoms) {
+            this.add(dependency)
+            dependency.consumers.add(this.atom)
+        }
+
+        this.disposeUnused()
     }
 
     dispose() {
@@ -27,7 +42,18 @@ export class Dependencies {
         this.current.clear()
     }
 
-    disposeUnused() {
+    private add(atom: Atom) {
+        this.current.add(atom)
+        this.fusty.delete(atom)
+    }
+
+    private swap() {
+        const { current, fusty } = this
+        this.current = fusty
+        this.fusty = current
+    }
+
+    private disposeUnused() {
         for (const atom of this.fusty) {
             atom.dispose(this.atom)
         }

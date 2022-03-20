@@ -2,7 +2,6 @@ import { Atom } from './atom'
 import { FunBuilder } from './builder'
 import { Cache, Err } from './cache'
 import { Context } from './context'
-import { spider } from './spider'
 
 export class Computed<T = unknown> {
     private atom: Atom<T>
@@ -19,7 +18,7 @@ export class Computed<T = unknown> {
     }
 
     get() {
-        if (spider.watch(this.atom) || this.atom.consumers.size > 0) {
+        if (this.atom.dependencies.register() || this.atom.consumers.size > 0) {
             if (!this.atom.hasCache()) {
                 this.atom.builder.build()
             }
