@@ -28,20 +28,32 @@ export abstract class Builder<T = unknown> {
     build(): Err | Data<T> {
         let { atom } = this
 
-        const stack = new Stack<StreamIterator<T>>()
+        const stack = new Stack<[Atom<T>, StreamIterator<T>]>()
 
         main: while (true) {
+            atom.dependencies.swap()
+
+            spider.start()
+
             const iterator = atom.builder.iterator()
 
-            stack.push(iterator)
+            stack.push([atom, iterator])
 
             let input = undefined
 
             while (true) {
-                const { done, value } = stack.peek().next(input)
+                const [_, iterator] = stack.peek()
+                const { done, value } = iterator.next(input)
 
                 if (done) {
-                    stack.pop()
+                    ;[atom] = stack.pop()!
+
+                    for (const dependency of spider.stop()) {
+                        atom.dependencies.add(dependency)
+                        dependency.consumers.add(atom)
+                    }
+
+                    atom.dependencies.disposeUnused()
 
                     if (!stack.empty) {
                         input = value
@@ -75,7 +87,7 @@ export class GenBuilder<T = unknown> extends Builder<T> {
     }
 
     iterator(): StreamIterator<T> {
-        return this.cache(this.relations(this.source()))
+        return this.cache(this.source())
     }
 
     *cache(iterator: StreamIterator<T>): StreamIterator<T> {
@@ -109,47 +121,9 @@ export class GenBuilder<T = unknown> extends Builder<T> {
         }
     }
 
-    *relations(iterator: StreamIterator<T>): StreamIterator<T> {
-        const { atom } = this
-
-        let input: unknown
-
-        atom.dependencies.swap()
-
-        spider.start()
-
-        while (true) {
-            const { done, value } = iterator.next(input)
-
-            if (done) {
-                for (const dependency of spider.stop()) {
-                    atom.dependencies.add(dependency)
-                    dependency.consumers.add(atom)
-                }
-
-                atom.dependencies.disposeUnused()
-                return value as Payload<T>
-            }
-
-            if (value instanceof GetConsumer) {
-                input = atom
-                continue
-            }
-
-            if (value instanceof PushThrough) {
-                const subAtom = value.atom
-
-                input = yield subAtom
-                continue
-            }
-
-            input = yield value
-        }
-    }
-
     *source(): StreamIterator<T> {
-        const { generator, thisArg, stack } = this
-        const { context } = this.atom
+        const { generator, thisArg, stack, atom } = this
+        const { context } = atom
 
         if (stack.empty) {
             stack.push(generator.call(thisArg, context) as StreamIterator<T>)
@@ -183,8 +157,13 @@ export class GenBuilder<T = unknown> extends Builder<T> {
                 stack.pop()
             }
 
-            if (value instanceof Command) {
-                input = yield value
+            if (value instanceof GetConsumer) {
+                input = atom
+                continue
+            }
+
+            if (value instanceof PushThrough) {
+                input = yield value.atom
                 continue
             }
 
@@ -230,10 +209,6 @@ export class FunBuilder<T = unknown> extends Builder<T> {
     *iterator(): StreamIterator<T> {
         const { atom } = this
 
-        atom.dependencies.swap()
-
-        spider.start()
-
         let newCache: Cache<any> // | Err
 
         try {
@@ -244,13 +219,7 @@ export class FunBuilder<T = unknown> extends Builder<T> {
             newCache = new Err(e as Error)
         }
 
-        for (const dependency of spider.stop()) {
-            atom.dependencies.add(dependency)
-            dependency.consumers.add(atom)
-        }
-
         atom.setCache(newCache)
-        atom.dependencies.disposeUnused()
 
         return newCache as any // as Err | Data<T>
     }
