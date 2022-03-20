@@ -42,7 +42,7 @@ export abstract class Builder<T = unknown> {
             let input = undefined
 
             while (true) {
-                const [_, iterator] = stack.peek()
+                const iterator = stack.peek()[1]
                 const { done, value } = iterator.next(input)
 
                 if (done) {
