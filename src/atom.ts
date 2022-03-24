@@ -27,7 +27,7 @@ export class Atom<T = unknown> {
                 if (!atom.hasCache()) {
                     cache = atom.builder.build() as Cache<T>
 
-                    atom.setCache(cache as Cache<T>)
+                    atom.setCache(cache)
                 } else {
                     cache = atom.getCache()!
                 }

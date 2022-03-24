@@ -1,8 +1,7 @@
 import { Atom } from './atom'
-import { Cache, Data, Err } from './cache'
+import { Data, Err } from './cache'
 import { Command, GetConsumer } from './command'
 import { Context } from './context'
-//import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Stack } from './stack'
 import { Payload, StreamIterator, StreamGeneratorFunc } from './stream'
@@ -40,6 +39,12 @@ export abstract class Builder<T = unknown> {
                 return (value as any) as Err | Data<T> // TODO: remove any
             }
 
+            if (value instanceof Mutator) {
+                const prevValue = this.atom.hasCache() ? this.atom.getCache()!.value : undefined
+                input = value.mutate(prevValue as T | undefined)
+                continue
+            }
+
             throw 'What`s up? It shouldn`t have happened'
         }
     }
@@ -57,33 +62,7 @@ export class GenBuilder<T = unknown> extends Builder<T> {
         this.thisArg = thisArg
     }
 
-    iterator(): StreamIterator<T> {
-        return this.cache(this.source())
-    }
-
-    *cache(iterator: StreamIterator<T>): StreamIterator<T> {
-        const { atom } = this
-
-        let input: unknown
-
-        while (true) {
-            const { done, value } = iterator.next(input)
-
-            if (value instanceof Mutator) {
-                const prevValue = atom.hasCache() ? atom.getCache()!.value : undefined
-                input = value.mutate(prevValue as T | undefined)
-                continue
-            }
-
-            if (done) {
-                return value as Payload<T>
-            }
-
-            input = yield value
-        }
-    }
-
-    *source(): StreamIterator<T> {
+    *iterator(): StreamIterator<T> {
         const { generator, thisArg, stack, atom } = this
         const { context } = atom
 
@@ -154,18 +133,26 @@ export class FunBuilder<T = unknown> extends Builder<T> {
 
     *iterator(): StreamIterator<T> {
         const { cb, thisArg, atom } = this
+        const { context } = atom
 
-        let newCache: Cache<any> // | Err
+        let error: boolean
+        let value: Command | Payload<T> | Error
 
         try {
-            const value = cb.call(thisArg, atom.context)
-
-            newCache = new Data(value)
+            value = cb.call(thisArg, context)
+            error = false
         } catch (e) {
-            newCache = new Err(e as Error)
+            value = e as Error
+            error = true
         }
 
-        return newCache as any // as Err | Data<T>
+        if (error) {
+            return new Err(value as Error) as any
+        } else if (value instanceof Mutator) {
+            return new Data(yield value) as any
+        } else {
+            return new Data(value) as any
+        }
     }
 
     dispose(): void {
