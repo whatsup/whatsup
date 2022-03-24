@@ -1,14 +1,14 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
-import { Cache, Err } from './cache'
+import { Cache } from './cache'
 import { Atom } from './atom'
 import { GenBuilder } from './builder'
-import { PushThrough } from './command'
+//import { PushThrough } from './command'
 
-const pushThrough = new PushThrough()
+//const pushThrough = new PushThrough()
 
 export abstract class Cause<T> extends Stream<T> {
-    private readonly atom: Atom
+    private readonly atom: Atom<T>
 
     constructor() {
         super()
@@ -17,18 +17,12 @@ export abstract class Cause<T> extends Stream<T> {
         this.atom = new Atom(builder, context)
     }
 
+    getAtomFor(): Atom<T> {
+        return this.atom
+    }
+
     *[Symbol.iterator](): Generator<never, T, Cache> {
-        this.atom.dependencies.register()
-
-        const result = yield pushThrough.reuseWith(this.atom) as never
-
-        this.atom.setCache(result)
-
-        if (result instanceof Err) {
-            throw result.value
-        }
-
-        return result.value as T
+        return this.atom.get()
     }
 }
 

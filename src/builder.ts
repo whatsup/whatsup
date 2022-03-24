@@ -2,7 +2,7 @@ import { Atom } from './atom'
 import { Cache, Data, Err } from './cache'
 import { Command, PushThrough, GetConsumer } from './command'
 import { Context } from './context'
-import { Delegation } from './delegation'
+//import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Stack } from './stack'
 import { Payload, StreamIterator, StreamGeneratorFunc } from './stream'
@@ -25,44 +25,62 @@ export abstract class Builder<T = unknown> {
     }
 
     build(): Err | Data<T> {
-        let { atom } = this
+        this.atom.dependencies.watch()
 
-        const stack = new Stack<[Atom<T>, StreamIterator<T>]>()
+        const iterator = this.atom.builder.iterator()
 
-        main: while (true) {
-            atom.dependencies.watch()
+        let input = undefined
 
-            const iterator = atom.builder.iterator()
+        while (true) {
+            const { done, value } = iterator.next(input)
 
-            stack.push([atom, iterator])
+            if (done) {
+                this.atom.dependencies.normalize()
 
-            let input = undefined
-
-            while (true) {
-                const iterator = stack.peek()[1]
-                const { done, value } = iterator.next(input)
-
-                if (done) {
-                    ;[atom] = stack.pop()!
-
-                    atom.dependencies.normalize()
-
-                    if (!stack.empty) {
-                        input = value
-                        continue
-                    }
-
-                    return (value as any) as Err | Data<T> // TODO: remove any
-                }
-
-                if (value instanceof Atom) {
-                    atom = value
-                    continue main
-                }
-
-                throw 'What`s up? It shouldn`t have happened'
+                return (value as any) as Err | Data<T> // TODO: remove any
             }
+
+            throw 'What`s up? It shouldn`t have happened'
         }
+
+        // let { atom } = this
+
+        // const stack = new Stack<[Atom<T>, StreamIterator<T>]>()
+
+        // main: while (true) {
+        //     atom.dependencies.watch()
+
+        //     const iterator = atom.builder.iterator()
+
+        //     stack.push([atom, iterator])
+
+        //     let input = undefined
+
+        //     while (true) {
+        //         const iterator = stack.peek()[1]
+        //         const { done, value } = iterator.next(input)
+
+        //         if (done) {
+        //             ;[atom] = stack.pop()!
+
+        //             atom.dependencies.normalize()
+
+        //             if (!stack.empty) {
+        //                 input = value
+        //                 continue
+        //             }
+
+        //             return (value as any) as Err | Data<T> // TODO: remove any
+        //         }
+
+        //         if (value instanceof Atom) {
+        //             atom = value
+        //             continue main
+        //         }
+
+        //         throw 'What`s up? It shouldn`t have happened'
+        //     }
+        // }
     }
 }
 
@@ -100,10 +118,15 @@ export class GenBuilder<T = unknown> extends Builder<T> {
                 continue
             }
 
-            if (value instanceof Atom && value.hasCache()) {
-                input = value.getCache()
-                continue
-            }
+            // if (value instanceof Data && value.value instanceof Delegation) {
+            //     input = value
+            //     continue
+            // }
+
+            // if (value instanceof Atom && value.hasCache()) {
+            //     input = value.getCache()
+            //     continue
+            // }
 
             if (done) {
                 return value as Payload<T>
@@ -124,10 +147,10 @@ export class GenBuilder<T = unknown> extends Builder<T> {
         let input: unknown
 
         while (true) {
-            if (input instanceof Data && input.value instanceof Delegation) {
-                stack.push(input.value.stream[Symbol.iterator]())
-                input = undefined
-            }
+            // if (input instanceof Data && input.value instanceof Delegation) {
+            //     stack.push(input.value.stream[Symbol.iterator]())
+            //     input = undefined
+            // }
 
             let done: boolean
             let error: boolean
@@ -192,19 +215,19 @@ export class FunBuilder<T = unknown> extends Builder<T> {
         this.thisArg = thisArg
     }
 
-    calc() {
-        const { cb, thisArg, atom } = this
+    // calc() {
+    //     const { cb, thisArg, atom } = this
 
-        return cb.call(thisArg, atom.context)
-    }
+    //     return cb.call(thisArg, atom.context)
+    // }
 
     *iterator(): StreamIterator<T> {
-        //const { atom } = this
+        const { cb, thisArg, atom } = this
 
         let newCache: Cache<any> // | Err
 
         try {
-            const value = this.calc()
+            const value = cb.call(thisArg, atom.context)
 
             newCache = new Data(value)
         } catch (e) {

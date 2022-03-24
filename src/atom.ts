@@ -1,7 +1,8 @@
 import { Context } from './context'
 import { Dependencies } from './dependencies'
-import { Cache } from './cache'
+import { Cache, Err } from './cache'
 import { Builder } from './builder'
+import { Delegation } from './delegation'
 
 export class Atom<T = unknown> {
     readonly builder: Builder<T>
@@ -15,6 +16,38 @@ export class Atom<T = unknown> {
         this.context = context.attachTo(this)
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)
+    }
+
+    get() {
+        let cache: Cache<T>
+        let atom = this as Atom<T>
+
+        while (true) {
+            if (atom.dependencies.register() || atom.consumers.size > 0) {
+                if (!atom.hasCache()) {
+                    cache = atom.builder.build() as Cache<T>
+
+                    atom.setCache(cache as Cache<T>)
+                } else {
+                    cache = atom.getCache()!
+                }
+            } else {
+                cache = atom.builder.build() as Cache<T>
+            }
+
+            if (cache instanceof Err) {
+                throw cache!.value
+            }
+
+            if (cache.value instanceof Delegation) {
+                atom = cache.value.stream.getAtomFor(atom)
+                continue
+            }
+
+            break
+        }
+
+        return cache!.value
     }
 
     hasCache() {

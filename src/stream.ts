@@ -2,6 +2,7 @@ import { Context } from './context'
 import { Command } from './command'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
+import { Atom } from './atom'
 
 export type Payload<T> = T | Delegation<T> | Mutator<T>
 export type StreamIterator<T> = Iterator<Payload<T> | Command, Payload<T>, unknown>
@@ -35,6 +36,7 @@ export interface StreamLike<T = unknown> {
 export const iterator = Symbol('whatsup iterator')
 
 export abstract class Stream<T = unknown> implements StreamLike<T> {
+    abstract getAtomFor(atom: Atom): Atom<T>
     abstract whatsUp(context?: Context): StreamGenerator<T>
     abstract [Symbol.iterator](): Generator<never, T, unknown>
 
