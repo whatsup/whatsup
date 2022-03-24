@@ -30,6 +30,8 @@ class Transaction {
             const newCache = atom.builder.build()
 
             if (!newCache.equal(oldCache)) {
+                atom.setCache(newCache)
+
                 for (const consumer of consumers) {
                     this.queueCandidates.add(consumer)
                 }

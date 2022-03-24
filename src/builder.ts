@@ -90,9 +90,9 @@ export class GenBuilder<T = unknown> extends Builder<T> {
         while (true) {
             const { done, value } = iterator.next(input)
 
-            if (value instanceof Cache) {
-                atom.setCache(value)
-            }
+            // if (value instanceof Cache) {
+            //     atom.setCache(value)
+            // }
 
             if (value instanceof Mutator) {
                 const prevValue = atom.hasCache() ? atom.getCache()!.value : undefined
@@ -199,7 +199,7 @@ export class FunBuilder<T = unknown> extends Builder<T> {
     }
 
     *iterator(): StreamIterator<T> {
-        const { atom } = this
+        //const { atom } = this
 
         let newCache: Cache<any> // | Err
 
@@ -211,7 +211,7 @@ export class FunBuilder<T = unknown> extends Builder<T> {
             newCache = new Err(e as Error)
         }
 
-        atom.setCache(newCache)
+        //atom.setCache(newCache)
 
         return newCache as any // as Err | Data<T>
     }

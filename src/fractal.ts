@@ -34,6 +34,8 @@ export abstract class Fractal<T> extends Stream<T> {
 
         const result = yield pushThrough.reuseWith(atom) as never
 
+        atom.setCache(result)
+
         if (result instanceof Err) {
             throw result.value
         }

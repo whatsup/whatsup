@@ -24,7 +24,9 @@ export class Observable<T = unknown> {
     get() {
         if (this.atom.dependencies.register() || this.atom.consumers.size > 0) {
             if (!this.atom.hasCache()) {
-                this.atom.builder.build()
+                const cache = this.atom.builder.build()
+
+                this.atom.setCache(cache as Cache<T>)
             }
 
             const cache = this.atom.getCache()

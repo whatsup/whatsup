@@ -22,6 +22,8 @@ export abstract class Cause<T> extends Stream<T> {
 
         const result = yield pushThrough.reuseWith(this.atom) as never
 
+        this.atom.setCache(result)
+
         if (result instanceof Err) {
             throw result.value
         }
