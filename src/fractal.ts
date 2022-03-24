@@ -5,9 +5,7 @@ import { Cache } from './cache'
 import { Atom } from './atom'
 import { GenBuilder } from './builder'
 
-//const handshake = new MultiHandshake()
 const getConsumer = new GetConsumer()
-//const pushThrough = new PushThrough()
 
 export abstract class Fractal<T> extends Stream<T> {
     private readonly atoms: WeakMap<Atom, Atom<T>>

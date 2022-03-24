@@ -3,9 +3,6 @@ import { Context } from './context'
 import { Cache } from './cache'
 import { Atom } from './atom'
 import { GenBuilder } from './builder'
-//import { PushThrough } from './command'
-
-//const pushThrough = new PushThrough()
 
 export abstract class Cause<T> extends Stream<T> {
     private readonly atom: Atom<T>

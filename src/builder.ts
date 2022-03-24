@@ -1,6 +1,6 @@
 import { Atom } from './atom'
 import { Cache, Data, Err } from './cache'
-import { Command, PushThrough, GetConsumer } from './command'
+import { Command, GetConsumer } from './command'
 import { Context } from './context'
 //import { Delegation } from './delegation'
 import { Mutator } from './mutator'
@@ -42,45 +42,6 @@ export abstract class Builder<T = unknown> {
 
             throw 'What`s up? It shouldn`t have happened'
         }
-
-        // let { atom } = this
-
-        // const stack = new Stack<[Atom<T>, StreamIterator<T>]>()
-
-        // main: while (true) {
-        //     atom.dependencies.watch()
-
-        //     const iterator = atom.builder.iterator()
-
-        //     stack.push([atom, iterator])
-
-        //     let input = undefined
-
-        //     while (true) {
-        //         const iterator = stack.peek()[1]
-        //         const { done, value } = iterator.next(input)
-
-        //         if (done) {
-        //             ;[atom] = stack.pop()!
-
-        //             atom.dependencies.normalize()
-
-        //             if (!stack.empty) {
-        //                 input = value
-        //                 continue
-        //             }
-
-        //             return (value as any) as Err | Data<T> // TODO: remove any
-        //         }
-
-        //         if (value instanceof Atom) {
-        //             atom = value
-        //             continue main
-        //         }
-
-        //         throw 'What`s up? It shouldn`t have happened'
-        //     }
-        // }
     }
 }
 
@@ -108,25 +69,11 @@ export class GenBuilder<T = unknown> extends Builder<T> {
         while (true) {
             const { done, value } = iterator.next(input)
 
-            // if (value instanceof Cache) {
-            //     atom.setCache(value)
-            // }
-
             if (value instanceof Mutator) {
                 const prevValue = atom.hasCache() ? atom.getCache()!.value : undefined
                 input = value.mutate(prevValue as T | undefined)
                 continue
             }
-
-            // if (value instanceof Data && value.value instanceof Delegation) {
-            //     input = value
-            //     continue
-            // }
-
-            // if (value instanceof Atom && value.hasCache()) {
-            //     input = value.getCache()
-            //     continue
-            // }
 
             if (done) {
                 return value as Payload<T>
@@ -147,11 +94,6 @@ export class GenBuilder<T = unknown> extends Builder<T> {
         let input: unknown
 
         while (true) {
-            // if (input instanceof Data && input.value instanceof Delegation) {
-            //     stack.push(input.value.stream[Symbol.iterator]())
-            //     input = undefined
-            // }
-
             let done: boolean
             let error: boolean
             let value: Command | Payload<T> | Error
@@ -174,11 +116,6 @@ export class GenBuilder<T = unknown> extends Builder<T> {
 
             if (value instanceof GetConsumer) {
                 input = atom
-                continue
-            }
-
-            if (value instanceof PushThrough) {
-                input = yield value.atom
                 continue
             }
 
@@ -215,12 +152,6 @@ export class FunBuilder<T = unknown> extends Builder<T> {
         this.thisArg = thisArg
     }
 
-    // calc() {
-    //     const { cb, thisArg, atom } = this
-
-    //     return cb.call(thisArg, atom.context)
-    // }
-
     *iterator(): StreamIterator<T> {
         const { cb, thisArg, atom } = this
 
@@ -233,8 +164,6 @@ export class FunBuilder<T = unknown> extends Builder<T> {
         } catch (e) {
             newCache = new Err(e as Error)
         }
-
-        //atom.setCache(newCache)
 
         return newCache as any // as Err | Data<T>
     }
