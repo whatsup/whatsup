@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { Dependencies } from './dependencies'
+import { Relations } from './relations'
 import { Cache, Data, Err } from './cache'
 import { Delegation } from './delegation'
 import { Payload, StreamIterator } from './stream'
@@ -22,13 +22,14 @@ export abstract class Atom<T = unknown> {
 
     protected abstract iterator(): StreamIterator<T>
 
-    readonly context: Context 
-    readonly relations: Dependencies
+    readonly context: Context
+    readonly relations: Relations
+
     private cache: Cache<T> | undefined
 
     constructor(parentContext: Context | null) {
-        this.context = new Context(this, parentContext) 
-        this.relations = new Dependencies(this)
+        this.context = new Context(this, parentContext)
+        this.relations = new Relations(this)
     }
 
     get() {
