@@ -25,7 +25,7 @@ class Transaction {
 
         while (i < queue.length) {
             const atom = queue[i++]
-            const consumers = atom.consumers
+            const consumers = atom.relations.consumers
 
             if (atom.rebuild()) {
                 for (const consumer of consumers) {
@@ -42,7 +42,7 @@ class Transaction {
             const stack = new Stack<Iterator<Atom>>()
 
             loop: while (true) {
-                stack.push(atom.consumers[Symbol.iterator]())
+                stack.push(atom.relations.consumers[Symbol.iterator]())
 
                 while (true) {
                     const { done, value } = stack.peek().next()
@@ -59,7 +59,7 @@ class Transaction {
 
                     const counter = this.incrementCounter(value)
 
-                    if (counter > 1 || value.consumers.size === 0) {
+                    if (counter > 1 || !value.relations.hasConsumers()) {
                         continue
                     }
 
@@ -82,7 +82,7 @@ class Transaction {
                     continue
                 }
 
-                this.updateQueue(consumer.consumers)
+                this.updateQueue(consumer.relations.consumers)
             }
         }
     }

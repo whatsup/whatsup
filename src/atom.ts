@@ -22,15 +22,13 @@ export abstract class Atom<T = unknown> {
 
     protected abstract iterator(): StreamIterator<T>
 
-    readonly context: Context
-    readonly consumers: Set<Atom>
-    readonly dependencies: Dependencies
+    readonly context: Context 
+    readonly relations: Dependencies
     private cache: Cache<T> | undefined
 
     constructor(parentContext: Context | null) {
-        this.context = new Context(this, parentContext)
-        this.consumers = new Set()
-        this.dependencies = new Dependencies(this)
+        this.context = new Context(this, parentContext) 
+        this.relations = new Dependencies(this)
     }
 
     get() {
@@ -38,7 +36,7 @@ export abstract class Atom<T = unknown> {
         let atom = this as Atom<T>
 
         while (true) {
-            if (atom.dependencies.link() || atom.consumers.size > 0) {
+            if (atom.relations.link() || atom.relations.hasConsumers()) {
                 if (!atom.hasCache()) {
                     atom.rebuild()
                 }
@@ -67,13 +65,13 @@ export abstract class Atom<T = unknown> {
 
         let input = undefined
 
-        this.dependencies.collect()
+        this.relations.collect()
 
         while (true) {
             const { done, value } = iterator.next(input)
 
             if (done) {
-                this.dependencies.normalize()
+                this.relations.normalize()
 
                 return (value as any) as Err | Data<T> // TODO: remove any
             }
@@ -115,12 +113,12 @@ export abstract class Atom<T = unknown> {
 
     dispose(initiator?: Atom) {
         if (initiator) {
-            this.consumers.delete(initiator)
+            this.relations.deleteConsumer(initiator)
         }
-        if (this.consumers.size === 0) {
+        if (!this.relations.hasConsumers()) {
             this.cache = undefined
             this.context.dispose()
-            this.dependencies.dispose()
+            this.relations.dispose()
         }
     }
 }
