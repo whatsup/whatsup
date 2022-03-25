@@ -26,12 +26,8 @@ class Transaction {
         while (i < queue.length) {
             const atom = queue[i++]
             const consumers = atom.consumers
-            const oldCache = atom.getCache()
-            const newCache = atom.builder.build()
 
-            if (!newCache.equal(oldCache)) {
-                atom.setCache(newCache)
-
+            if (atom.rebuild()) {
                 for (const consumer of consumers) {
                     this.queueCandidates.add(consumer)
                 }

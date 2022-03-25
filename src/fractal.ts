@@ -3,7 +3,6 @@ import { Context } from './context'
 import { GetConsumer } from './command'
 import { Cache } from './cache'
 import { Atom } from './atom'
-import { GenBuilder } from './builder'
 
 const getConsumer = new GetConsumer()
 
@@ -17,9 +16,8 @@ export abstract class Fractal<T> extends Stream<T> {
 
     getAtomFor(consumer: Atom): Atom<T> {
         if (!this.atoms.has(consumer)) {
-            const builder = new GenBuilder(this.whatsUp, this)
             const context = new Context(consumer.context)
-            const atom = new Atom(builder, context)
+            const atom = Atom.create(context, this.whatsUp, this) as Atom<T>
 
             this.atoms.set(consumer, atom)
         }
@@ -37,8 +35,8 @@ export abstract class Fractal<T> extends Stream<T> {
 
 export function fractal<T>(generator: StreamGeneratorFunc<T>, thisArg?: unknown): Fractal<T> {
     return new (class extends Fractal<T> {
-        whatsUp(context: Context): StreamGenerator<T> {
-            return generator.call(thisArg || this, context)
+        *whatsUp(context: Context): StreamGenerator<T> {
+            return yield* generator.call(thisArg || this, context)
         }
     })()
 }

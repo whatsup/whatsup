@@ -1,5 +1,4 @@
 import { Atom } from './atom'
-import { FunBuilder } from './builder'
 import { Cache } from './cache'
 import { Context } from './context'
 
@@ -7,10 +6,9 @@ export class Computed<T = unknown> {
     private atom: Atom<T>
 
     constructor(cb: (context?: Context) => T) {
-        const builder = new FunBuilder(cb, this)
         const context = new Context()
 
-        this.atom = new Atom(builder, context)
+        this.atom = Atom.create(context, cb, this)
     }
 
     *[Symbol.iterator](): Generator<never, T, Cache> {

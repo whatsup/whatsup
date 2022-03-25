@@ -1,5 +1,4 @@
 import { Atom } from './atom'
-import { FunBuilder } from './builder'
 import { Cache } from './cache'
 import { Context } from './context'
 import { transaction } from './scheduler'
@@ -10,10 +9,9 @@ export class Observable<T = unknown> {
 
     constructor(value: T) {
         const cb = () => this.value
-        const builder = new FunBuilder(cb, this)
         const context = new Context()
 
-        this.atom = new Atom(builder, context)
+        this.atom = Atom.create(context, cb, this)
         this.value = value
     }
 
