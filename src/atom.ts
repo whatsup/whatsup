@@ -28,7 +28,7 @@ export abstract class Atom<T = unknown> {
     private cache: Cache<T> | undefined
 
     constructor(parentContext: Context | null) {
-        this.context = new Context(parentContext, this)
+        this.context = new Context(this, parentContext)
         this.consumers = new Set()
         this.dependencies = new Dependencies(this)
     }
@@ -38,20 +38,17 @@ export abstract class Atom<T = unknown> {
         let atom = this as Atom<T>
 
         while (true) {
-            if (atom.dependencies.register() || atom.consumers.size > 0) {
+            if (atom.dependencies.link() || atom.consumers.size > 0) {
                 if (!atom.hasCache()) {
-                    cache = atom.build() as Cache<T>
-
-                    atom.setCache(cache)
-                } else {
-                    cache = atom.getCache()!
+                    atom.rebuild()
                 }
+                cache = atom.getCache()!
             } else {
                 cache = atom.build() as Cache<T>
             }
 
             if (cache instanceof Err) {
-                throw cache!.value
+                throw cache.value
             }
 
             if (cache.value instanceof Delegation) {
@@ -62,15 +59,15 @@ export abstract class Atom<T = unknown> {
             break
         }
 
-        return cache!.value
+        return cache.value
     }
 
     build(): Err | Data<T> {
-        this.dependencies.watch()
-
         const iterator = this.iterator()
 
         let input = undefined
+
+        this.dependencies.collect()
 
         while (true) {
             const { done, value } = iterator.next(input)

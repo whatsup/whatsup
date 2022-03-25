@@ -18,7 +18,7 @@ export class Context implements Context {
     /** @internal */
     private atom!: Atom
 
-    constructor(parent: Context | null, atom: Atom) {
+    constructor(atom: Atom, parent: Context | null) {
         this.atom = atom
         this.parent = parent
     }

@@ -13,7 +13,7 @@ export class Dependencies {
         this.fusty = new Set<Atom>()
     }
 
-    watch() {
+    collect() {
         const { current, fusty } = this
         this.current = fusty
         this.fusty = current
@@ -21,7 +21,7 @@ export class Dependencies {
         WATCH_STACK.push(new Set())
     }
 
-    register() {
+    link() {
         if (WATCH_STACK.length) {
             WATCH_STACK[WATCH_STACK.length - 1].add(this.atom)
             return true
@@ -38,8 +38,8 @@ export class Dependencies {
             dependency.consumers.add(this.atom)
         }
 
-        for (const atom of this.fusty) {
-            atom.dispose(this.atom)
+        for (const dependency of this.fusty) {
+            dependency.dispose(this.atom)
         }
 
         this.fusty.clear()
