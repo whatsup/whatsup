@@ -1,6 +1,5 @@
 import { Atom } from './atom'
 import { Cache } from './cache'
-import { Context } from './context'
 import { transaction } from './scheduler'
 
 export class Observable<T = unknown> {
@@ -9,9 +8,8 @@ export class Observable<T = unknown> {
 
     constructor(value: T) {
         const cb = () => this.value
-        const context = new Context()
 
-        this.atom = Atom.create(context, cb, this)
+        this.atom = Atom.create(null, cb, this)
         this.value = value
     }
 

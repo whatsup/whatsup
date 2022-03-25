@@ -16,8 +16,7 @@ export abstract class Fractal<T> extends Stream<T> {
 
     getAtomFor(consumer: Atom): Atom<T> {
         if (!this.atoms.has(consumer)) {
-            const context = new Context(consumer.context)
-            const atom = Atom.create(context, this.whatsUp, this) as Atom<T>
+            const atom = Atom.create(consumer.context, this.whatsUp, this) as Atom<T>
 
             this.atoms.set(consumer, atom)
         }

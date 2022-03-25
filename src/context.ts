@@ -18,19 +18,9 @@ export class Context implements Context {
     /** @internal */
     private atom!: Atom
 
-    constructor(parent: Context | null = null) {
-        this.parent = parent
-    }
-
-    /** @internal */
-    attachTo(atom: Atom) {
-        if (this.atom) {
-            throw new Error(`Context already attached to another Atom`)
-        }
-
+    constructor(parent: Context | null, atom: Atom) {
         this.atom = atom
-
-        return this
+        this.parent = parent
     }
 
     share<T>(key: Factor<T>, value: T): void

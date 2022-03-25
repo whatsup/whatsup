@@ -6,9 +6,7 @@ export class Computed<T = unknown> {
     private atom: Atom<T>
 
     constructor(cb: (context?: Context) => T) {
-        const context = new Context()
-
-        this.atom = Atom.create(context, cb, this)
+        this.atom = Atom.create(null, cb, this)
     }
 
     *[Symbol.iterator](): Generator<never, T, Cache> {

@@ -8,8 +8,7 @@ export abstract class Cause<T> extends Stream<T> {
 
     constructor() {
         super()
-        const context = new Context()
-        this.atom = Atom.create(context, this.whatsUp, this) as Atom<T>
+        this.atom = Atom.create(null, this.whatsUp, this) as Atom<T>
     }
 
     getAtomFor(): Atom<T> {
