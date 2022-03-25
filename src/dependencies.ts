@@ -1,38 +1,48 @@
 import { Atom } from './atom'
 
-const STACK = [] as Set<Atom>[]
+const WATCH_STACK = [] as Set<Atom>[]
 
 export class Dependencies {
     private readonly atom: Atom
-    private current = new Set<Atom>()
-    private fusty = new Set<Atom>()
+    private current: Set<Atom>
+    private fusty: Set<Atom>
 
     constructor(atom: Atom) {
         this.atom = atom
+        this.current = new Set<Atom>()
+        this.fusty = new Set<Atom>()
     }
 
     watch() {
-        STACK.push(new Set())
-        this.swap()
+        const { current, fusty } = this
+        this.current = fusty
+        this.fusty = current
+
+        WATCH_STACK.push(new Set())
     }
 
     register() {
-        if (STACK.length) {
-            STACK[STACK.length - 1].add(this.atom)
+        if (WATCH_STACK.length) {
+            WATCH_STACK[WATCH_STACK.length - 1].add(this.atom)
             return true
         }
         return false
     }
 
     normalize() {
-        const atoms = STACK.pop()!
+        const atoms = WATCH_STACK.pop()!
 
         for (const dependency of atoms) {
-            this.add(dependency)
+            this.current.add(dependency)
+            this.fusty.delete(dependency)
             dependency.consumers.add(this.atom)
         }
 
-        this.disposeUnused()
+        for (const atom of this.fusty) {
+            atom.dispose(this.atom)
+        }
+
+        this.fusty.clear()
     }
 
     dispose() {
@@ -40,23 +50,5 @@ export class Dependencies {
             atom.dispose(this.atom)
         }
         this.current.clear()
-    }
-
-    private add(atom: Atom) {
-        this.current.add(atom)
-        this.fusty.delete(atom)
-    }
-
-    private swap() {
-        const { current, fusty } = this
-        this.current = fusty
-        this.fusty = current
-    }
-
-    private disposeUnused() {
-        for (const atom of this.fusty) {
-            atom.dispose(this.atom)
-        }
-        this.fusty.clear()
     }
 }
