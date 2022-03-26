@@ -6,13 +6,13 @@ export class Relations {
     private readonly atom: Atom
     readonly consumers: Set<Atom>
     private dependencies: Set<Atom>
-    private disposable: Set<Atom>
+    private garbage: Set<Atom>
 
     constructor(atom: Atom) {
         this.atom = atom
         this.consumers = new Set<Atom>()
         this.dependencies = new Set<Atom>()
-        this.disposable = new Set<Atom>()
+        this.garbage = new Set<Atom>()
     }
 
     hasConsumers() {
@@ -28,10 +28,10 @@ export class Relations {
     }
 
     collect() {
-        const { dependencies, disposable } = this
+        const { dependencies, garbage } = this
 
-        this.dependencies = disposable
-        this.disposable = dependencies
+        this.dependencies = garbage
+        this.garbage = dependencies
 
         WATCH_STACK.push(new Set())
     }
@@ -41,6 +41,7 @@ export class Relations {
             WATCH_STACK[WATCH_STACK.length - 1].add(this.atom)
             return true
         }
+
         return false
     }
 
@@ -49,21 +50,23 @@ export class Relations {
 
         for (const dependency of atoms) {
             this.dependencies.add(dependency)
-            this.disposable.delete(dependency)
+            this.garbage.delete(dependency)
+
             dependency.relations.addConsumer(this.atom)
         }
 
-        for (const dependency of this.disposable) {
+        for (const dependency of this.garbage) {
             dependency.dispose(this.atom)
         }
 
-        this.disposable.clear()
+        this.garbage.clear()
     }
 
     dispose() {
         for (const atom of this.dependencies) {
             atom.dispose(this.atom)
         }
+
         this.dependencies.clear()
     }
 }

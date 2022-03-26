@@ -6,7 +6,7 @@ export class Delegation<T> {
 
 const MAP = new WeakMap<Stream, Delegation<unknown>>()
 
-export function delegate<T>(stream: Stream<T>) {
+export const delegate = <T>(stream: Stream<T>) => {
     if (!MAP.has(stream)) {
         MAP.set(stream, new Delegation(stream))
     }

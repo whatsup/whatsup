@@ -167,7 +167,7 @@ export class Context implements Context {
     }
 
     update() {
-        transaction((t) => t.include(this.atom))
+        transaction((t) => t.addEntry(this.atom))
     }
 
     /** @internal */

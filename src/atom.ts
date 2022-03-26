@@ -8,18 +8,9 @@ import { isGenerator } from './utils'
 import { GET_CONSUMER } from './symbols'
 
 export abstract class Atom<T = unknown> {
-    static create<T>(parentCtx: Context | null, producer: (ctx?: Context) => T | Generator<T>, thisArg: unknown) {
-        if (isGenerator(producer)) {
-            return new GenAtom(parentCtx, producer, thisArg) as Atom<T>
-        }
-        return new FunAtom(parentCtx, producer, thisArg) as Atom<T>
-    }
-
     protected abstract iterator(): StreamIterator<T>
-
     readonly context: Context
     readonly relations: Relations
-
     private cache: Cache<T> | undefined
 
     constructor(parentCtx: Context | null) {
@@ -226,4 +217,12 @@ class FunAtom<T> extends Atom<T> {
             return new Data(value) as any
         }
     }
+}
+
+export const atom = <T>(parentCtx: Context | null, producer: (ctx?: Context) => T | Generator<T>, thisArg: unknown) => {
+    if (isGenerator(producer)) {
+        return new GenAtom(parentCtx, producer, thisArg) as Atom<T>
+    }
+
+    return new FunAtom(parentCtx, producer, thisArg) as Atom<T>
 }

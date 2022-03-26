@@ -2,7 +2,7 @@ import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { GET_CONSUMER } from './symbols'
 import { Cache } from './cache'
-import { Atom } from './atom'
+import { atom, Atom } from './atom'
 
 export abstract class Fractal<T> extends Stream<T> {
     private readonly atoms: WeakMap<Atom, Atom<T>>
@@ -14,9 +14,9 @@ export abstract class Fractal<T> extends Stream<T> {
 
     getAtomFor(consumer: Atom): Atom<T> {
         if (!this.atoms.has(consumer)) {
-            const atom = Atom.create(consumer.context, this.whatsUp, this) as Atom<T>
+            const dependency = atom(consumer.context, this.whatsUp, this) as Atom<T>
 
-            this.atoms.set(consumer, atom)
+            this.atoms.set(consumer, dependency)
         }
 
         return this.atoms.get(consumer)!

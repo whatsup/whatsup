@@ -1,14 +1,14 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { Cache } from './cache'
-import { Atom } from './atom'
+import { atom, Atom } from './atom'
 
 export abstract class Cause<T> extends Stream<T> {
     private readonly atom: Atom<T>
 
     constructor() {
         super()
-        this.atom = Atom.create(null, this.whatsUp, this) as Atom<T>
+        this.atom = atom(null, this.whatsUp, this) as Atom<T>
     }
 
     getAtomFor(): Atom<T> {

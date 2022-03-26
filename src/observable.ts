@@ -1,4 +1,4 @@
-import { Atom } from './atom'
+import { atom, Atom } from './atom'
 import { Cache } from './cache'
 import { transaction } from './scheduler'
 
@@ -9,7 +9,7 @@ export class Observable<T = unknown> {
     constructor(value: T) {
         const cb = () => this.value
 
-        this.atom = Atom.create(null, cb, this)
+        this.atom = atom(null, cb, this)
         this.value = value
     }
 
@@ -24,7 +24,7 @@ export class Observable<T = unknown> {
     set(value: T) {
         this.value = value
 
-        transaction((t) => t.include(this.atom))
+        transaction((t) => t.addEntry(this.atom))
     }
 }
 

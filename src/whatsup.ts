@@ -1,11 +1,11 @@
 import { Stream } from './stream'
-import { Atom } from './atom'
+import { atom } from './atom'
 import { transaction } from './scheduler'
 
 export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
 
-export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?: ErrorHandler) {
+export const whatsUp = <T>(target: Stream<T>, onData?: DataHandler<T>, onError?: ErrorHandler) => {
     function* generator() {
         while (true) {
             try {
@@ -19,13 +19,14 @@ export function whatsUp<T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
                     onError(e as Error)
                 }
             }
+
             yield
         }
     }
 
-    const atom = Atom.create(null, generator, undefined)
+    const root = atom(null, generator, undefined)
 
-    transaction((t) => t.include(atom))
+    transaction((t) => t.addEntry(root))
 
-    return () => atom.dispose()
+    return () => root.dispose()
 }

@@ -1,20 +1,24 @@
 import { Atom } from './atom'
 
 class Transaction {
-    initializing = true
     readonly key = Symbol('Transaction key')
     private readonly queue = [] as Atom[]
     private readonly queueCandidates = new Set<Atom>()
     private readonly counters = new Map<Atom, number>()
+    private started = false
 
-    include(atom: Atom) {
+    get pending() {
+        return !this.started
+    }
+
+    addEntry(atom: Atom) {
         if (!this.queue.includes(atom)) {
             this.queue.push(atom)
         }
     }
 
     run() {
-        this.initializing = false
+        this.started = true
 
         const { queue } = this
 
@@ -86,19 +90,19 @@ class Transaction {
 let master: Transaction | null = null
 let slave: Transaction | null = null
 
-export function transaction<T>(cb: (transaction: Transaction) => T): T {
+export const transaction = <T>(cb: (transaction: Transaction) => T): T => {
     let key: symbol
     let transaction: Transaction
 
     if (master === null) {
         transaction = master = new Transaction()
         key = transaction.key
-    } else if (master.initializing) {
+    } else if (master.pending) {
         transaction = master
     } else if (slave === null) {
         transaction = slave = new Transaction()
         key = transaction.key
-    } else if (slave.initializing) {
+    } else if (slave.pending) {
         transaction = slave
     } else {
         throw 'Task error'
@@ -124,6 +128,6 @@ export function transaction<T>(cb: (transaction: Transaction) => T): T {
     return result
 }
 
-export function action<T>(cb: () => T) {
-    return transaction(cb)
+export const action = <T>(cb: () => T) => {
+    return transaction(() => cb())
 }

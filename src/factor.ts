@@ -12,6 +12,6 @@ export class Factor<T = unknown> {
     }
 }
 
-export function factor<T>(defaultValue?: T) {
+export const factor = <T>(defaultValue?: T) => {
     return new Factor(defaultValue)
 }
