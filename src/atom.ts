@@ -5,7 +5,7 @@ import { Delegation } from './delegation'
 import { Payload, StreamIterator } from './stream'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
-import { Command, GetConsumer } from './command'
+import { GET_CONSUMER } from './symbols'
 
 export abstract class Atom<T = unknown> {
     static create<T>(parentCtx: Context | null, producer: (ctx?: Context) => T | Generator<T>, thisArg: unknown) {
@@ -144,7 +144,7 @@ class GenAtom<T> extends Atom<T> {
         while (true) {
             let done: boolean
             let error: boolean
-            let value: Command | Payload<T> | Error
+            let value: Symbol | Payload<T> | Error
 
             try {
                 const iterator = stack[stack.length - 1]
@@ -163,7 +163,7 @@ class GenAtom<T> extends Atom<T> {
                 stack.pop()
             }
 
-            if (value instanceof GetConsumer) {
+            if (value === GET_CONSUMER) {
                 input = this
                 continue
             }
@@ -208,7 +208,7 @@ class FunAtom<T> extends Atom<T> {
         const { producer, thisArg, context } = this
 
         let error: boolean
-        let value: Command | Payload<T> | Error
+        let value: Payload<T> | Error
 
         try {
             value = producer.call(thisArg, context)

@@ -1,11 +1,10 @@
 import { Context } from './context'
-import { Command } from './command'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { Atom } from './atom'
 
 export type Payload<T> = T | Delegation<T> | Mutator<T>
-export type StreamIterator<T> = Iterator<Payload<T> | Command, Payload<T>, unknown>
+export type StreamIterator<T> = Iterator<Payload<T> | Symbol, Payload<T>, unknown>
 export type StreamGenerator<T> = Generator<Payload<T>, Payload<T> | void | never>
 export type StreamGeneratorFunc<T> = (context: Context) => StreamGenerator<T> //| (() => StreamGenerator<T>)
 

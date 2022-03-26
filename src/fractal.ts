@@ -1,10 +1,8 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
-import { GetConsumer } from './command'
+import { GET_CONSUMER } from './symbols'
 import { Cache } from './cache'
 import { Atom } from './atom'
-
-const getConsumer = new GetConsumer()
 
 export abstract class Fractal<T> extends Stream<T> {
     private readonly atoms: WeakMap<Atom, Atom<T>>
@@ -25,7 +23,7 @@ export abstract class Fractal<T> extends Stream<T> {
     }
 
     *[Symbol.iterator](): Generator<never, T, Cache> {
-        const consumer = ((yield getConsumer as never) as any) as Atom
+        const consumer = ((yield GET_CONSUMER as never) as any) as Atom
         const atom = this.getAtomFor(consumer)
 
         return atom.get()
