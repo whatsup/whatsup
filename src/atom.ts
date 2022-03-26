@@ -56,7 +56,7 @@ export abstract class Atom<T = unknown> {
         return cache.value
     }
 
-    build(): Err | Data<T> {
+    build(): Cache<T> {
         const iterator = this.iterator()
 
         let input = undefined
@@ -69,7 +69,7 @@ export abstract class Atom<T = unknown> {
             if (done) {
                 this.relations.normalize()
 
-                return (value as any) as Err | Data<T> // TODO: remove any
+                return (value as any) as Cache<T> // TODO: remove any
             }
 
             if (value instanceof Mutator) {

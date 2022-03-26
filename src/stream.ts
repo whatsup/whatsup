@@ -6,7 +6,7 @@ import { Atom } from './atom'
 export type Payload<T> = T | Delegation<T> | Mutator<T>
 export type StreamIterator<T> = Iterator<Payload<T> | Symbol, Payload<T>, unknown>
 export type StreamGenerator<T> = Generator<Payload<T>, Payload<T> | void | never>
-export type StreamGeneratorFunc<T> = (context: Context) => StreamGenerator<T> //| (() => StreamGenerator<T>)
+export type StreamGeneratorFunc<T> = (ctx: Context) => StreamGenerator<T> //| (() => StreamGenerator<T>)
 
 /*
 // This is Name
@@ -28,15 +28,9 @@ whatsUp(user, (v)=> console.log(v))
 //> {name: 'John'}
 */
 
-export interface StreamLike<T = unknown> {
-    whatsUp(context?: Context): StreamGenerator<T>
-}
-
-export const iterator = Symbol('whatsup iterator')
-
-export abstract class Stream<T = unknown> implements StreamLike<T> {
+export abstract class Stream<T = unknown> {
     abstract getAtomFor(atom: Atom): Atom<T>
-    abstract whatsUp(context?: Context): StreamGenerator<T>
+    abstract whatsUp(ctx?: Context): StreamGenerator<T>
     abstract [Symbol.iterator](): Generator<never, T, unknown>
 
     // *[iterator](command: Handshake): Generator<never, T, unknown> {
