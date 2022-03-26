@@ -8,15 +8,11 @@ import { isGenerator } from './utils'
 import { Command, GetConsumer } from './command'
 
 export abstract class Atom<T = unknown> {
-    static create<T>(
-        parentContext: Context | null,
-        producer: (context?: Context) => T | Generator<T>,
-        thisArg: unknown
-    ) {
+    static create<T>(parentCtx: Context | null, producer: (ctx?: Context) => T | Generator<T>, thisArg: unknown) {
         if (isGenerator(producer)) {
-            return new GenAtom(parentContext, producer, thisArg) as Atom<T>
+            return new GenAtom(parentCtx, producer, thisArg) as Atom<T>
         }
-        return new FunAtom(parentContext, producer, thisArg) as Atom<T>
+        return new FunAtom(parentCtx, producer, thisArg) as Atom<T>
     }
 
     protected abstract iterator(): StreamIterator<T>
@@ -26,8 +22,8 @@ export abstract class Atom<T = unknown> {
 
     private cache: Cache<T> | undefined
 
-    constructor(parentContext: Context | null) {
-        this.context = new Context(this, parentContext)
+    constructor(parentCtx: Context | null) {
+        this.context = new Context(this, parentCtx)
         this.relations = new Relations(this)
     }
 
@@ -128,8 +124,9 @@ class GenAtom<T> extends Atom<T> {
     private readonly producer: (context?: Context) => Generator<T>
     private readonly thisArg: unknown
 
-    constructor(parentContext: Context | null, producer: (context?: Context) => Generator<T>, thisArg: unknown) {
-        super(parentContext)
+    constructor(parentCtx: Context | null, producer: (ctx?: Context) => Generator<T>, thisArg: unknown) {
+        super(parentCtx)
+
         this.stack = []
         this.producer = producer
         this.thisArg = thisArg
@@ -200,8 +197,9 @@ class FunAtom<T> extends Atom<T> {
     private readonly producer: (context?: Context) => T
     private readonly thisArg: unknown
 
-    constructor(parentContext: Context | null, producer: (context?: Context) => T, thisArg: unknown) {
-        super(parentContext)
+    constructor(parentCtx: Context | null, producer: (ctx?: Context) => T, thisArg: unknown) {
+        super(parentCtx)
+
         this.producer = producer
         this.thisArg = thisArg
     }
