@@ -5,7 +5,6 @@ import { Delegation } from './delegation'
 import { Payload, StreamIterator } from './stream'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
-import { Stack } from './stack'
 import { Command, GetConsumer } from './command'
 
 export abstract class Atom<T = unknown> {
@@ -125,13 +124,13 @@ export abstract class Atom<T = unknown> {
 }
 
 class GenAtom<T> extends Atom<T> {
-    private readonly stack: Stack<StreamIterator<T>>
+    private readonly stack: StreamIterator<T>[]
     private readonly producer: (context?: Context) => Generator<T>
     private readonly thisArg: unknown
 
     constructor(parentContext: Context | null, producer: (context?: Context) => Generator<T>, thisArg: unknown) {
         super(parentContext)
-        this.stack = new Stack()
+        this.stack = []
         this.producer = producer
         this.thisArg = thisArg
     }
@@ -139,7 +138,7 @@ class GenAtom<T> extends Atom<T> {
     protected *iterator(): StreamIterator<T> {
         const { stack, producer, thisArg, context } = this
 
-        if (stack.empty) {
+        if (stack.length == 0) {
             stack.push(producer.call(thisArg, context) as StreamIterator<T>)
         }
 
@@ -151,7 +150,8 @@ class GenAtom<T> extends Atom<T> {
             let value: Command | Payload<T> | Error
 
             try {
-                const result = stack.peek().next(input)
+                const iterator = stack[stack.length - 1]
+                const result = iterator.next(input)
 
                 value = result.value!
                 done = result.done!
@@ -179,7 +179,7 @@ class GenAtom<T> extends Atom<T> {
                 input = new Data(value)
             }
 
-            if (done && !stack.empty) {
+            if (done && stack.length > 0) {
                 continue
             }
 
@@ -190,7 +190,7 @@ class GenAtom<T> extends Atom<T> {
     dispose(initiator?: Atom) {
         super.dispose(initiator)
 
-        while (!this.stack.empty) {
+        while (this.stack.length > 0) {
             this.stack.pop()!.return!()
         }
     }

@@ -1,5 +1,4 @@
 import { Atom } from './atom'
-import { Stack } from './stack'
 
 class Transaction {
     initializing = true
@@ -19,7 +18,9 @@ class Transaction {
 
         const { queue } = this
 
-        this.incrementCounters()
+        for (let atom of queue) {
+            this.incrementCounters(atom)
+        }
 
         let i = 0
 
@@ -33,45 +34,23 @@ class Transaction {
                 }
             }
 
-            this.updateQueue(consumers)
+            this.decrementCounters(consumers)
         }
     }
 
-    private incrementCounters() {
-        root: for (let atom of this.queue) {
-            const stack = new Stack<Iterator<Atom>>()
+    private incrementCounters(atom: Atom) {
+        for (const consumer of atom.relations.consumers) {
+            const counter = this.incrementCounter(consumer)
 
-            loop: while (true) {
-                stack.push(atom.relations.consumers[Symbol.iterator]())
-
-                while (true) {
-                    const { done, value } = stack.peek().next()
-
-                    if (done) {
-                        stack.pop()
-
-                        if (!stack.empty) {
-                            continue
-                        }
-
-                        continue root
-                    }
-
-                    const counter = this.incrementCounter(value)
-
-                    if (counter > 1 || !value.relations.hasConsumers()) {
-                        continue
-                    }
-
-                    atom = value
-
-                    continue loop
-                }
+            if (counter > 1 || !consumer.relations.hasConsumers()) {
+                continue
             }
+
+            this.incrementCounters(consumer)
         }
     }
 
-    private updateQueue(consumers: Iterable<Atom>) {
+    private decrementCounters(consumers: Iterable<Atom>) {
         for (const consumer of consumers) {
             const counter = this.decrementCounter(consumer)
 
@@ -82,7 +61,7 @@ class Transaction {
                     continue
                 }
 
-                this.updateQueue(consumer.relations.consumers)
+                this.decrementCounters(consumer.relations.consumers)
             }
         }
     }
