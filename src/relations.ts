@@ -37,7 +37,7 @@ export class Relations {
     }
 
     link() {
-        if (WATCH_STACK.length) {
+        if (WATCH_STACK.length > 0) {
             WATCH_STACK[WATCH_STACK.length - 1].add(this.atom)
             return true
         }
