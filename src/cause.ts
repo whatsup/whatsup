@@ -1,6 +1,6 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
-import { Cache } from './cache'
+import { Data } from './data'
 import { atom, Atom } from './atom'
 
 export abstract class Cause<T> extends Stream<T> {
@@ -15,7 +15,7 @@ export abstract class Cause<T> extends Stream<T> {
         return this.atom
     }
 
-    *[Symbol.iterator](): Generator<never, T, Cache> {
+    *[Symbol.iterator](): Generator<never, T, Data> {
         return this.atom.get()
     }
 }

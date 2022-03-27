@@ -1,5 +1,5 @@
 import { atom, Atom } from './atom'
-import { Cache } from './cache'
+import { Data } from './data'
 import { transaction } from './scheduler'
 
 export class Observable<T = unknown> {
@@ -13,7 +13,7 @@ export class Observable<T = unknown> {
         this.value = value
     }
 
-    *[Symbol.iterator](): Generator<never, T, Cache> {
+    *[Symbol.iterator](): Generator<never, T, Data> {
         return this.get() as any
     }
 

@@ -1,7 +1,7 @@
 import { Stream, StreamGenerator, StreamGeneratorFunc } from './stream'
 import { Context } from './context'
 import { GET_CONSUMER } from './symbols'
-import { Cache } from './cache'
+import { Data } from './data'
 import { atom, Atom } from './atom'
 
 export abstract class Fractal<T> extends Stream<T> {
@@ -22,7 +22,7 @@ export abstract class Fractal<T> extends Stream<T> {
         return this.atoms.get(consumer)!
     }
 
-    *[Symbol.iterator](): Generator<never, T, Cache> {
+    *[Symbol.iterator](): Generator<never, T, Data> {
         const consumer = ((yield GET_CONSUMER as never) as any) as Atom
         const atom = this.getAtomFor(consumer)
 

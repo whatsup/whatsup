@@ -1,5 +1,5 @@
 import { atom, Atom } from './atom'
-import { Cache } from './cache'
+import { Data } from './data'
 import { Context } from './context'
 
 export class Computed<T = unknown> {
@@ -9,7 +9,7 @@ export class Computed<T = unknown> {
         this.atom = atom(null, cb, this)
     }
 
-    *[Symbol.iterator](): Generator<never, T, Cache> {
+    *[Symbol.iterator](): Generator<never, T, Data> {
         return this.get() as any
     }
 

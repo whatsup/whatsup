@@ -1,6 +1,6 @@
 import { Context } from './context'
 import { Relations } from './relations'
-import { Cache, Data, Err } from './cache'
+import { Data, Err } from './data'
 import { Delegation } from './delegation'
 import { Payload, StreamIterator } from './stream'
 import { Mutator } from './mutator'
@@ -11,7 +11,7 @@ export abstract class Atom<T = unknown> {
     protected abstract iterator(): StreamIterator<T>
     readonly context: Context
     readonly relations: Relations
-    private cache: Cache<T> | undefined
+    private cache: Data<T> | undefined
 
     constructor(parentCtx: Context | null) {
         this.context = new Context(this, parentCtx)
@@ -19,7 +19,7 @@ export abstract class Atom<T = unknown> {
     }
 
     get() {
-        let cache: Cache<T>
+        let cache: Data<T>
         let atom = this as Atom<T>
 
         while (true) {
@@ -29,7 +29,7 @@ export abstract class Atom<T = unknown> {
                 }
                 cache = atom.cache!
             } else {
-                cache = atom.build() as Cache<T>
+                cache = atom.build()
             }
 
             if (cache instanceof Err) {
@@ -47,7 +47,7 @@ export abstract class Atom<T = unknown> {
         return cache.value
     }
 
-    build(): Cache<T> {
+    build(): Data<T> {
         const iterator = this.iterator()
 
         let input = undefined
@@ -60,7 +60,7 @@ export abstract class Atom<T = unknown> {
             if (done) {
                 this.relations.normalize()
 
-                return (value as any) as Cache<T> // TODO: remove any
+                return (value as any) as Data<T> // TODO: remove any
             }
 
             if (value instanceof Mutator) {
@@ -75,7 +75,11 @@ export abstract class Atom<T = unknown> {
     rebuild() {
         const newCache = this.build()
 
-        if (!newCache.equal(this.cache)) {
+        if (
+            this.cache === undefined ||
+            this.cache.constructor !== newCache.constructor ||
+            this.cache.value !== newCache.value
+        ) {
             this.cache = newCache
 
             return true
