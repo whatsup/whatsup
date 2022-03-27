@@ -24,10 +24,10 @@ export abstract class Atom<T = unknown> {
 
         while (true) {
             if (atom.relations.link() || atom.relations.hasConsumers()) {
-                if (!atom.hasCache()) {
+                if (atom.cache === undefined) {
                     atom.rebuild()
                 }
-                cache = atom.getCache()!
+                cache = atom.cache!
             } else {
                 cache = atom.build() as Cache<T>
             }
@@ -64,8 +64,7 @@ export abstract class Atom<T = unknown> {
             }
 
             if (value instanceof Mutator) {
-                const prevValue = this.hasCache() ? this.getCache()!.value : undefined
-                input = value.mutate(prevValue as T | undefined)
+                input = value.mutate(this.cache?.value)
                 continue
             }
 
@@ -74,28 +73,15 @@ export abstract class Atom<T = unknown> {
     }
 
     rebuild() {
-        const oldCache = this.getCache()
         const newCache = this.build()
 
-        if (!newCache.equal(oldCache)) {
-            this.setCache(newCache as Cache<T>)
+        if (!newCache.equal(this.cache)) {
+            this.cache = newCache
 
             return true
         }
 
         return false
-    }
-
-    hasCache() {
-        return this.cache !== undefined
-    }
-
-    getCache() {
-        return this.cache
-    }
-
-    setCache(cache: Cache<T>) {
-        return (this.cache = cache)
     }
 
     dispose(initiator?: Atom) {
