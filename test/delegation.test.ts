@@ -1,16 +1,16 @@
 import { delegate } from '../src/delegation'
-import { fractal } from '../src/fractal'
-import { conse } from '../src/conse'
+import { component } from '../src/component'
+import { observable } from '../src/observable'
 import { whatsUp } from '../src/whatsup'
 
 describe('Delegating', () => {
     describe('test delegation', () => {
         const mock1 = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Trigger1 = conse(1)
-        const Trigger2 = conse(2)
-        const Trigger3 = conse(3)
-        const One = fractal(function* () {
+        const Trigger1 = observable(1)
+        const Trigger2 = observable(2)
+        const Trigger3 = observable(3)
+        const One = component(function* () {
             while (true) {
                 if (mock1(yield* Trigger1) > 0) {
                     yield delegate(Two)
@@ -19,10 +19,10 @@ describe('Delegating', () => {
                 }
             }
         })
-        const Two = fractal(function* () {
+        const Two = component(function* () {
             while (true) yield yield* Trigger2
         })
-        const App = fractal(function* () {
+        const App = component(function* () {
             return mock2(yield* One)
         })
 
@@ -62,9 +62,9 @@ describe('Delegating', () => {
     describe('test when executor throw excepton', () => {
         const mock1 = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Trigger1 = conse(false)
-        const Trigger2 = conse(2)
-        const One = fractal(function* () {
+        const Trigger1 = observable(false)
+        const Trigger2 = observable(2)
+        const One = component(function* () {
             while (true) {
                 if (yield* Trigger1) {
                     yield delegate(Two)
@@ -73,10 +73,10 @@ describe('Delegating', () => {
                 }
             }
         })
-        const Two = fractal(function* () {
+        const Two = component(function* () {
             throw 'TWO_ERROR'
         })
-        const App = fractal(function* () {
+        const App = component(function* () {
             return yield* One
         })
 
@@ -113,10 +113,10 @@ describe('Delegating', () => {
     describe('test when executor throw delegation', () => {
         const mock1 = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Trigger1 = conse(false)
-        const Trigger2 = conse(2)
-        const Trigger3 = conse(3)
-        const One = fractal(function* () {
+        const Trigger1 = observable(false)
+        const Trigger2 = observable(2)
+        const Trigger3 = observable(3)
+        const One = component(function* () {
             while (true) {
                 if (yield* Trigger1) {
                     throw delegate(Two)
@@ -125,10 +125,10 @@ describe('Delegating', () => {
                 }
             }
         })
-        const Two = fractal(function* () {
+        const Two = component(function* () {
             return yield* Trigger3
         })
-        const App = fractal(function* () {
+        const App = component(function* () {
             return yield* One
         })
 

@@ -1,22 +1,22 @@
 import { whatsUp } from '../src/whatsup'
-import { Observable } from '../src/observable'
+import { observable } from '../src/observable'
 
 describe('Observable', () => {
     it(`should react on change`, () => {
         const mock = jest.fn()
-        const observable = new Observable(1)
+        const num = observable(1)
 
-        whatsUp(observable as any, mock)
+        whatsUp(num as any, mock)
 
         expect(mock).toBeCalledWith(1)
 
-        observable.set(2)
+        num.set(2)
 
         expect(mock).toBeCalledWith(2)
     })
 
     it(`should return current value`, () => {
-        const name = new Observable('John')
+        const name = observable('John')
 
         expect(name.get()).toBe('John')
     })

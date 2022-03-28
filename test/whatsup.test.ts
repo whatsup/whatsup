@@ -1,11 +1,11 @@
 import { whatsUp } from '../src/whatsup'
-import { cause } from '../src/cause'
+import { computed } from '../src/computed'
 
 describe('whatsUp', () => {
     it(`should call onData callback when data received`, () => {
         const dataMock = jest.fn()
         const errMock = jest.fn()
-        const target = cause(function* () {
+        const target = computed(function* () {
             yield 'Data'
         })
 
@@ -18,7 +18,7 @@ describe('whatsUp', () => {
     it(`should call onError callback when error received`, () => {
         const dataMock = jest.fn()
         const errMock = jest.fn()
-        const target = cause(function* () {
+        const target = computed(function* () {
             throw 'Error'
         })
 

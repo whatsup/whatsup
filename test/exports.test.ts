@@ -1,7 +1,7 @@
 import { Stream } from '../src/stream'
-import { fractal, Fractal } from '../src/fractal'
-import { cause, Cause } from '../src/cause'
-import { conse, Conse } from '../src/conse'
+import { component, Component } from '../src/component'
+import { computed, Computed } from '../src/computed'
+import { observable, Observable } from '../src/observable'
 import { list, List } from '../src/list'
 import { whatsUp } from '../src/whatsup'
 import { factor, Factor } from '../src/factor'
@@ -11,8 +11,8 @@ import { Event } from '../src/event'
 
 import {
     Stream as _Stream,
-    fractal as _fractal,
-    Fractal as _Fractal,
+    component as _component,
+    Component as _Component,
     list as _list,
     List as _List,
     whatsUp as _whatsUp,
@@ -22,16 +22,16 @@ import {
     mutator as _mutator,
     Mutator as _Mutator,
     Event as _Event,
-    cause as _cause,
-    Cause as _Cause,
-    conse as _conse,
-    Conse as _Conse,
+    computed as _computed,
+    Computed as _Computed,
+    observable as _observable,
+    Observable as _Observable,
 } from '../src/index'
 
 it('Exports', () => {
     expect(Stream).toBe(_Stream)
-    expect(fractal).toBe(_fractal)
-    expect(Fractal).toBe(_Fractal)
+    expect(component).toBe(_component)
+    expect(Component).toBe(_Component)
     expect(list).toBe(_list)
     expect(List).toBe(_List)
     expect(whatsUp).toBe(_whatsUp)
@@ -41,8 +41,8 @@ it('Exports', () => {
     expect(mutator).toBe(_mutator)
     expect(Mutator).toBe(_Mutator)
     expect(Event).toBe(_Event)
-    expect(cause).toBe(_cause)
-    expect(Cause).toBe(_Cause)
-    expect(conse).toBe(_conse)
-    expect(Conse).toBe(_Conse)
+    expect(computed).toBe(_computed)
+    expect(Computed).toBe(_Computed)
+    expect(observable).toBe(_observable)
+    expect(Observable).toBe(_Observable)
 })

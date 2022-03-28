@@ -1,16 +1,16 @@
 import { delegate } from '../src/delegation'
-import { conse } from '../src/conse'
-import { fractal } from '../src/fractal'
+import { observable } from '../src/observable'
+import { component } from '../src/component'
 import { whatsUp } from '../src/whatsup'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
         const mock = jest.fn((v) => v)
-        const Balance = conse(33)
-        const App = fractal(function* () {
+        const Balance = observable(33)
+        const App = component(function* () {
             while (true) yield `User ${yield* User}`
         })
-        const User = fractal(function* () {
+        const User = component(function* () {
             while (true) {
                 try {
                     yield `Wallet ${yield* Wallet}`
@@ -19,7 +19,7 @@ describe('Errors', () => {
                 }
             }
         })
-        const Wallet = fractal(function* () {
+        const Wallet = component(function* () {
             while (true) {
                 if ((yield* Balance) <= 0) {
                     throw 'ZEROBALANCE'
@@ -50,11 +50,11 @@ describe('Errors', () => {
 
     describe('test catch error on other parent levels (error propagation)', () => {
         const mock = jest.fn((v) => v)
-        const Balance = conse(33)
-        const App = fractal(function* () {
+        const Balance = observable(33)
+        const App = component(function* () {
             while (true) yield `Parent ${yield* Parent}`
         })
-        const Parent = fractal(function* () {
+        const Parent = component(function* () {
             while (true) {
                 try {
                     yield `User ${yield* User}`
@@ -63,12 +63,12 @@ describe('Errors', () => {
                 }
             }
         })
-        const User = fractal(function* () {
+        const User = component(function* () {
             while (true) {
                 yield `Wallet ${yield* Wallet}`
             }
         })
-        const Wallet = fractal(function* () {
+        const Wallet = component(function* () {
             while (true) {
                 if ((yield* Balance) <= 0) {
                     throw 'ZEROBALANCE'
@@ -99,11 +99,11 @@ describe('Errors', () => {
 
     describe('test throw & catch error with alive error data', () => {
         const mock = jest.fn((v) => v)
-        const Balance = conse(10)
-        const App = fractal(function* () {
+        const Balance = observable(10)
+        const App = component(function* () {
             while (true) yield `User ${yield* User}`
         })
-        const User = fractal(function* () {
+        const User = component(function* () {
             while (true) {
                 try {
                     yield `Wallet ${yield* Wallet}`
@@ -112,7 +112,7 @@ describe('Errors', () => {
                 }
             }
         })
-        const Wallet = fractal(function* () {
+        const Wallet = component(function* () {
             while (true) {
                 const balance = yield* Balance
                 if (balance <= 0) {
@@ -150,12 +150,12 @@ describe('Errors', () => {
 
     describe('test throw & catch error with alive error & catcher data', () => {
         const mock = jest.fn((v) => v)
-        const Count = conse(0)
-        const Balance = conse(100)
-        const App = fractal(function* () {
+        const Count = observable(0)
+        const Balance = observable(100)
+        const App = component(function* () {
             while (true) yield `User ${yield* User}`
         })
-        const User = fractal(function* () {
+        const User = component(function* () {
             while (true) {
                 try {
                     yield `Wallet ${yield* Wallet}`
@@ -164,7 +164,7 @@ describe('Errors', () => {
                 }
             }
         })
-        const Wallet = fractal(function* () {
+        const Wallet = component(function* () {
             while (true) {
                 const balance = yield* Balance
                 if (balance <= 0) {
@@ -209,21 +209,21 @@ describe('Errors', () => {
     describe('test catch error with delegating', () => {
         const mock = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Toggle = conse(true)
-        const Balance = conse(33)
-        const App = fractal(function* () {
+        const Toggle = observable(true)
+        const Balance = observable(33)
+        const App = component(function* () {
             while (true) {
                 yield `User ${yield* User}`
             }
         })
-        const User = fractal(function* () {
+        const User = component(function* () {
             if (yield* Toggle) {
                 throw delegate(Wallet)
             } else {
                 return delegate(Wallet)
             }
         })
-        const Wallet = fractal(function* () {
+        const Wallet = component(function* () {
             while (true) {
                 yield `Balance ${yield* Balance}`
             }

@@ -7,8 +7,8 @@ export type Payload<T> = T | Delegation<T> | Mutator<T>
 export type StreamIterator<T> = Iterator<Payload<T> | Symbol, Payload<T>, unknown>
 export type StreamGenerator<T> = Generator<Payload<T>, Payload<T> | void | never>
 export type StreamGeneratorFunc<T> = (ctx: Context) => StreamGenerator<T> //| (() => StreamGenerator<T>)
-export type GenProducer<T> = (ctx?: Context) => StreamGenerator<T>
-export type FunProducer<T> = (ctx?: Context) => Payload<T>
+export type GenProducer<T> = (ctx: Context) => StreamGenerator<T>
+export type FunProducer<T> = (ctx: Context) => Payload<T>
 export type Producer<T> = GenProducer<T> | FunProducer<T>
 
 /*
@@ -34,7 +34,7 @@ whatsUp(user, (v)=> console.log(v))
 export abstract class Stream<T = unknown> {
     abstract getAtomFor(atom: Atom): Atom<T>
     abstract whatsUp(ctx?: Context): StreamGenerator<T>
-    abstract [Symbol.iterator](): Generator<unknown, T, unknown>
+    abstract [Symbol.iterator](): Generator<any, T, any>
 
     // *[iterator](command: Handshake): Generator<never, T, unknown> {
     //     //                            this is ^^^^^^^^^^^^^^^^^^^^^^^^ for better type inference

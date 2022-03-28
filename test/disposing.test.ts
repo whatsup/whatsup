@@ -1,5 +1,5 @@
-import { cause } from '../src/cause'
-import { conse } from '../src/conse'
+import { computed } from '../src/computed'
+import { observable } from '../src/observable'
 import { delegate } from '../src/delegation'
 import { whatsUp } from '../src/whatsup'
 
@@ -7,7 +7,7 @@ describe('Disposing', () => {
     it(`should dispose deps when dispose callback called`, () => {
         const mock = jest.fn()
         const mockA = jest.fn()
-        const a = cause(function* () {
+        const a = computed(function* () {
             try {
                 while (true) {
                     yield 'A'
@@ -32,7 +32,7 @@ describe('Disposing', () => {
         const mockA = jest.fn()
         const mockB = jest.fn()
         const mockC = jest.fn()
-        const a = cause(function* () {
+        const a = computed(function* () {
             try {
                 while (true) {
                     yield 'A'
@@ -41,7 +41,7 @@ describe('Disposing', () => {
                 mockA()
             }
         })
-        const b = cause(function* () {
+        const b = computed(function* () {
             try {
                 while (true) {
                     yield `${yield* a}B`
@@ -50,7 +50,7 @@ describe('Disposing', () => {
                 mockB()
             }
         })
-        const c = cause(function* () {
+        const c = computed(function* () {
             try {
                 while (true) {
                     yield `${yield* a}${yield* b}C`
@@ -75,13 +75,13 @@ describe('Disposing', () => {
     it(`should dispose unused deps`, () => {
         const mock = jest.fn()
         const mockB = jest.fn()
-        const toggle = conse(true)
-        const a = cause(function* () {
+        const toggle = observable(true)
+        const a = computed(function* () {
             while (true) {
                 yield (yield* toggle) ? yield* b : 'A'
             }
         })
-        const b = cause(function* () {
+        const b = computed(function* () {
             try {
                 while (true) {
                     yield 'B'
@@ -106,13 +106,13 @@ describe('Disposing', () => {
     it(`should dispose unused deps when inside generator used delegation`, () => {
         const mock = jest.fn()
         const mockB = jest.fn()
-        const toggle = conse(true)
-        const a = cause(function* () {
+        const toggle = observable(true)
+        const a = computed<string>(function* () {
             while (true) {
                 yield (yield* toggle) ? yield delegate(b) : 'A'
             }
         })
-        const b = cause(function* () {
+        const b = computed(function* () {
             try {
                 while (true) {
                     yield 'B'
@@ -137,11 +137,11 @@ describe('Disposing', () => {
     it(`should dispose unused deps when inside generator used return statement `, () => {
         const mock = jest.fn()
         const mockB = jest.fn()
-        const toggle = conse(true)
-        const a = cause(function* () {
+        const toggle = observable(true)
+        const a = computed(function* () {
             return (yield* toggle) ? yield* b : 'A'
         })
-        const b = cause(function* () {
+        const b = computed(function* () {
             try {
                 while (true) {
                     yield 'B'
@@ -166,11 +166,11 @@ describe('Disposing', () => {
     it(`should dispose unused deps when inside generator used return statement & delegation`, () => {
         const mock = jest.fn()
         const mockB = jest.fn()
-        const toggle = conse(true)
-        const a = cause(function* () {
+        const toggle = observable(true)
+        const a = computed<string>(function* () {
             return (yield* toggle) ? yield delegate(b) : 'A'
         })
-        const b = cause(function* () {
+        const b = computed(function* () {
             try {
                 while (true) {
                     yield 'B'

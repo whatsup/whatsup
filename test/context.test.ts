@@ -1,6 +1,6 @@
 import { Factor, factor } from '../src/factor'
 import { Event } from '../src/event'
-import { fractal } from '../src/fractal'
+import { component } from '../src/component'
 import { Context } from '../src/context'
 import { whatsUp } from '../src/whatsup'
 
@@ -10,25 +10,25 @@ describe('Context', () => {
     let context3: Context
     let context4: Context
 
-    const test1 = fractal(function* (ctx) {
+    const test1 = component(function* (ctx) {
         context1 = ctx
         while (true) {
             yield yield* test2
         }
     })
-    const test2 = fractal(function* (ctx) {
+    const test2 = component(function* (ctx) {
         context2 = ctx
         while (true) {
             yield yield* test3
         }
     })
-    const test3 = fractal(function* (ctx) {
+    const test3 = component(function* (ctx) {
         context3 = ctx
         while (true) {
             yield yield* test4
         }
     })
-    const test4 = fractal(function* (ctx) {
+    const test4 = component(function* (ctx) {
         context4 = ctx
         while (true) {
             yield 'Hello'

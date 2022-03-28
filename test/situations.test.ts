@@ -1,14 +1,14 @@
 import { factor } from '../src/factor'
-import { fractal } from '../src/fractal'
-import { conse } from '../src/conse'
+import { component } from '../src/component'
+import { observable } from '../src/observable'
 import { whatsUp } from '../src/whatsup'
 
 describe('Situations', () => {
     describe('test reactions with initial values', () => {
         const mock = jest.fn()
-        const Name = conse('John')
-        const Age = conse(33)
-        const User = fractal(function* () {
+        const Name = observable('John')
+        const Age = observable(33)
+        const User = component(function* () {
             while (true) yield `User ${yield* Name} ${yield* Age}`
         })
 
@@ -20,11 +20,11 @@ describe('Situations', () => {
         })
     })
 
-    describe('react only on connected fractals', () => {
+    describe('react only on connected components', () => {
         const mock = jest.fn()
-        const Switch = conse(true)
-        const Name = conse('John')
-        const User = fractal(function* () {
+        const Switch = observable(true)
+        const Name = observable('John')
+        const User = component(function* () {
             while (true) {
                 yield `User ${(yield* Switch) ? yield* Name : 'Default'}`
             }
@@ -63,8 +63,8 @@ describe('Situations', () => {
 
     describe('test reactions on unique values only', () => {
         const mock = jest.fn()
-        const Name = conse<string>('John')
-        const User = fractal(function* () {
+        const Name = observable<string>('John')
+        const User = component(function* () {
             while (true) yield `User ${yield* Name}`
         })
 
@@ -93,7 +93,7 @@ describe('Situations', () => {
         const mock2 = jest.fn()
         const mock3 = jest.fn()
         const fac = factor('default')
-        const One = fractal(function* (ctx) {
+        const One = component(function* (ctx) {
             ctx!.share(fac, 'hello')
             mock1(ctx!.get(fac))
 
@@ -101,7 +101,7 @@ describe('Situations', () => {
                 yield yield* Two
             }
         })
-        const Two = fractal(function* (ctx) {
+        const Two = component(function* (ctx) {
             mock2(ctx!.get(fac))
             ctx!.share(fac, 'world')
 
@@ -110,14 +110,14 @@ describe('Situations', () => {
                 yield yield* Thr
             }
         })
-        const Thr = fractal(function* (ctx) {
+        const Thr = component(function* (ctx) {
             mock3(ctx!.get(fac))
 
             while (true) {
                 yield ''
             }
         })
-        const Four = fractal(function* (ctx) {
+        const Four = component(function* (ctx) {
             ctx!.share(fac, 'delegator')
             mock2(ctx!.get(fac))
 

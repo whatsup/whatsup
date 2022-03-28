@@ -1,14 +1,14 @@
 import { action } from '../src/scheduler'
-import { conse } from '../src/conse'
-import { cause } from '../src/cause'
+import { observable } from '../src/observable'
+import { computed } from '../src/computed'
 import { whatsUp } from '../src/whatsup'
 
 describe('Scheduler', () => {
     it(`Should run every change in personal transaction`, () => {
         const mock = jest.fn()
-        const a = conse('a')
-        const b = conse('b')
-        const c = cause(function* () {
+        const a = observable('a')
+        const b = observable('b')
+        const c = computed(function* () {
             while (true) {
                 yield `${yield* a}${yield* b}c`
             }
@@ -28,9 +28,9 @@ describe('Scheduler', () => {
 
     it(`Should run all changes in single transaction`, () => {
         const mock = jest.fn()
-        const a = conse('a')
-        const b = conse('b')
-        const c = cause(function* () {
+        const a = observable('a')
+        const b = observable('b')
+        const c = computed(function* () {
             while (true) {
                 yield `${yield* a}${yield* b}c`
             }
@@ -51,14 +51,14 @@ describe('Scheduler', () => {
     it(`Should create slave transaction when call 'transaction' inside transaction`, () => {
         const mockB = jest.fn()
         const mockC = jest.fn()
-        const a = conse('a')
-        const b = cause(function* () {
+        const a = observable('a')
+        const b = computed(function* () {
             while (true) {
                 c.set(`${yield* a}b`)
                 yield `${yield* a}b`
             }
         })
-        const c = conse('c')
+        const c = observable('c')
 
         whatsUp(c, mockC)
 
@@ -82,16 +82,16 @@ describe('Scheduler', () => {
         const mockB = jest.fn()
         const mockC = jest.fn()
         const mockD = jest.fn()
-        const a = conse('a')
-        const b = cause(function* () {
+        const a = observable('a')
+        const b = computed(function* () {
             while (true) {
                 c.set(`${yield* a}c`)
                 d.set(`${yield* a}d`)
                 yield `${yield* a}b`
             }
         })
-        const c = conse('c')
-        const d = conse('d')
+        const c = observable('c')
+        const d = observable('d')
 
         whatsUp(c, mockC)
 
@@ -127,21 +127,21 @@ describe('Scheduler', () => {
         const mock = jest.fn()
         const mockWallet = jest.fn()
         const mockUser = jest.fn()
-        const Balance = conse(100)
-        const Name = conse<string>('John')
-        const Wallet = cause(function* () {
+        const Balance = observable(100)
+        const Name = observable<string>('John')
+        const Wallet = computed(function* () {
             while (true) {
                 mockWallet()
                 yield `Wallet ${yield* Balance}`
             }
         })
-        const User = cause(function* () {
+        const User = computed(function* () {
             while (true) {
                 mockUser()
                 yield `User ${yield* Name}`
             }
         })
-        const App = cause(function* () {
+        const App = computed(function* () {
             while (true) yield `App ${yield* User} ${yield* Wallet}`
         })
 

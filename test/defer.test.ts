@@ -1,4 +1,4 @@
-import { cause } from '../src/cause'
+import { computed } from '../src/computed'
 import { whatsUp } from '../src/whatsup'
 
 describe('Defer', () => {
@@ -7,7 +7,7 @@ describe('Defer', () => {
     it(`should trigger context.update`, async () => {
         const mock = jest.fn()
 
-        const cau = cause(function* (ctx) {
+        const cau = computed(function* (ctx) {
             ctx.defer(() => delay(300))
             yield 'Hello'
             yield 'World'
@@ -25,7 +25,7 @@ describe('Defer', () => {
     it(`should return {done, value}`, async () => {
         const mock = jest.fn()
 
-        const cau = cause(function* (ctx) {
+        const cau = computed(function* (ctx) {
             const result = ctx.defer(() => new Promise((r) => setTimeout(() => r('World'), 300)))
             yield { ...result }
             yield { ...result }
@@ -43,7 +43,7 @@ describe('Defer', () => {
     it(`should serve scopes`, async () => {
         const mock = jest.fn()
 
-        const cau = cause(function* (ctx) {
+        const cau = computed(function* (ctx) {
             // this
             //                      and this
             // is
@@ -84,7 +84,7 @@ describe('Defer', () => {
         let a0: string, a1: string, a2: string, a3: string
         let b0: string, b1: string, b2: string, b3: string
 
-        const cau = cause(function* (ctx) {
+        const cau = computed(function* (ctx) {
             let str = ''
 
             a0 = str += 'this '

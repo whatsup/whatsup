@@ -1,4 +1,4 @@
-import { fractal } from '../src/fractal'
+import { component } from '../src/component'
 import { mutator, Mutator } from '../src/mutator'
 import { whatsUp } from '../src/whatsup'
 
@@ -12,7 +12,7 @@ describe('Mutators', () => {
                 return prev + 1
             }
         }
-        const Output = fractal(function* (ctx) {
+        const Output = component(function* (ctx) {
             kickstart = () => ctx.update()
 
             try {
@@ -50,7 +50,7 @@ describe('Mutators', () => {
         let result: any
         let kickstart: () => void
         const increment = mutator<number>((prev = 0) => prev + 1)
-        const Output = fractal(function* (ctx) {
+        const Output = component(function* (ctx) {
             kickstart = () => ctx.update()
 
             while (true) {

@@ -1,11 +1,11 @@
 import { whatsUp } from '../src/whatsup'
-import { cause } from '../src/cause'
+import { component } from '../src/component'
 
-describe('Cause', () => {
+describe('Component', () => {
     it(`should substitute this`, () => {
         const mock = jest.fn()
         const thisArg = {}
-        const fr = cause(function* (this: typeof thisArg) {
+        const fr = component(function* (this: typeof thisArg) {
             mock(this)
             while (true) yield null
         }, thisArg)

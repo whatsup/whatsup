@@ -1,22 +1,22 @@
-import { fractal } from '../src/fractal'
-import { conse } from '../src/conse'
-import { cause } from '../src/cause'
+import { component } from '../src/component'
+import { observable } from '../src/observable'
+import { computed } from '../src/computed'
 import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
     it('should run build only in transaction', () => {
-        const App = fractal(function* App() {
+        const App = component(function* App() {
             while (true) {
                 yield (yield* Two) + (yield* One)
             }
         })
-        const One = fractal(function* One() {
+        const One = component(function* One() {
             while (true) {
                 Two.set(6)
                 yield 3
             }
         })
-        const Two = conse(5)
+        const Two = observable(5)
 
         const mock = jest.fn()
 
@@ -31,25 +31,25 @@ describe('Execution order', () => {
     })
     it('normal updating from bottom to up', () => {
         const ids = [] as number[]
-        const App = fractal(function* () {
+        const App = component(function* () {
             while (true) {
                 ids.push(1)
                 yield yield* One
             }
         })
-        const One = fractal(function* () {
+        const One = component(function* () {
             while (true) {
                 ids.push(2)
                 yield yield* Two
             }
         })
-        const Two = fractal(function* () {
+        const Two = component(function* () {
             while (true) {
                 ids.push(3)
                 yield yield* Hub
             }
         })
-        const Hub = conse(1)
+        const Hub = observable(1)
         const mock = jest.fn()
 
         whatsUp(App, mock)
@@ -65,7 +65,7 @@ describe('Execution order', () => {
 
     it(`should return 1, 2`, () => {
         const mock = jest.fn()
-        const a = conse(1)
+        const a = observable(1)
 
         whatsUp(a, mock)
 
@@ -80,13 +80,13 @@ describe('Execution order', () => {
 
     it(`should return 1 odd, 2 even, 3 odd`, () => {
         const mock = jest.fn()
-        const a = conse(1)
-        const b = cause(function* () {
+        const a = observable(1)
+        const b = computed(function* () {
             while (true) {
                 yield (yield* a) % 2 === 0 ? 'even' : 'odd'
             }
         })
-        const c = cause(function* () {
+        const c = computed(function* () {
             while (true) {
                 yield `${yield* a} ${yield* b}`
             }
