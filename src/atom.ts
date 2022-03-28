@@ -211,8 +211,8 @@ class FunAtom<T> extends Atom<T> {
 
 export const atom = <T>(parentCtx: Context | null, producer: Producer<T>, thisArg: unknown) => {
     if (isGenerator(producer)) {
-        return new GenAtom(parentCtx, producer, thisArg) as Atom<T>
+        return new GenAtom(parentCtx, producer as GenProducer<T>, thisArg) as Atom<T>
     }
 
-    return new FunAtom(parentCtx, producer, thisArg) as Atom<T>
+    return new FunAtom(parentCtx, producer as FunProducer<T>, thisArg) as Atom<T>
 }
