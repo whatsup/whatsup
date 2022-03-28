@@ -6,4 +6,4 @@ export class Data<T = unknown> {
     }
 }
 
-export class Err<T extends Error> extends Data<T> {}
+export class Err extends Data<Error> {}

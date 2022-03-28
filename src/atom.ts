@@ -1,17 +1,20 @@
+import { FunProducer, GenProducer, Payload, Producer, StreamIterator } from './stream'
 import { Context } from './context'
 import { Relations } from './relations'
 import { Data, Err } from './data'
 import { Delegation } from './delegation'
-import { FunProducer, GenProducer, Payload, Producer, StreamIterator } from './stream'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
 import { GET_CONSUMER } from './symbols'
 
+type AtomCache<T> = Data<T | Delegation<T>> | Err
+type AtomIterator<T> = Iterator<Mutator<T>, AtomCache<T>, unknown>
+
 export abstract class Atom<T = unknown> {
-    protected abstract iterator(): StreamIterator<T>
+    protected abstract iterator(): AtomIterator<T>
     readonly context: Context
     readonly relations: Relations
-    private cache: Data<T> | undefined
+    private cache: AtomCache<T> | undefined
 
     constructor(parentCtx: Context | null) {
         this.context = new Context(this, parentCtx)
@@ -19,7 +22,7 @@ export abstract class Atom<T = unknown> {
     }
 
     get() {
-        let cache: Data<T>
+        let cache: AtomCache<T>
         let atom = this as Atom<T>
 
         while (true) {
@@ -47,7 +50,7 @@ export abstract class Atom<T = unknown> {
         return cache.value
     }
 
-    build(): Data<T> {
+    build() {
         const iterator = this.iterator()
 
         let input = undefined
@@ -60,11 +63,11 @@ export abstract class Atom<T = unknown> {
             if (done) {
                 this.relations.normalize()
 
-                return (value as any) as Data<T> // TODO: remove any
+                return value
             }
 
             if (value instanceof Mutator) {
-                input = value.mutate(this.cache?.value)
+                input = value.mutate(this.cache?.value as T)
                 continue
             }
 
@@ -113,7 +116,7 @@ class GenAtom<T> extends Atom<T> {
         this.thisArg = thisArg
     }
 
-    protected *iterator(): StreamIterator<T> {
+    protected *iterator(): AtomIterator<T> {
         const { stack, producer, thisArg, context } = this
 
         if (stack.length == 0) {
@@ -161,7 +164,7 @@ class GenAtom<T> extends Atom<T> {
                 continue
             }
 
-            return input as Payload<T>
+            return input as AtomCache<T>
         }
     }
 
@@ -185,7 +188,7 @@ class FunAtom<T> extends Atom<T> {
         this.thisArg = thisArg
     }
 
-    protected *iterator(): StreamIterator<T> {
+    protected *iterator(): AtomIterator<T> {
         const { producer, thisArg, context } = this
 
         let error: boolean
@@ -200,11 +203,11 @@ class FunAtom<T> extends Atom<T> {
         }
 
         if (error) {
-            return new Err(value as Error) as any
+            return new Err(value as Error)
         } else if (value instanceof Mutator) {
-            return new Data(yield value) as any
+            return new Data(yield value) as AtomCache<T>
         } else {
-            return new Data(value) as any
+            return new Data(value) as AtomCache<T>
         }
     }
 }

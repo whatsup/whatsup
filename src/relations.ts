@@ -3,8 +3,8 @@ import { Atom } from './atom'
 const WATCH_STACK = [] as Set<Atom>[]
 
 export class Relations {
-    private readonly atom: Atom
     readonly consumers: Set<Atom>
+    private readonly atom: Atom
     private dependencies: Set<Atom>
     private garbage: Set<Atom>
 
