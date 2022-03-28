@@ -2,7 +2,7 @@ import { Context } from './context'
 import { Relations } from './relations'
 import { Data, Err } from './data'
 import { Delegation } from './delegation'
-import { Payload, StreamIterator } from './stream'
+import { FunProducer, GenProducer, Payload, Producer, StreamIterator } from './stream'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
 import { GET_CONSUMER } from './symbols'
@@ -102,10 +102,10 @@ export abstract class Atom<T = unknown> {
 
 class GenAtom<T> extends Atom<T> {
     private readonly stack: StreamIterator<T>[]
-    private readonly producer: (context?: Context) => Generator<T>
+    private readonly producer: GenProducer<T>
     private readonly thisArg: unknown
 
-    constructor(parentCtx: Context | null, producer: (ctx?: Context) => Generator<T>, thisArg: unknown) {
+    constructor(parentCtx: Context | null, producer: GenProducer<T>, thisArg: unknown) {
         super(parentCtx)
 
         this.stack = []
@@ -175,10 +175,10 @@ class GenAtom<T> extends Atom<T> {
 }
 
 class FunAtom<T> extends Atom<T> {
-    private readonly producer: (context?: Context) => T
+    private readonly producer: FunProducer<T>
     private readonly thisArg: unknown
 
-    constructor(parentCtx: Context | null, producer: (ctx?: Context) => T, thisArg: unknown) {
+    constructor(parentCtx: Context | null, producer: FunProducer<T>, thisArg: unknown) {
         super(parentCtx)
 
         this.producer = producer
@@ -209,7 +209,7 @@ class FunAtom<T> extends Atom<T> {
     }
 }
 
-export const atom = <T>(parentCtx: Context | null, producer: (ctx?: Context) => T | Generator<T>, thisArg: unknown) => {
+export const atom = <T>(parentCtx: Context | null, producer: Producer<T>, thisArg: unknown) => {
     if (isGenerator(producer)) {
         return new GenAtom(parentCtx, producer, thisArg) as Atom<T>
     }
