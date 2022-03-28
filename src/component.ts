@@ -1,5 +1,4 @@
-import { Stream, StreamGenerator, Producer } from './stream'
-import { Context } from './context'
+import { Stream, Producer } from './stream'
 import { GET_CONSUMER } from './symbols'
 import { atom, Atom } from './atom'
 
@@ -43,10 +42,6 @@ export class Component<T = unknown> extends Stream<T> {
         const atom = this.getAtomFor(consumer)
 
         return atom.get()
-    }
-
-    whatsUp(ctx?: Context): StreamGenerator<T> {
-        return ctx as any
     }
 }
 

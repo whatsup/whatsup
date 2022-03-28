@@ -1,6 +1,5 @@
-import { atom, Atom } from './atom'
-import { Context } from './context'
-import { Stream, Producer, StreamGenerator } from './stream'
+import { atom, Atom } from './atom' 
+import { Stream, Producer } from './stream'
 
 export class Computed<T = unknown> extends Stream<T> {
     protected atom: Atom<T>
@@ -20,11 +19,7 @@ export class Computed<T = unknown> extends Stream<T> {
 
     get() {
         return this.atom.get()
-    }
-
-    whatsUp(ctx?: Context): StreamGenerator<T> {
-        return ctx as any
-    }
+    } 
 }
 
 export function computed<T>(producer: Producer<T>, thisArg?: unknown) {
