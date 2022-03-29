@@ -63,7 +63,7 @@ export abstract class Atom<T = unknown> {
             if (done) {
                 this.relations.normalize()
 
-                return value
+                return value as AtomCache<T>
             }
 
             if (value instanceof Mutator) {
