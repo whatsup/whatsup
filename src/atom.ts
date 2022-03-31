@@ -11,7 +11,7 @@ type AtomCache<T> = Data<T | Delegation<T>> | Err
 type AtomIterator<T> = Iterator<Mutator<T>, AtomCache<T>, unknown>
 
 export abstract class Atom<T = unknown> {
-    protected abstract iterator(): AtomIterator<T>
+    protected abstract builder(): AtomIterator<T>
     readonly context: Context
     readonly relations: Relations
     private cache: AtomCache<T> | undefined
@@ -51,7 +51,7 @@ export abstract class Atom<T = unknown> {
     }
 
     build() {
-        const iterator = this.iterator()
+        const iterator = this.builder()
 
         let input = undefined
 
@@ -104,23 +104,22 @@ export abstract class Atom<T = unknown> {
 }
 
 class GenAtom<T> extends Atom<T> {
-    private readonly stack: StreamIterator<T>[]
     private readonly producer: GenProducer<T>
     private readonly thisArg: unknown
+    private iterator?: StreamIterator<T>
 
     constructor(parentCtx: Context | null, producer: GenProducer<T>, thisArg: unknown) {
         super(parentCtx)
 
-        this.stack = []
         this.producer = producer
         this.thisArg = thisArg
     }
 
-    protected *iterator(): AtomIterator<T> {
-        const { stack, producer, thisArg, context } = this
+    protected *builder(): AtomIterator<T> {
+        const { producer, thisArg, context } = this
 
-        if (stack.length == 0) {
-            stack.push(producer.call(thisArg, context) as StreamIterator<T>)
+        if (!this.iterator) {
+            this.iterator = producer.call(thisArg, context) as StreamIterator<T>
         }
 
         let input: unknown
@@ -131,8 +130,7 @@ class GenAtom<T> extends Atom<T> {
             let value: Symbol | Payload<T> | Error
 
             try {
-                const iterator = stack[stack.length - 1]
-                const result = iterator.next(input)
+                const result = this.iterator!.next(input)
 
                 value = result.value!
                 done = result.done!
@@ -144,7 +142,7 @@ class GenAtom<T> extends Atom<T> {
             }
 
             if (done) {
-                stack.pop()
+                this.iterator = undefined
             }
 
             if (value === GET_CONSUMER) {
@@ -153,26 +151,20 @@ class GenAtom<T> extends Atom<T> {
             }
 
             if (error) {
-                input = new Err(value as Error)
+                return new Err(value as Error)
             } else if (value instanceof Mutator) {
-                input = new Data(yield value)
+                return new Data(yield value) as AtomCache<T>
             } else {
-                input = new Data(value)
+                return new Data(value) as AtomCache<T>
             }
-
-            if (done && stack.length > 0) {
-                continue
-            }
-
-            return input as AtomCache<T>
         }
     }
 
     dispose(initiator?: Atom) {
         super.dispose(initiator)
 
-        while (this.stack.length > 0) {
-            this.stack.pop()!.return!()
+        if (this.iterator) {
+            this.iterator!.return!()
         }
     }
 }
@@ -188,7 +180,7 @@ class FunAtom<T> extends Atom<T> {
         this.thisArg = thisArg
     }
 
-    protected *iterator(): AtomIterator<T> {
+    protected *builder(): AtomIterator<T> {
         const { producer, thisArg, context } = this
 
         let error: boolean

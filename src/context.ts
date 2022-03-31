@@ -13,7 +13,7 @@ export class Context implements Context {
     shared: Map<Factor<unknown> | Ctor<unknown>, unknown> | undefined
 
     /** @internal */
-    listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined
+    private listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined
 
     /** @internal */
     private atom!: Atom
