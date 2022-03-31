@@ -10,7 +10,7 @@ export class Context implements Context {
     readonly parent: Context | null
 
     /** @internal */
-    shared: Map<Factor<unknown> | Ctor<unknown>, unknown> | undefined
+    private shared: Map<Factor<unknown> | Ctor<unknown>, unknown> | undefined
 
     /** @internal */
     private listeners: WeakMap<EventCtor<any>, Set<EventListener<any>>> | undefined

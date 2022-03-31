@@ -1,19 +1,24 @@
 import { FunProducer, GenProducer, Payload, Producer, StreamIterator } from './stream'
 import { Context } from './context'
 import { Relations } from './relations'
-import { Data, Err } from './data'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
 import { GET_CONSUMER } from './symbols'
 
-type AtomCache<T> = Data<T | Delegation<T>> | Err
+type Cache<T> = T | Delegation<T> | Error
+enum CacheType {
+    Empty = 'Empty',
+    Data = 'Data',
+    Error = 'Error',
+}
 
 export abstract class Atom<T = unknown> {
     protected abstract builder(): StreamIterator<T>
     readonly context: Context
     readonly relations: Relations
-    private cache: AtomCache<T> | undefined
+    private cache?: Cache<T>
+    private cacheType = CacheType.Empty
 
     constructor(parentCtx: Context | null) {
         this.context = new Context(this, parentCtx)
@@ -21,32 +26,33 @@ export abstract class Atom<T = unknown> {
     }
 
     get() {
-        let cache: AtomCache<T>
+        let cache: Cache<T>
         let atom = this as Atom<T>
 
         while (true) {
             if (atom.relations.link() || atom.relations.hasConsumers()) {
-                if (atom.cache === undefined) {
+                if (atom.cacheType === CacheType.Empty) {
                     atom.rebuild()
                 }
+
+                if (atom.cacheType === CacheType.Error) {
+                    throw atom.cache
+                }
+
                 cache = atom.cache!
             } else {
                 cache = atom.build()
             }
 
-            if (cache instanceof Err) {
-                throw cache.value
-            }
-
-            if (cache.value instanceof Delegation) {
-                atom = cache.value.stream.getAtomFor(atom)
+            if (cache instanceof Delegation) {
+                atom = cache.stream.getAtomFor(atom)
                 continue
             }
 
             break
         }
 
-        return cache.value
+        return cache as T
     }
 
     build() {
@@ -56,48 +62,52 @@ export abstract class Atom<T = unknown> {
 
         this.relations.collect()
 
-        while (true) {
-            let done: boolean
-            let error: boolean
-            let value: Symbol | Payload<T> | Error
+        let done: boolean
+        let error: boolean
+        let value: Symbol | Payload<T> | Error
 
-            try {
-                const result = iterator.next(input)
+        try {
+            const result = iterator.next(input)
 
-                value = result.value!
-                done = result.done!
-                error = false
-            } catch (e) {
-                value = e as Error
-                done = true
-                error = true
-            }
+            value = result.value!
+            done = result.done!
+            error = false
+        } catch (e) {
+            value = e as Error
+            done = true
+            error = true
+        }
 
-            if (done) {
-                this.relations.normalize()
-            } else {
-                throw 'What`s up? It shouldn`t have happened'
-            }
+        if (done) {
+            this.relations.normalize()
+        } else {
+            throw 'What`s up? It shouldn`t have happened'
+        }
 
-            if (error) {
-                return new Err(value as Error)
-            } else if (value instanceof Mutator) {
-                return new Data(value.mutate(this.cache?.value as T)) as AtomCache<T>
-            } else {
-                return new Data(value) as AtomCache<T>
-            }
+        if (error) {
+            throw value
+        } else if (value instanceof Mutator) {
+            return value.mutate(this.cache as T)
+        } else {
+            return value as T | Delegation<T>
         }
     }
 
     rebuild() {
-        const newCache = this.build()
+        let newCacheType: CacheType
+        let newCache: Cache<T>
 
-        if (
-            this.cache === undefined ||
-            this.cache.constructor !== newCache.constructor ||
-            this.cache.value !== newCache.value
-        ) {
+        try {
+            newCache = this.build()
+            newCacheType = CacheType.Data
+        } catch (e) {
+            newCache = e as Error
+            newCacheType = CacheType.Error
+        }
+
+        if (this.cache === undefined || this.cacheType !== newCacheType || this.cache !== newCache) {
             this.cache = newCache
+            this.cacheType = newCacheType
 
             return true
         }
@@ -111,6 +121,7 @@ export abstract class Atom<T = unknown> {
         }
         if (!this.relations.hasConsumers()) {
             this.cache = undefined
+            this.cacheType = CacheType.Empty
             this.context.dispose()
             this.relations.dispose()
         }
