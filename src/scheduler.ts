@@ -47,7 +47,7 @@ class Transaction {
             const counter = this.incrementCounter(consumer)
 
             if (counter > 1 || !consumer.relations.hasConsumers()) {
-                continue
+                continue 
             }
 
             this.incrementCounters(consumer)

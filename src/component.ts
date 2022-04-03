@@ -1,5 +1,5 @@
 import { Stream, Producer } from './stream'
-import { GET_CONSUMER } from './symbols'
+import { GET_CONSUMER } from './atom'
 import { Atom } from './atom'
 import { Splitter } from './splitter'
 

@@ -3,15 +3,17 @@ import { Context } from './context'
 import { Relations } from './relations'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
-import { isGenerator } from './utils'
-import { GET_CONSUMER } from './symbols'
+import { isGenerator } from './utils' 
 
 type Cache<T> = T | Delegation<T> | Error
+
 enum CacheType {
     Empty = 'Empty',
     Data = 'Data',
     Error = 'Error',
 }
+
+export const GET_CONSUMER = Symbol('Get up-level atom (consumer)')
 
 export abstract class Atom<T = unknown> {
     protected abstract builder(): StreamIterator<T>
