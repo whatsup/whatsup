@@ -105,7 +105,11 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     }
 
     private attachMountingCallbacks(target: R) {
-        const element: Element = !Array.isArray(target) ? target : target.length === 1 ? target[0] : null
+        const element: Element | null = !Array.isArray(target)
+            ? (target as Element)
+            : target.length === 1
+            ? (target[0] as Element)
+            : null
 
         if (element) {
             if (this.onMount && !Reflect.has(element, JSX_MOUNT_OBSERVER)) {
