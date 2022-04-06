@@ -6,7 +6,7 @@ export type DataHandler<T> = (data: T) => void
 export type ErrorHandler = (e: Error) => void
 
 export const whatsUp = <T>(target: Stream<T>, onData?: DataHandler<T>, onError?: ErrorHandler) => {
-    function* generator() {
+    function* WhatsUp() {
         while (true) {
             try {
                 const data = yield* target
@@ -24,7 +24,7 @@ export const whatsUp = <T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
         }
     }
 
-    const root = createAtom(generator, undefined)
+    const root = createAtom(WhatsUp, undefined)
 
     transaction((t) => t.addEntry(root))
 
