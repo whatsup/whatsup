@@ -1,16 +1,16 @@
 import { delegate } from '../src/delegation'
 import { observable } from '../src/observable'
-import { component } from '../src/component'
+import { computed } from '../src/computed'
 import { whatsUp } from '../src/whatsup'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
         const mock = jest.fn((v) => v)
         const Balance = observable(33)
-        const App = component(function* () {
+        const App = computed(function* () {
             while (true) yield `User ${yield* User}`
         })
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) {
                 try {
                     yield `Wallet ${yield* Wallet}`
@@ -19,7 +19,7 @@ describe('Errors', () => {
                 }
             }
         })
-        const Wallet = component(function* () {
+        const Wallet = computed(function* () {
             while (true) {
                 if ((yield* Balance) <= 0) {
                     throw 'ZEROBALANCE'
@@ -51,10 +51,10 @@ describe('Errors', () => {
     describe('test catch error on other parent levels (error propagation)', () => {
         const mock = jest.fn((v) => v)
         const Balance = observable(33)
-        const App = component(function* () {
+        const App = computed(function* () {
             while (true) yield `Parent ${yield* Parent}`
         })
-        const Parent = component(function* () {
+        const Parent = computed(function* () {
             while (true) {
                 try {
                     yield `User ${yield* User}`
@@ -63,12 +63,12 @@ describe('Errors', () => {
                 }
             }
         })
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) {
                 yield `Wallet ${yield* Wallet}`
             }
         })
-        const Wallet = component(function* () {
+        const Wallet = computed(function* () {
             while (true) {
                 if ((yield* Balance) <= 0) {
                     throw 'ZEROBALANCE'
@@ -100,10 +100,10 @@ describe('Errors', () => {
     describe('test throw & catch error with alive error data', () => {
         const mock = jest.fn((v) => v)
         const Balance = observable(10)
-        const App = component(function* () {
+        const App = computed(function* () {
             while (true) yield `User ${yield* User}`
         })
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) {
                 try {
                     yield `Wallet ${yield* Wallet}`
@@ -112,7 +112,7 @@ describe('Errors', () => {
                 }
             }
         })
-        const Wallet = component(function* () {
+        const Wallet = computed(function* () {
             while (true) {
                 const balance = yield* Balance
                 if (balance <= 0) {
@@ -152,10 +152,10 @@ describe('Errors', () => {
         const mock = jest.fn((v) => v)
         const Count = observable(0)
         const Balance = observable(100)
-        const App = component(function* () {
+        const App = computed(function* () {
             while (true) yield `User ${yield* User}`
         })
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) {
                 try {
                     yield `Wallet ${yield* Wallet}`
@@ -164,7 +164,7 @@ describe('Errors', () => {
                 }
             }
         })
-        const Wallet = component(function* () {
+        const Wallet = computed(function* () {
             while (true) {
                 const balance = yield* Balance
                 if (balance <= 0) {
@@ -211,19 +211,19 @@ describe('Errors', () => {
         const mock2 = jest.fn((v) => v)
         const Toggle = observable(true)
         const Balance = observable(33)
-        const App = component(function* () {
+        const App = computed(function* () {
             while (true) {
                 yield `User ${yield* User}`
             }
         })
-        const User = component(function* () {
+        const User = computed(function* () {
             if (yield* Toggle) {
                 throw delegate(Wallet)
             } else {
                 return delegate(Wallet)
             }
         })
-        const Wallet = component(function* () {
+        const Wallet = computed(function* () {
             while (true) {
                 yield `Balance ${yield* Balance}`
             }

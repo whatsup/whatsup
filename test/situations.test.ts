@@ -1,5 +1,4 @@
-import { factor } from '../src/factor'
-import { component } from '../src/component'
+import { computed } from '../src/computed'
 import { observable } from '../src/observable'
 import { whatsUp } from '../src/whatsup'
 
@@ -8,7 +7,7 @@ describe('Situations', () => {
         const mock = jest.fn()
         const Name = observable('John')
         const Age = observable(33)
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) yield `User ${yield* Name} ${yield* Age}`
         })
 
@@ -20,11 +19,11 @@ describe('Situations', () => {
         })
     })
 
-    describe('react only on connected components', () => {
+    describe('react only on connected computeds', () => {
         const mock = jest.fn()
         const Switch = observable(true)
         const Name = observable('John')
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) {
                 yield `User ${(yield* Switch) ? yield* Name : 'Default'}`
             }
@@ -64,7 +63,7 @@ describe('Situations', () => {
     describe('test reactions on unique values only', () => {
         const mock = jest.fn()
         const Name = observable<string>('John')
-        const User = component(function* () {
+        const User = computed(function* () {
             while (true) yield `User ${yield* Name}`
         })
 
@@ -85,63 +84,6 @@ describe('Situations', () => {
             Name.set('Barry')
             expect(mock).toBeCalledTimes(2)
             expect(mock).lastCalledWith('User Barry')
-        })
-    })
-
-    describe('context manipulations', () => {
-        const mock1 = jest.fn()
-        const mock2 = jest.fn()
-        const mock3 = jest.fn()
-        const fac = factor('default')
-        const One = component(function* (ctx) {
-            ctx!.share(fac, 'hello')
-            mock1(ctx!.get(fac))
-
-            while (true) {
-                yield yield* Two
-            }
-        })
-        const Two = component(function* (ctx) {
-            mock2(ctx!.get(fac))
-            ctx!.share(fac, 'world')
-
-            while (true) {
-                yield* Four
-                yield yield* Thr
-            }
-        })
-        const Thr = component(function* (ctx) {
-            mock3(ctx!.get(fac))
-
-            while (true) {
-                yield ''
-            }
-        })
-        const Four = component(function* (ctx) {
-            ctx!.share(fac, 'delegator')
-            mock2(ctx!.get(fac))
-
-            while (true) {
-                yield ''
-            }
-        })
-
-        whatsUp(One, () => {})
-
-        it(`should mock1 to be called with "default"`, () => {
-            expect(mock1).toBeCalledTimes(1)
-            expect(mock1).lastCalledWith('default')
-        })
-
-        it(`should mock2 to be called with "hello"`, () => {
-            expect(mock2).toBeCalledTimes(2)
-            expect(mock2).nthCalledWith(1, 'hello')
-            expect(mock2).nthCalledWith(2, 'world')
-        })
-
-        it(`should mock3 to be called with "world"`, () => {
-            expect(mock3).toBeCalledTimes(1)
-            expect(mock3).lastCalledWith('world')
         })
     })
 })

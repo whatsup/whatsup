@@ -1,16 +1,13 @@
-import { atom, Atom } from './atom'
+import { createAtom, Atom } from './atom'
 import { Stream, Producer } from './stream'
 
 export class Computed<T = unknown> extends Stream<T> {
-    protected atom: Atom<T>
+    /* @internal */
+    readonly atom: Atom<T>
 
     constructor(producer: Producer<T>, thisArg?: unknown) {
         super()
-        this.atom = atom(null, producer, thisArg)
-    }
-
-    getAtomFor(): Atom<T> {
-        return this.atom
+        this.atom = createAtom(producer, thisArg)
     }
 
     *[Symbol.iterator](): Generator<any, T, any> {

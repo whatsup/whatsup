@@ -1,5 +1,5 @@
 import { delegate } from '../src/delegation'
-import { component } from '../src/component'
+import { computed } from '../src/computed'
 import { observable } from '../src/observable'
 import { whatsUp } from '../src/whatsup'
 
@@ -10,7 +10,7 @@ describe('Delegating', () => {
         const Trigger1 = observable(1)
         const Trigger2 = observable(2)
         const Trigger3 = observable(3)
-        const One = component(function* () {
+        const One = computed(function* () {
             while (true) {
                 if (mock1(yield* Trigger1) > 0) {
                     yield delegate(Two)
@@ -19,10 +19,10 @@ describe('Delegating', () => {
                 }
             }
         })
-        const Two = component(function* () {
+        const Two = computed(function* () {
             while (true) yield yield* Trigger2
         })
-        const App = component(function* () {
+        const App = computed(function* () {
             return mock2(yield* One)
         })
 
@@ -64,7 +64,7 @@ describe('Delegating', () => {
         const mock2 = jest.fn((v) => v)
         const Trigger1 = observable(false)
         const Trigger2 = observable(2)
-        const One = component(function* () {
+        const One = computed(function* () {
             while (true) {
                 if (yield* Trigger1) {
                     yield delegate(Two)
@@ -73,10 +73,10 @@ describe('Delegating', () => {
                 }
             }
         })
-        const Two = component(function* () {
+        const Two = computed(function* () {
             throw 'TWO_ERROR'
         })
-        const App = component(function* () {
+        const App = computed(function* () {
             return yield* One
         })
 
@@ -116,7 +116,7 @@ describe('Delegating', () => {
         const Trigger1 = observable(false)
         const Trigger2 = observable(2)
         const Trigger3 = observable(3)
-        const One = component(function* () {
+        const One = computed(function* () {
             while (true) {
                 if (yield* Trigger1) {
                     throw delegate(Two)
@@ -125,10 +125,10 @@ describe('Delegating', () => {
                 }
             }
         })
-        const Two = component(function* () {
+        const Two = computed(function* () {
             return yield* Trigger3
         })
-        const App = component(function* () {
+        const App = computed(function* () {
             return yield* One
         })
 

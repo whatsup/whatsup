@@ -1,9 +1,8 @@
 import { FunProducer, GenProducer, Payload, Producer, StreamIterator } from './stream'
-import { Context } from './context'
 import { Relations } from './relations'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
-import { isGenerator } from './utils' 
+import { isGenerator } from './utils'
 
 type Cache<T> = T | Delegation<T> | Error
 
@@ -17,13 +16,11 @@ export const GET_CONSUMER = Symbol('Get up-level atom (consumer)')
 
 export abstract class Atom<T = unknown> {
     protected abstract builder(): StreamIterator<T>
-    readonly context: Context
     readonly relations: Relations
     private cache?: Cache<T>
     private cacheType = CacheType.Empty
 
-    constructor(parentCtx: Context | null) {
-        this.context = new Context(this, parentCtx)
+    constructor() {
         this.relations = new Relations(this)
     }
 
@@ -47,7 +44,7 @@ export abstract class Atom<T = unknown> {
             }
 
             if (cache instanceof Delegation) {
-                atom = cache.stream.getAtomFor(atom)
+                atom = cache.stream.atom
                 continue
             }
 
@@ -124,29 +121,28 @@ export abstract class Atom<T = unknown> {
         if (!this.relations.hasConsumers()) {
             this.cache = undefined
             this.cacheType = CacheType.Empty
-            this.context.dispose()
             this.relations.dispose()
         }
     }
 }
 
-class GenAtom<T> extends Atom<T> {
+class GnAtom<T> extends Atom<T> {
     private readonly producer: GenProducer<T>
     private readonly thisArg: unknown
     private iterator?: StreamIterator<T>
 
-    constructor(parentCtx: Context | null, producer: GenProducer<T>, thisArg: unknown) {
-        super(parentCtx)
+    constructor(producer: GenProducer<T>, thisArg: unknown) {
+        super()
 
         this.producer = producer
         this.thisArg = thisArg
     }
 
     protected *builder(): StreamIterator<T> {
-        const { producer, thisArg, context } = this
+        const { producer, thisArg } = this
 
         if (!this.iterator) {
-            this.iterator = producer.call(thisArg, context) as StreamIterator<T>
+            this.iterator = producer.call(thisArg) as StreamIterator<T>
         }
 
         let input: unknown
@@ -182,28 +178,28 @@ class GenAtom<T> extends Atom<T> {
     }
 }
 
-class FunAtom<T> extends Atom<T> {
+class FnAtom<T> extends Atom<T> {
     private readonly producer: FunProducer<T>
     private readonly thisArg: unknown
 
-    constructor(parentCtx: Context | null, producer: FunProducer<T>, thisArg: unknown) {
-        super(parentCtx)
+    constructor(producer: FunProducer<T>, thisArg: unknown) {
+        super()
 
         this.producer = producer
         this.thisArg = thisArg
     }
 
     protected *builder(): StreamIterator<T> {
-        const { producer, thisArg, context } = this
+        const { producer, thisArg } = this
 
-        return producer.call(thisArg, context)
+        return producer.call(thisArg)
     }
 }
 
-export const atom = <T>(parentCtx: Context | null, producer: Producer<T>, thisArg: unknown) => {
+export const createAtom = <T>(producer: Producer<T>, thisArg: unknown) => {
     if (isGenerator(producer)) {
-        return new GenAtom(parentCtx, producer as GenProducer<T>, thisArg) as Atom<T>
+        return new GnAtom(producer as GenProducer<T>, thisArg) as Atom<T>
     }
 
-    return new FunAtom(parentCtx, producer as FunProducer<T>, thisArg) as Atom<T>
+    return new FnAtom(producer as FunProducer<T>, thisArg) as Atom<T>
 }

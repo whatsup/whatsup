@@ -1,5 +1,5 @@
 import { Stream } from './stream'
-import { atom } from './atom'
+import { createAtom } from './atom'
 import { transaction } from './scheduler'
 
 export type DataHandler<T> = (data: T) => void
@@ -24,7 +24,7 @@ export const whatsUp = <T>(target: Stream<T>, onData?: DataHandler<T>, onError?:
         }
     }
 
-    const root = atom(null, generator, undefined)
+    const root = createAtom(generator, undefined)
 
     transaction((t) => t.addEntry(root))
 

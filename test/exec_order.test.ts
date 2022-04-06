@@ -1,16 +1,15 @@
-import { component } from '../src/component'
-import { observable } from '../src/observable'
 import { computed } from '../src/computed'
+import { observable } from '../src/observable'
 import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
     it('should run build only in transaction', () => {
-        const App = component(function* App() {
+        const App = computed(function* App() {
             while (true) {
                 yield (yield* Two) + (yield* One)
             }
         })
-        const One = component(function* One() {
+        const One = computed(function* One() {
             while (true) {
                 Two.set(6)
                 yield 3
@@ -31,19 +30,19 @@ describe('Execution order', () => {
     })
     it('normal updating from bottom to up', () => {
         const ids = [] as number[]
-        const App = component(function* () {
+        const App = computed(function* () {
             while (true) {
                 ids.push(1)
                 yield yield* One
             }
         })
-        const One = component(function* () {
+        const One = computed(function* () {
             while (true) {
                 ids.push(2)
                 yield yield* Two
             }
         })
-        const Two = component(function* () {
+        const Two = computed(function* () {
             while (true) {
                 ids.push(3)
                 yield yield* Hub

@@ -1,4 +1,5 @@
-import { component } from '../src/component'
+import { observable } from '../src/observable'
+import { computed } from '../src/computed'
 import { mutator, Mutator } from '../src/mutator'
 import { whatsUp } from '../src/whatsup'
 
@@ -12,11 +13,14 @@ describe('Mutators', () => {
                 return prev + 1
             }
         }
-        const Output = component(function* (ctx) {
-            kickstart = () => ctx.update()
+        const Output = computed(function* () {
+            const trigger = observable(0)
+
+            kickstart = () => trigger.set(Math.random())
 
             try {
                 while (true) {
+                    trigger.get()
                     yield new Increment()
                 }
             } finally {
@@ -50,10 +54,13 @@ describe('Mutators', () => {
         let result: any
         let kickstart: () => void
         const increment = mutator<number>((prev = 0) => prev + 1)
-        const Output = component(function* (ctx) {
-            kickstart = () => ctx.update()
+        const Output = computed(function* () {
+            const trigger = observable(0)
+
+            kickstart = () => trigger.set(Math.random())
 
             while (true) {
+                trigger.get()
                 yield increment
             }
         })
