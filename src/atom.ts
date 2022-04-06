@@ -89,9 +89,9 @@ export abstract class Atom<T = unknown> {
 
         if (error) {
             throw value
-        } else {
-            return value as T | Delegation<T>
         }
+
+        return value as T | Delegation<T>
     }
 
     rebuild() {
