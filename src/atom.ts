@@ -77,6 +77,10 @@ export abstract class Atom<T = unknown> {
             error = true
         }
 
+        if (value instanceof Mutator) {
+            value = value.mutate(this.cache as T)
+        }
+
         if (done) {
             this.relations.normalize()
         } else {
@@ -85,8 +89,6 @@ export abstract class Atom<T = unknown> {
 
         if (error) {
             throw value
-        } else if (value instanceof Mutator) {
-            return value.mutate(this.cache as T)
         } else {
             return value as T | Delegation<T>
         }
