@@ -1,7 +1,7 @@
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
 import { mutator, Mutator } from '../src/mutator'
-import { whatsUp } from '../src/whatsup'
+import { autorun } from '../src/reactions'
 
 describe('Mutators', () => {
     describe('test mutators', () => {
@@ -28,7 +28,7 @@ describe('Mutators', () => {
             }
         })
 
-        const dispose = whatsUp(output, (r) => (result = r))
+        const dispose = autorun(() => (result = output.get()))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)
@@ -65,7 +65,7 @@ describe('Mutators', () => {
             }
         })
 
-        whatsUp(output, (r) => (result = r))
+        autorun(() => (result = output.get()))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)

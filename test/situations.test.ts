@@ -1,6 +1,6 @@
+import { autorun } from '../src/reactions'
 import { computed } from '../src/computed'
 import { observable } from '../src/observable'
-import { whatsUp } from '../src/whatsup'
 
 describe('Situations', () => {
     describe('test reactions with initial values', () => {
@@ -11,7 +11,7 @@ describe('Situations', () => {
             while (true) yield `user ${name.get()} ${age.get()}`
         })
 
-        whatsUp(user, mock)
+        autorun(() => mock(user.get()))
 
         it(`mock called 1 time with "user John 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -29,7 +29,7 @@ describe('Situations', () => {
             }
         })
 
-        whatsUp(user, mock)
+        autorun(() => mock(user.get()))
 
         it(`mock called with "user John"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -67,7 +67,7 @@ describe('Situations', () => {
             while (true) yield `user ${name.get()}`
         })
 
-        whatsUp(user, mock)
+        autorun(() => mock(user.get()))
 
         it(`mock to be called 1 time with "user John"`, () => {
             expect(mock).toBeCalledTimes(1)

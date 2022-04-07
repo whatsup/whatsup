@@ -1,6 +1,6 @@
+import { autorun } from '../src/reactions'
 import { computed } from '../src/computed'
 import { observable } from '../src/observable'
-import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
     it('should run build only in transaction', () => {
@@ -19,7 +19,7 @@ describe('Execution order', () => {
 
         const mock = jest.fn()
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         expect(mock).toBeCalledTimes(2)
 
@@ -51,7 +51,7 @@ describe('Execution order', () => {
         const hub = observable(1)
         const mock = jest.fn()
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         expect(mock).lastCalledWith(1)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3]))
@@ -66,7 +66,7 @@ describe('Execution order', () => {
         const mock = jest.fn()
         const a = observable(1)
 
-        whatsUp(a, mock)
+        autorun(() => mock(a.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith(1)
@@ -91,7 +91,7 @@ describe('Execution order', () => {
             }
         })
 
-        whatsUp(c, mock)
+        autorun(() => mock(c.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('1 odd')

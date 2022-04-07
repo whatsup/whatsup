@@ -1,4 +1,4 @@
-import { whatsUp } from '../src/whatsup'
+import { autorun } from '../src/reactions'
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
 
@@ -8,7 +8,7 @@ describe('Computed', () => {
         const source = observable(1)
         const cell = computed(() => source.get() + 1)
 
-        whatsUp(cell as any, mock)
+        autorun(() => mock(cell.get()))
 
         expect(mock).toBeCalledWith(2)
 
@@ -25,7 +25,7 @@ describe('Computed', () => {
             return source.get() + 1
         })
 
-        const dispose = whatsUp(cell as any)
+        const dispose = autorun(() => cell.get())
 
         expect(mock).toBeCalledTimes(1)
 
@@ -48,7 +48,7 @@ describe('Computed', () => {
             return source.get() + 1
         })
 
-        const dispose = whatsUp(cell as any)
+        const dispose = autorun(() => cell.get())
 
         expect(mock).toBeCalledTimes(1)
 
@@ -79,7 +79,7 @@ describe('Computed', () => {
 
         expect(mock).toBeCalledTimes(2)
 
-        whatsUp(cell as any)
+        autorun(() => cell.get())
 
         expect(mock).toBeCalledTimes(3)
 
@@ -94,7 +94,7 @@ describe('Computed', () => {
         const two = observable(2)
         const cell = computed(() => one.get() + two.get())
 
-        whatsUp(cell as any, mock)
+        autorun(() => mock(cell.get()))
 
         expect(mock).toBeCalledWith(3)
 

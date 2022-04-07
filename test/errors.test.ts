@@ -1,7 +1,7 @@
 import { delegate } from '../src/delegation'
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
-import { whatsUp } from '../src/whatsup'
+import { autorun, reaction } from '../src/reactions'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
@@ -28,7 +28,7 @@ describe('Errors', () => {
             }
         })
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         it(`mock called with "user wallet balance 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -77,7 +77,7 @@ describe('Errors', () => {
             }
         })
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         it(`mock called with "Parent user wallet balance 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -122,7 +122,7 @@ describe('Errors', () => {
             }
         })
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         it(`mock called with "user wallet balance 10"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -174,7 +174,7 @@ describe('Errors', () => {
             }
         })
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         it(`mock called with "user wallet balance 100"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -229,7 +229,7 @@ describe('Errors', () => {
             }
         })
 
-        whatsUp(app, mock, mock2)
+        reaction(() => app.get(), mock, mock2)
 
         it(`mock called with "user balance 33"`, () => {
             expect(mock2).toBeCalledTimes(1)
@@ -239,13 +239,13 @@ describe('Errors', () => {
         it(`mock called with "user balance 10" always`, () => {
             toggle.set(false)
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('user balance 33')
+            expect(mock).lastCalledWith('user balance 33', undefined)
         })
 
         it(`mock called with "user balance 10"`, () => {
             balance.set(10)
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('user balance 10')
+            expect(mock).lastCalledWith('user balance 10', 'user balance 33')
         })
     })
 })

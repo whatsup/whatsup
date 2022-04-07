@@ -1,12 +1,12 @@
-import { whatsUp } from '../src/whatsup'
 import { observable } from '../src/observable'
+import { autorun } from '../src/reactions'
 
 describe('Observable', () => {
     it(`should react on change`, () => {
         const mock = jest.fn()
         const num = observable(1)
 
-        whatsUp(num as any, mock)
+        autorun(() => mock(num.get()))
 
         expect(mock).toBeCalledWith(1)
 

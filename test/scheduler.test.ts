@@ -1,7 +1,7 @@
 import { action } from '../src/scheduler'
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
-import { whatsUp } from '../src/whatsup'
+import { autorun } from '../src/reactions'
 
 describe('Scheduler', () => {
     it(`Should run every change in personal transaction`, () => {
@@ -13,7 +13,8 @@ describe('Scheduler', () => {
                 yield `${a.get()}${b.get()}c`
             }
         })
-        whatsUp(c, mock)
+
+        autorun(() => mock(c.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
@@ -35,7 +36,7 @@ describe('Scheduler', () => {
                 yield `${a.get()}${b.get()}c`
             }
         })
-        whatsUp(c, mock)
+        autorun(() => mock(c.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
@@ -60,12 +61,12 @@ describe('Scheduler', () => {
         })
         const c = observable('c')
 
-        whatsUp(c, mockC)
+        autorun(() => mockC(c.get()))
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
 
-        whatsUp(b, mockB)
+        autorun(() => mockB(b.get()))
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')
@@ -93,17 +94,17 @@ describe('Scheduler', () => {
         const c = observable('c')
         const d = observable('d')
 
-        whatsUp(c, mockC)
+        autorun(() => mockC(c.get()))
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
 
-        whatsUp(d, mockD)
+        autorun(() => mockD(d.get()))
 
         expect(mockD).toBeCalledTimes(1)
         expect(mockD).lastCalledWith('d')
 
-        whatsUp(b, mockB)
+        autorun(() => mockB(b.get()))
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')
@@ -145,7 +146,7 @@ describe('Scheduler', () => {
             while (true) yield `App ${user.get()} ${wallet.get()}`
         })
 
-        whatsUp(app, mock)
+        autorun(() => mock(app.get()))
 
         it(`mock to be called 1 time with "App User John Wallet 100"`, () => {
             expect(mock).toBeCalledTimes(1)

@@ -1,11 +1,10 @@
-import { whatsUp } from '../src/whatsup'
 import { list } from '../src/list'
+import { autorun } from '../src/reactions'
 
 describe('List', () => {
     let result: number[]
     const li = list<number>()
-
-    const dispose = whatsUp(li, (r) => (result = r))
+    const dispose = autorun(() => (result = li.get()))
 
     it(`should return 1, 2, 3`, () => {
         li.insert(1, 2, 3)

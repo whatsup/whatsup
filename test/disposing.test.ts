@@ -1,7 +1,7 @@
 import { computed } from '../src/computed'
 import { observable } from '../src/observable'
 import { delegate } from '../src/delegation'
-import { whatsUp } from '../src/whatsup'
+import { autorun } from '../src/reactions'
 
 describe('Disposing', () => {
     it(`should dispose deps when dispose callback called`, () => {
@@ -17,7 +17,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = whatsUp(a, mock)
+        const dispose = autorun(() => mock(a.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('A')
@@ -60,7 +60,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = whatsUp(c, mock)
+        const dispose = autorun(() => mock(c.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('AABC')
@@ -91,7 +91,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = whatsUp(a, mock)
+        const dispose = autorun(() => mock(a.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
@@ -122,7 +122,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = whatsUp(a, mock)
+        const dispose = autorun(() => mock(a.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
@@ -151,7 +151,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = whatsUp(a, mock)
+        const dispose = autorun(() => mock(a.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
@@ -180,7 +180,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = whatsUp(a, mock)
+        const dispose = autorun(() => mock(a.get()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
