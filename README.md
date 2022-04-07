@@ -17,45 +17,43 @@ Whats Up is a reactive framework based on the ideas of streams and fractals. It 
 
 ## Install
 
-Use the [WhatsUp CLI](https://github.com/whatsup/cli) to generate whatsup projects quickly. See below for the necessary steps:
-
-1. Install the WhatsUp CLI globally:
-
 ```bash
-npm i -g @whatsup/cli
+npm i whatsup
 # or
-yarn global add @whatsup/cli
+yarn add whatsup
 ```
 
-2. Create a project:
+## Components
 
-```bash
-whatsup project
-```
+### `Observable`
 
-3. Run the application:
-
-```bash
-npm start
-# or
-yarn start
-```
-
-## Streams
-
-### `Conse`
-
-it's like a observable
+Creates a trackable field. Has `.get` and `.set` methods
 
 ```ts
-import { conse } from 'whatsup'
+import { observable } from 'whatsup'
 
-const name = conse('Natali')
+const name = observable('Natali')
+
+name.get() // 'Natali'
+name.set('Aria')
+name.get() // 'Aria'
 ```
 
-### `Cause`
+### `Computed`
 
-it's like a computed
+Creates a derived field. Accepts a function or generator as an argument.
+
+```ts
+import { computed } from 'whatsup'
+
+const user = cause(() => {
+    return {
+        name: name.get(),
+    }
+})
+```
+
+With generator
 
 ```ts
 import { cause } from 'whatsup'
@@ -63,107 +61,57 @@ import { cause } from 'whatsup'
 const user = cause(function* () {
     while (true) {
         yield {
-            name: yield* name,
+            name: name.get(),
         }
     }
 })
 ```
 
-### `Fractal`
+Inside the generator, the keyword `yield` push data.
 
-This is the cherry on the cake. We'll tell you about it below :)
+The life cycle consists of three steps:
 
-## Simple rules
+1. create a new iterator using a generator
+2. the iterator starts executing and stops after `yield` or `return`, during this operation, all `.get()` calls automatically establish the observed dependencies
+3. when changing dependencies, if in the previous step the data was obtained using `yield`, the work continues from the second step; if there was a `return`, the work continues from the first step
 
-`yield` - send to stream
+The `return` statement does the same as the `yield` statement, but it does the iterator reset.
 
-`yield*` - read from stream
-
-## Watching
+## Reactions
 
 ```ts
-import { whatsUp } from 'whatsup'
+import { reaction } from 'whatsup'
 
-const onData = (data) => console.log(data)
-const onError = (err) => console.error(err)
+const name = observable('Natali')
+const dispose = reaction(
+    () => name.get(),
+    (name) => console.log(name)
+)
 
-const dispose = whatsUp(user, onData, onError)
-//> {name: 'Natali'}
+//> 'Natali'
 
 name.set('Aria')
-//> {name: 'Aria'}
 
-dispose() // to stop whatsUping
+//> 'Aria'
+
+dispose() // to stop watching
 ```
 
-## Extended example
-
-You can extend base classes, but you need to implement the `whatsUp` method
+### Autorun
 
 ```ts
-import { conse, cause, whatsUp } from 'whatsup'
+import { reaction } from 'whatsup'
 
-interface UserData {
-    name: string
-}
+const name = observable('Natali')
+const dispose = autorun(() => console.log(name.get()))
 
-class Name extends Conse<string> {}
+//> 'Natali'
 
-class User extends Cause<UserData> {
-    readonly name: Name
+name.set('Aria')
 
-    constructor(name: string) {
-        super()
-        this.name = new Name(name)
-    }
+//> 'Aria'
 
-    *whatsUp() {
-        while (true) {
-            yield {
-                name: yield* this.name,
-            }
-        }
-    }
-}
-
-const user = new User('Natali')
-
-whatsUp(user, (data) => console.log(data))
-//> {name: 'Natali'}
-
-user.name.set('Aria')
-//> {name: 'Aria'}
-```
-
-## Single argument of `whatsUp` method - `context: Context`
-
-The context has several useful methods for controlling flow, such as `update`
-
-```ts
-import { cause, whatsUp } from 'whatsup'
-
-class Timer extends Cause<number> {
-    constructor(readonly delay: number) {
-        super()
-    }
-
-    *whatsUp(ctx: Context) {
-        let i = 0
-
-        while (true) {
-            setTimeout(() => ctx.update(), this.delay)
-            //     kickstart ^^^^^^^^^^^^ updating loop
-            yield i++
-        }
-    }
-}
-
-const timer = new Timer(1000)
-
-whatsUp(timer, (data) => console.log(data))
-//> 0
-//> 1
-//> 2 ...
+dispose() // to stop watching
 ```
 
 ## Local-scoped variables & auto-dispose unnecessary dependencies
@@ -171,58 +119,45 @@ whatsUp(timer, (data) => console.log(data))
 You can store ancillary data available from calculation to calculation directly in the generator body and you can react to disposing with the native language capabilities
 
 ```ts
-import { conse, cause, whatsUp } from 'whatsup'
+import { observable, computed, autorun } from 'whatsup'
 
-class Timer extends Cause<number> {
-    constructor(readonly delay: number) {
-        super()
-    }
+const timer = computed(function* () {
+    // local scoped variables, they is alive while the timer is alive
+    let timeoutId: number
+    const value = observable(0)
 
-    *whatsUp(ctx: Context) {
-        let i = 0
-        let timeoutId: number
-
-        try {
-            while (true) {
-                timeoutId = setTimeout(() => ctx.update(), this.delay)
-                yield i++
-            }
-        } finally {
-            // This block will always be executed when unsubscribing from a stream.
-            clearTimeout(timeoutId)
-            console.log('Timer destroed')
-        }
-    }
-}
-
-class App extends Cause<number> {
-    readonly showTimer = conse(true);
-
-    *whatsUp() {
-        // local scoped Timer instance, she is alive while the stream App is alive
-        const timer = new Timer()
-
+    try {
         while (true) {
-            if (yield* this.showTimer) {
-                const time = yield* timer
-                yield time
-            } else {
-                yield 'App timer is hidden'
-            }
+            const val = value.get()
+
+            timeoutId = setTimeout(() => value.set(val + 1), 1000)
+
+            yield val
         }
+    } finally {
+        // This block will always be executed when unsubscribing
+        clearTimeout(timeoutId)
+        console.log('Timer destroed')
     }
-}
+})
 
-const app = new App()
+const useTimer = observable(true)
 
-whatsUp(app, (data) => console.log(data))
+const app = computed(() => {
+    if (useTimer.get()) {
+        return timer.get()
+    }
+    return 'App: timer is not used'
+})
+
+autorun(() => console.log(app.get()))
 //> 0
 //> 1
 //> 2
-app.showTimer.set(false)
+useTimer.set(false)
 //> Timer destroed
-//> App timer is hidden
-app.showTimer.set(true) // the timer starts from the beginning
+//> App: timer is not used
+useTimer.set(true) // the timer starts from the beginning
 //> 0
 //> 1
 //> ...
@@ -233,58 +168,36 @@ app.showTimer.set(true) // the timer starts from the beginning
 Allows you to create new data based on previous. You need just to implement the mutate method.
 
 ```ts
-import { cause, Mutator } from 'whatsup'
+import { observable, computed, mutator } from 'whatsup'
 
-class Increment extends Mutator<number> {
-    mutate(prev: number | undefined = 0) {
-        return prev + 1
-    }
-}
+const increment = mutator<number>((n = -1) => n + 1))
 
-class Timer extends Cause<number> {
-    constructor(readonly delay: number) {
-        super()
-    }
+const name = observable('John')
 
-    *whatsUp(ctx: Context) {
-        while (true) {
-            setTimeout(() => ctx.update(), this.delay)
-            yield new Increment()
-            // we no longer need to store a local counter "i"
-        }
-    }
-}
+const counter = computed(()=>{
+    name.get()
+    return increment
+    // we no need to store a local counter "i"
+})
+
+autorun(() => {
+    const count = counter.get()
+    console.log(`Name was changed ${count} times`)
+})
+
+//> Name was changed 0 times
+
+name.set('Barry')
+
+//> Name was changed 1 times
 ```
 
-## Mutator shorthand
-
-You can create a mutator using shorthand
-
-```ts
-import { cause, mutator } from 'whatsup'
-
-const increment = mutator<number>((n = 0) => n + 1)
-
-class Timer extends Cause<number> {
-    constructor(readonly delay: number) {
-        super()
-    }
-
-    *whatsUp(ctx: Context) {
-        while (true) {
-            setTimeout(() => ctx.update(), this.delay)
-            yield increment
-        }
-    }
-}
-```
-
-## Mutators & filters
+## Mutators as filters
 
 Mutators can be used to write filters.
 
 ```ts
-import { whatsUp, cause, Mutator } from 'whatsup'
+import { computed, reaction, Mutator } from 'whatsup'
 
 class EvenOnly extends Mutator<number> {
     readonly next: number
@@ -299,23 +212,15 @@ class EvenOnly extends Mutator<number> {
         // We allow the new value only if it is even,
         // otherwise we return the old value
         // if the new value is strictly equal (===) to the old value,
-        // the App will stop updates propagation
+        // the app will stop updates propagation
     }
 }
 
-class App extends Cause<number> {
-    *whatsUp() {
-        const timer = new Timer()
+const app = computed(() => {
+    return new EvenOnly(timer.get())
+})
 
-        while (true) {
-            yield new EvenOnly(yield* timer)
-        }
-    }
-}
-
-const app = new App()
-
-whatsUp(app, (data) => console.log(data))
+reaction(app, (data) => console.log(data))
 //> 0
 //> 2
 //> 4
@@ -325,7 +230,7 @@ whatsUp(app, (data) => console.log(data))
 You can create custom equal filters
 
 ```ts
-import { whatsUp, cause, Mutator } from 'whatsup'
+import { Mutator } from 'whatsup'
 
 class EqualArr<T> extends Mutator<T[]> {
     readonly arr: T[]
@@ -347,282 +252,62 @@ class EqualArr<T> extends Mutator<T[]> {
 }
 
 /*
-then in whatsUp generator - yield new EqualArr([...])
+then return new EqualArr([...])
 */
 ```
 
 ## Mutators & JSX
 
-Fractal has its own plugin that converts jsx-tags into mutators calls. You can read the installation details here [whatsup/babel-plugin-transform-jsx](https://github.com/whatsup/babel-plugin-transform-jsx) and [whatsup/jsx](https://github.com/whatsup/jsx)
+WhatsUp has its own plugin that converts jsx-tags into mutators calls. You can read the installation details here [whatsup/babel-plugin-transform-jsx](https://github.com/whatsup/babel-plugin-transform-jsx) and [whatsup/jsx](https://github.com/whatsup/jsx)
 
 ```tsx
-import { conse, Cause } from 'whatsup'
+import { observable } from 'whatsup'
 import { render } from '@whatsup-js/jsx'
 
-class User extends Cause<JSX.Element> {
-    readonly name = conse('John')
-    readonly age = conse(33);
+function* Clicker() {
+    const counter = observable(0)
 
-    *whatsUp() {
-        while (true) {
-            yield (
-                <Container>
-                    <Name>{yield* this.name}</Name>
-                    <Age>{yield* this.age}</Age>
-                </Container>
-            )
-        }
+    while (true) {
+        const count = counter.get()
+
+        yield (
+            <div>
+                <div>{count}</div>
+                <button onClick={() => counter.set(count + 1)}>Clcik me</button>
+            </div>
+        )
     }
 }
 
-const user = new User()
-
-render(user)
+render(<Clicker />)
 // Yes, we can render without a container, directly to the body
 ```
 
 The mutator gets the old DOMNode and mutates it into a new DOMNode the shortest way.
-
-## Fractal
-
-It looks like a cause, but for each consumer, the fractal creates a new iterator and context. Contexts bind to the consumer context like a parent-child relation and form a context tree. This allows you to organize the transfer of factors down the tree, as well as the bubbling of events up. A cause, unlike a fractal, creates one iterator for all consumers, and one context without a reference to the parent (root context).
-
-```tsx
-import { Fractal, Event, Context, factor } from 'whatsup'
-import { render } from '@whatsup-js/jsx'
-
-const Theme = factor<'light' | 'dark'>('light')
-// factor determining color scheme
-
-// сustom event for remove Todo
-class RemoveEvent extends Event {
-    constructor(readonly todo: Todo) {
-        super()
-    }
-}
-
-class Todo extends Fractal<JSX.Element> {
-    readonly name: Conse<string>
-
-    constructor(name: string) {
-        this.name = conse(name)
-    }
-
-    *whatsUp(ctx: Context) {
-        const theme = ctx.find(Theme)
-        //   get value of ^^^ Theme factor
-        const onClick = () => ctx.dispatch(new RemoveEvent(this))
-        //   start event bubbling ^^^^^^^^
-
-        while (true) {
-            yield (
-                <Container theme={theme}>
-                    <Name>{yield* this.name}</Name>
-                    <RemoveButton onClick={onClick} />
-                </Container>
-            )
-        }
-    }
-}
-
-class Todos extends Fractal<JSX.Element> {
-    readonly list: List<Todo> = list()
-
-    create(name: string) {
-        const todo = new Todo(name)
-        this.list.insert(todo)
-    }
-
-    remove(todo: Todo) {
-        this.list.delete(todo)
-    }
-
-    *whatsUp(ctx: Context) {
-        ctx.share(Theme, 'dark')
-        //  ^^^ define value of Theme factor for children contexts
-        ctx.on(RemoveEvent, (e) => this.remove(e.todo))
-        //  ^^ start event listening
-
-        while (true) {
-            const acc = []
-
-            for (const todo of yield* this.list) {
-                acc.push(yield* todo)
-            }
-
-            yield <Container>{acc}</Container>
-        }
-    }
-}
-
-const todos = new Todos()
-
-render(todos)
-```
-
-## Sharing
-
-This mechanism allows you to make any object publicly available to all children.
-
-```ts
-import { Fractal, whatsUp } from 'whatsup'
-
-class Session {
-    constructor(readonly token: string) {}
-}
-
-class App extends Fractal<string> {
-    *whatsUp(ctx: Context) {
-        const session = new Session('Secret token')
-        const page = new Page()
-
-        ctx.share(this.session) // share Session instance
-
-        while (true) {
-            yield `App ${yield* page}`
-        }
-    }
-}
-
-class Page extends Fractal<string> {
-    *whatsUp(ctx: Context) {
-        const session = ctx.get(Session) // get Session instance
-
-        while (true) {
-            yield `Page ${session.token}`
-        }
-    }
-}
-
-whatsUp(new App(), (d) => console.log(d))
-//> App Page Secret token
-```
-
-There is also a `find` method. It looks for objects with `instanceof`.
-
-## Sharing with factors
-
-The `share` method can take a factor as a share-key.
-
-```ts
-import { Fractal, whatsUp, factor } from 'whatsup'
-
-const Theme = factor<string>('light')
-//             default value ^^^^^^^
-
-class App extends Fractal<string> {
-    *whatsUp(ctx: Context) {
-        const page = new Page()
-
-        ctx.share(Theme, 'dark') // share theme value for children contexts
-
-        while (true) {
-            yield `App ${yield* page}`
-        }
-    }
-}
-
-class Page extends Fractal<string> {
-    *whatsUp(ctx: Context) {
-        const theme = ctx.get(Theme) // get Theme shared value
-        // when no factor is found (not shared in parents)
-        // the default value is returned - 'light'
-
-        while (true) {
-            yield `Page. Theme is ${theme}.`
-        }
-    }
-}
-
-whatsUp(new App(), (d) => console.log(d))
-//> Page. Theme is dark.
-```
-
-## Asynchrony (deferred job)
-
-The context has a `defer` method. This method allows you to start the execution of asynchronous code, after the execution of which `ctx.update()` will be automatically called. Defer returns an object like `{done: boolean, value: T}`.
-
-```ts
-import { Cause, whatsUp } from 'whatsup'
-
-// welcome.ts
-export class Welcome extends Cause<string> {
-    *whatsUp() {
-        while (true) {
-            yield 'Hello world'
-        }
-    }
-}
-
-// app.ts
-class App extends Cause<string> {
-    *whatsUp(ctx) {
-        const deferred = ctx.defer(async function () {
-            const { Welcome } = await import('./welcome')
-            return new Welcome()
-        })
-
-        // deferred is {done: false}
-
-        yield 'Loading...'
-
-        // deferred is {done: true, value: Welcome}
-
-        const welcome = deferred.value
-
-        while (true) {
-            yield `App: ${yield* welcome}`
-        }
-    }
-}
-
-whatsUp(new App(), (d) => console.log(d))
-//> Loading...
-//> App: Hello world
-```
 
 ## Delegation
 
 A useful mechanism by which a stream can delegate its work to another stream.
 
 ```ts
-import { fractal, conse, whatsUp, delegate } from 'whatsup'
+import { computed, observable, reaction, delegate } from 'whatsup'
 
-const Name = conse('John')
+const name = observable('John')
 
-const User = fractal(function* () {
+const user = computed(function* () {
     while (true) {
-        yield `User ${yield* Name}`
+        yield `User ${name.get()}`
     }
 })
 
-const Guest = fractal(function* () {
+const guest = computed(function* () {
     while (true) {
-        yield delegate(User) // delegate work to User
+        yield delegate(user) // delegate work to user
     }
 })
 
-const guest = new Guest()
-
-whatsUp(guest, (data) => console.log(data))
+reaction(guest, (data) => console.log(data))
 //> User John
-```
-
-In the following example, you can see what happens if a delegation is passed to the conse.
-
-```ts
-import { cause, conse, whatsUp, delegate } from 'whatsup'
-
-const BarryName = cause(function* () {
-    while (true) yield 'Barry'
-})
-
-const Name = conse('John')
-
-whatsUp(Name, (data) => console.log(data))
-//> John
-Name.set(delegate(BarryName))
-//> Barry
 ```
 
 ## Incremental & glitch-free computing
@@ -630,27 +315,15 @@ Name.set(delegate(BarryName))
 All dependencies are updated synchronously in a topological sequence without unnecessary calculations.
 
 ```ts
-import { conse, cause, whatsUp } from 'whatsup'
+import { observable, compiuted, reaction } from 'whatsup'
 
-const num = conse(1)
-const evenOrOdd = cause(function* () {
-    while (true) {
-        yield (yield* num) % 2 === 0 ? 'even' : 'odd'
-    }
-})
-const isEven = cause(function* () {
-    while (true) {
-        yield `${yield* num} is ${yield* evenOrOdd}`
-    }
-})
-const isZero = cause(function* () {
-    while (true) {
-        yield (yield* num) === 0 ? 'zero' : 'not zero'
-    }
-})
+const num = observable(1)
+const evenOrOdd = computed(() => (num.get() % 2 === 0 ? 'even' : 'odd'))
+const isEven = computed(() => `${num.get()} is ${yield * evenOrOdd}`)
+const isZero = computed(() => (num.get() === 0 ? 'zero' : 'not zero'))
 
-whatsUp(isEven, (data) => console.log(data))
-whatsUp(isZero, (data) => console.log(data))
+reaction(isEven, (data) => console.log(data))
+reaction(isZero, (data) => console.log(data))
 //> 1 is odd
 //> not zero
 num.set(2)
@@ -661,25 +334,3 @@ num.set(0)
 //> 0 is even
 //> zero
 ```
-
-## Lifecycle
-
-Inside the generator, the keyword `yield` push data to stream, and `yield*` pull data from stream.
-
-![](https://hsto.org/webt/pv/tm/gz/pvtmgzvnerzt4sns6nuha-fmkgy.jpeg)
-
-The life cycle consists of three steps:
-
-1. create a new iterator using a generator
-2. the iterator starts executing and stops after `yield` or `return`, during this operation, all calls to `yield*` automatically establish the observed dependencies; as soon as a new data is generated, the stream reports this to the parent and goes into standby mode for updates
-3. having received the update message, the stream clears the list of dependencies and, if in the previous step the data was obtained using `yield`, the stream continues its work from the second step; if there was a `return`, the work continues from the first step
-
-The `return` statement does the same as the `yield` statement, but it does the iterator reset, and the stream starts its life anew.
-
-## Examples
-
--   [Sierpinski](https://whatsup.github.io/sierpinski) - perfomance test like React sierpinski triangle. [[source](https://github.com/whatsup/whatsup.github.io/tree/master/src/root/sierpinski)]
--   [Todos](https://whatsup.github.io/todos) - WhatsUp realization of TodoMVC. [[source](https://github.com/whatsup/whatsup.github.io/tree/master/src/root/todos)]
--   [Loadable](https://whatsup.github.io/loadable) - an example showing how you can organize the display of loaders during background loading. I specifically added small delays there in order to slow down the processes. [[source](https://github.com/whatsup/whatsup.github.io/tree/master/src/root/loadable)]
--   [Factors](https://whatsup.github.io/factors) - work in different conditions. One and the same fractal, depending on the factor set in the context, gives three different results, and also maintains their relevance. Try editing the name and age. [[source](https://github.com/whatsup/whatsup.github.io/tree/master/src/root/factors)]
--   [Antistress](https://whatsup.github.io/antistress) - just a toy, click the balls, paint them in different colors and get cool pictures. In fact, this is a fractal that shows a circle inside itself, or three of the same fractals inscribed in the perimeter of the circle. Click - paint, long click - crush, long click in the center of the crushed circle - return to its original state. If you crush the circles to a sufficiently deep level, you can see the [Sierpinski triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle). [[source](https://github.com/whatsup/whatsup.github.io/tree/master/src/root/antistress)]
