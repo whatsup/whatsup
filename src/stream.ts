@@ -13,5 +13,4 @@ export type Producer<T> = GenProducer<T> | FunProducer<T>
 export abstract class Stream<T = unknown> {
     /* @internal */
     abstract readonly atom: Atom<T>
-    abstract [Symbol.iterator](): Generator<any, T, any>
 }

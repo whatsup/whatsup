@@ -9,10 +9,6 @@ export class Observable<T = unknown> extends Computed<T> {
         this.value = value
     }
 
-    *[Symbol.iterator](): Generator<any, T, any> {
-        return this.get()
-    }
-
     set(value: T) {
         this.value = value
 

@@ -10,10 +10,6 @@ export class Computed<T = unknown> extends Stream<T> {
         this.atom = createAtom(producer, thisArg)
     }
 
-    *[Symbol.iterator](): Generator<any, T, any> {
-        return this.get()
-    }
-
     get() {
         return this.atom.get()
     }

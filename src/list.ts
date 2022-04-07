@@ -51,6 +51,10 @@ export class List<T> extends Observable<T[]> {
         this.set(newItems)
         return this
     }
+
+    *[Symbol.iterator]() {
+        yield* this.get()
+    }
 }
 
 export function list<T>(items: T[] = []) {
