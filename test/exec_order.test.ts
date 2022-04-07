@@ -4,22 +4,22 @@ import { whatsUp } from '../src/whatsup'
 
 describe('Execution order', () => {
     it('should run build only in transaction', () => {
-        const App = computed(function* App() {
+        const app = computed(function* App() {
             while (true) {
-                yield (yield* Two) + (yield* One)
+                yield two.get() + one.get()
             }
         })
-        const One = computed(function* One() {
+        const one = computed(function* One() {
             while (true) {
-                Two.set(6)
+                two.set(6)
                 yield 3
             }
         })
-        const Two = observable(5)
+        const two = observable(5)
 
         const mock = jest.fn()
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
         expect(mock).toBeCalledTimes(2)
 
@@ -30,33 +30,33 @@ describe('Execution order', () => {
     })
     it('normal updating from bottom to up', () => {
         const ids = [] as number[]
-        const App = computed(function* () {
+        const app = computed(function* () {
             while (true) {
                 ids.push(1)
-                yield yield* One
+                yield one.get()
             }
         })
-        const One = computed(function* () {
+        const one = computed(function* () {
             while (true) {
                 ids.push(2)
-                yield yield* Two
+                yield two.get()
             }
         })
-        const Two = computed(function* () {
+        const two = computed(function* () {
             while (true) {
                 ids.push(3)
-                yield yield* Hub
+                yield hub.get()
             }
         })
-        const Hub = observable(1)
+        const hub = observable(1)
         const mock = jest.fn()
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
         expect(mock).lastCalledWith(1)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3]))
 
-        Hub.set(2)
+        hub.set(2)
 
         expect(mock).lastCalledWith(2)
         expect(ids).toEqual(expect.arrayContaining([1, 2, 3, 3, 2, 1]))
@@ -82,12 +82,12 @@ describe('Execution order', () => {
         const a = observable(1)
         const b = computed(function* () {
             while (true) {
-                yield (yield* a) % 2 === 0 ? 'even' : 'odd'
+                yield a.get() % 2 === 0 ? 'even' : 'odd'
             }
         })
         const c = computed(function* () {
             while (true) {
-                yield `${yield* a} ${yield* b}`
+                yield `${a.get()} ${b.get()}`
             }
         })
 

@@ -13,7 +13,7 @@ describe('Mutators', () => {
                 return prev + 1
             }
         }
-        const Output = computed(function* () {
+        const output = computed(function* () {
             const trigger = observable(0)
 
             kickstart = () => trigger.set(Math.random())
@@ -28,7 +28,7 @@ describe('Mutators', () => {
             }
         })
 
-        const dispose = whatsUp(Output, (r) => (result = r))
+        const dispose = whatsUp(output, (r) => (result = r))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)
@@ -54,7 +54,7 @@ describe('Mutators', () => {
         let result: any
         let kickstart: () => void
         const increment = mutator<number>((prev = 0) => prev + 1)
-        const Output = computed(function* () {
+        const output = computed(function* () {
             const trigger = observable(0)
 
             kickstart = () => trigger.set(Math.random())
@@ -65,7 +65,7 @@ describe('Mutators', () => {
             }
         })
 
-        whatsUp(Output, (r) => (result = r))
+        whatsUp(output, (r) => (result = r))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)

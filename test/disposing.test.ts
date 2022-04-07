@@ -44,7 +44,7 @@ describe('Disposing', () => {
         const b = computed(function* () {
             try {
                 while (true) {
-                    yield `${yield* a}B`
+                    yield `${a.get()}B`
                 }
             } finally {
                 mockB()
@@ -53,7 +53,7 @@ describe('Disposing', () => {
         const c = computed(function* () {
             try {
                 while (true) {
-                    yield `${yield* a}${yield* b}C`
+                    yield `${a.get()}${b.get()}C`
                 }
             } finally {
                 mockC()
@@ -78,7 +78,7 @@ describe('Disposing', () => {
         const toggle = observable(true)
         const a = computed(function* () {
             while (true) {
-                yield (yield* toggle) ? yield* b : 'A'
+                yield toggle.get() ? b.get() : 'A'
             }
         })
         const b = computed(function* () {
@@ -109,7 +109,7 @@ describe('Disposing', () => {
         const toggle = observable(true)
         const a = computed<string>(function* () {
             while (true) {
-                yield (yield* toggle) ? yield delegate(b) : 'A'
+                yield toggle.get() ? yield delegate(b) : 'A'
             }
         })
         const b = computed(function* () {
@@ -139,7 +139,7 @@ describe('Disposing', () => {
         const mockB = jest.fn()
         const toggle = observable(true)
         const a = computed(function* () {
-            return (yield* toggle) ? yield* b : 'A'
+            return toggle.get() ? b.get() : 'A'
         })
         const b = computed(function* () {
             try {
@@ -168,7 +168,7 @@ describe('Disposing', () => {
         const mockB = jest.fn()
         const toggle = observable(true)
         const a = computed<string>(function* () {
-            return (yield* toggle) ? yield delegate(b) : 'A'
+            return toggle.get() ? yield delegate(b) : 'A'
         })
         const b = computed(function* () {
             try {

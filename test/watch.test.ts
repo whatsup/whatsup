@@ -3,30 +3,30 @@ import { computed } from '../src/computed'
 import { whatsUp } from '../src/whatsup'
 
 describe('Watcher', () => {
-    it(`should call onError when error`, () => {
+    it(`should call onerror when error`, () => {
         const dataMock = jest.fn()
         const errMock = jest.fn()
-        const Num = observable(1)
-        const Err = computed(function* () {
+        const num = observable(1)
+        const err = computed(function* () {
             while (true) {
-                const n = yield* Num
+                const n = num.get()
                 if (n < 0) {
-                    throw 'Num less than 0'
+                    throw 'num less than 0'
                 }
-                yield yield* Num
+                yield num.get()
             }
         })
 
-        whatsUp(Err, dataMock, errMock)
+        whatsUp(err, dataMock, errMock)
 
         expect(dataMock).toBeCalledTimes(1)
         expect(errMock).toBeCalledTimes(0)
         expect(dataMock).lastCalledWith(1)
 
-        Num.set(-1)
+        num.set(-1)
 
         expect(dataMock).toBeCalledTimes(1)
         expect(errMock).toBeCalledTimes(1)
-        expect(errMock).lastCalledWith('Num less than 0')
+        expect(errMock).lastCalledWith('num less than 0')
     })
 })

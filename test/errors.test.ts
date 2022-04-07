@@ -6,246 +6,246 @@ import { whatsUp } from '../src/whatsup'
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
         const mock = jest.fn((v) => v)
-        const Balance = observable(33)
-        const App = computed(function* () {
-            while (true) yield `User ${yield* User}`
+        const balance = observable(33)
+        const app = computed(function* () {
+            while (true) yield `user ${user.get()}`
         })
-        const User = computed(function* () {
+        const user = computed(function* () {
             while (true) {
                 try {
-                    yield `Wallet ${yield* Wallet}`
+                    yield `wallet ${wallet.get()}`
                 } catch (e) {
                     yield `Error in user ${e}`
                 }
             }
         })
-        const Wallet = computed(function* () {
+        const wallet = computed(function* () {
             while (true) {
-                if ((yield* Balance) <= 0) {
+                if (balance.get() <= 0) {
                     throw 'ZEROBALANCE'
                 }
-                yield `Balance ${yield* Balance}`
+                yield `balance ${balance.get()}`
             }
         })
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
-        it(`mock called with "User Wallet Balance 33"`, () => {
+        it(`mock called with "user wallet balance 33"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User Wallet Balance 33')
+            expect(mock).lastCalledWith('user wallet balance 33')
         })
 
-        it(`mock called with "User Error in user ZEROBALANCE"`, () => {
-            Balance.set(-1)
+        it(`mock called with "user Error in user ZEROBALANCE"`, () => {
+            balance.set(-1)
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Error in user ZEROBALANCE')
+            expect(mock).lastCalledWith('user Error in user ZEROBALANCE')
         })
 
-        it(`when data changed & the error is fixed - mock called with "User Wallet Balance 10"`, () => {
-            Balance.set(10)
+        it(`when data changed & the error is fixed - mock called with "user wallet balance 10"`, () => {
+            balance.set(10)
             expect(mock).toBeCalledTimes(3)
-            expect(mock).lastCalledWith('User Wallet Balance 10')
+            expect(mock).lastCalledWith('user wallet balance 10')
         })
     })
 
     describe('test catch error on other parent levels (error propagation)', () => {
         const mock = jest.fn((v) => v)
-        const Balance = observable(33)
-        const App = computed(function* () {
-            while (true) yield `Parent ${yield* Parent}`
+        const balance = observable(33)
+        const app = computed(function* () {
+            while (true) yield `Parent ${parent.get()}`
         })
-        const Parent = computed(function* () {
+        const parent = computed(function* () {
             while (true) {
                 try {
-                    yield `User ${yield* User}`
+                    yield `user ${user.get()}`
                 } catch (e) {
                     yield `Error in parent ${e}`
                 }
             }
         })
-        const User = computed(function* () {
+        const user = computed(function* () {
             while (true) {
-                yield `Wallet ${yield* Wallet}`
+                yield `wallet ${wallet.get()}`
             }
         })
-        const Wallet = computed(function* () {
+        const wallet = computed(function* () {
             while (true) {
-                if ((yield* Balance) <= 0) {
+                if (balance.get() <= 0) {
                     throw 'ZEROBALANCE'
                 }
-                yield `Balance ${yield* Balance}`
+                yield `balance ${balance.get()}`
             }
         })
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
-        it(`mock called with "Parent User Wallet Balance 33"`, () => {
+        it(`mock called with "Parent user wallet balance 33"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('Parent User Wallet Balance 33')
+            expect(mock).lastCalledWith('Parent user wallet balance 33')
         })
 
         it(`mock called with "Parent Error in parent ZEROBALANCE"`, () => {
-            Balance.set(-1)
+            balance.set(-1)
             expect(mock).toBeCalledTimes(2)
             expect(mock).lastCalledWith('Parent Error in parent ZEROBALANCE')
         })
 
-        it(`when data changed & the error is fixed - mock called with "Parent User Wallet Balance 10"`, () => {
-            Balance.set(10)
+        it(`when data changed & the error is fixed - mock called with "Parent user wallet balance 10"`, () => {
+            balance.set(10)
             expect(mock).toBeCalledTimes(3)
-            expect(mock).lastCalledWith('Parent User Wallet Balance 10')
+            expect(mock).lastCalledWith('Parent user wallet balance 10')
         })
     })
 
     describe('test throw & catch error with alive error data', () => {
         const mock = jest.fn((v) => v)
-        const Balance = observable(10)
-        const App = computed(function* () {
-            while (true) yield `User ${yield* User}`
+        const balance = observable(10)
+        const app = computed(function* () {
+            while (true) yield `user ${user.get()}`
         })
-        const User = computed(function* () {
+        const user = computed(function* () {
             while (true) {
                 try {
-                    yield `Wallet ${yield* Wallet}`
+                    yield `wallet ${wallet.get()}`
                 } catch (e) {
                     yield `Error in user ${e}`
                 }
             }
         })
-        const Wallet = computed(function* () {
+        const wallet = computed(function* () {
             while (true) {
-                const balance = yield* Balance
-                if (balance <= 0) {
-                    throw `ZEROBALANCE ${balance}`
+                const bal = balance.get()
+                if (bal <= 0) {
+                    throw `ZEROBALANCE ${bal}`
                 }
-                yield `Balance ${balance}`
+                yield `balance ${bal}`
             }
         })
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
-        it(`mock called with "User Wallet Balance 10"`, () => {
+        it(`mock called with "user wallet balance 10"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User Wallet Balance 10')
+            expect(mock).lastCalledWith('user wallet balance 10')
         })
 
-        it(`mock called with "User Error in user ZEROBALANCE -5"`, () => {
-            Balance.set(-5)
+        it(`mock called with "user Error in user ZEROBALANCE -5"`, () => {
+            balance.set(-5)
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Error in user ZEROBALANCE -5')
+            expect(mock).lastCalledWith('user Error in user ZEROBALANCE -5')
         })
 
-        it(`change Balance & mock called with "User Error in user ZEROBALANCE -10"`, () => {
-            Balance.set(-10)
+        it(`change balance & mock called with "user Error in user ZEROBALANCE -10"`, () => {
+            balance.set(-10)
             expect(mock).toBeCalledTimes(3)
-            expect(mock).lastCalledWith('User Error in user ZEROBALANCE -10')
+            expect(mock).lastCalledWith('user Error in user ZEROBALANCE -10')
         })
 
-        it(`change Balance & the error is fixed - mock called with "User Wallet Balance 10"`, () => {
-            Balance.set(10)
+        it(`change balance & the error is fixed - mock called with "user wallet balance 10"`, () => {
+            balance.set(10)
             expect(mock).toBeCalledTimes(4)
-            expect(mock).lastCalledWith('User Wallet Balance 10')
+            expect(mock).lastCalledWith('user wallet balance 10')
         })
     })
 
     describe('test throw & catch error with alive error & catcher data', () => {
         const mock = jest.fn((v) => v)
-        const Count = observable(0)
-        const Balance = observable(100)
-        const App = computed(function* () {
-            while (true) yield `User ${yield* User}`
+        const count = observable(0)
+        const balance = observable(100)
+        const app = computed(function* () {
+            while (true) yield `user ${user.get()}`
         })
-        const User = computed(function* () {
+        const user = computed(function* () {
             while (true) {
                 try {
-                    yield `Wallet ${yield* Wallet}`
+                    yield `wallet ${wallet.get()}`
                 } catch (e) {
-                    yield `Error in user ${e} ${yield* Count}`
+                    yield `Error in user ${e} ${count.get()}`
                 }
             }
         })
-        const Wallet = computed(function* () {
+        const wallet = computed(function* () {
             while (true) {
-                const balance = yield* Balance
-                if (balance <= 0) {
-                    throw `ZEROBALANCE ${balance}`
+                const bal = balance.get()
+                if (bal <= 0) {
+                    throw `ZEROBALANCE ${bal}`
                 }
-                yield `Balance ${balance}`
+                yield `balance ${bal}`
             }
         })
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
-        it(`mock called with "User Wallet Balance 100"`, () => {
+        it(`mock called with "user wallet balance 100"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User Wallet Balance 100')
+            expect(mock).lastCalledWith('user wallet balance 100')
         })
 
-        it(`mock called with "User Error in user ZEROBALANCE -5 0"`, () => {
-            Balance.set(-5)
+        it(`mock called with "user Error in user ZEROBALANCE -5 0"`, () => {
+            balance.set(-5)
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Error in user ZEROBALANCE -5 0')
+            expect(mock).lastCalledWith('user Error in user ZEROBALANCE -5 0')
         })
 
-        it(`change Balance & mock called with "User Error in user ZEROBALANCE -10 0"`, () => {
-            Balance.set(-10)
+        it(`change balance & mock called with "user Error in user ZEROBALANCE -10 0"`, () => {
+            balance.set(-10)
             expect(mock).toBeCalledTimes(3)
-            expect(mock).lastCalledWith('User Error in user ZEROBALANCE -10 0')
+            expect(mock).lastCalledWith('user Error in user ZEROBALANCE -10 0')
         })
 
-        it(`change Count & mock called with "User Error in user ZEROBALANCE -10 1"`, () => {
-            Count.set(1)
+        it(`change Count & mock called with "user Error in user ZEROBALANCE -10 1"`, () => {
+            count.set(1)
             expect(mock).toBeCalledTimes(4)
-            expect(mock).lastCalledWith('User Error in user ZEROBALANCE -10 1')
+            expect(mock).lastCalledWith('user Error in user ZEROBALANCE -10 1')
         })
 
-        it(`change Balance & the error is fixed - mock called with "User Wallet Balance 100"`, () => {
-            Balance.set(100)
+        it(`change balance & the error is fixed - mock called with "user wallet balance 100"`, () => {
+            balance.set(100)
             expect(mock).toBeCalledTimes(5)
-            expect(mock).lastCalledWith('User Wallet Balance 100')
+            expect(mock).lastCalledWith('user wallet balance 100')
         })
     })
 
     describe('test catch error with delegating', () => {
         const mock = jest.fn((v) => v)
         const mock2 = jest.fn((v) => v)
-        const Toggle = observable(true)
-        const Balance = observable(33)
-        const App = computed(function* () {
+        const toggle = observable(true)
+        const balance = observable(33)
+        const app = computed(function* () {
             while (true) {
-                yield `User ${yield* User}`
+                yield `user ${user.get()}`
             }
         })
-        const User = computed(function* () {
-            if (yield* Toggle) {
-                throw delegate(Wallet)
+        const user = computed(function* () {
+            if (toggle.get()) {
+                throw delegate(wallet)
             } else {
-                return delegate(Wallet)
+                return delegate(wallet)
             }
         })
-        const Wallet = computed(function* () {
+        const wallet = computed(function* () {
             while (true) {
-                yield `Balance ${yield* Balance}`
+                yield `balance ${balance.get()}`
             }
         })
 
-        whatsUp(App, mock, mock2)
+        whatsUp(app, mock, mock2)
 
-        it(`mock called with "User Balance 33"`, () => {
+        it(`mock called with "user balance 33"`, () => {
             expect(mock2).toBeCalledTimes(1)
-            expect(mock2).lastCalledWith(delegate(Wallet))
+            expect(mock2).lastCalledWith(delegate(wallet))
         })
 
-        it(`mock called with "User Balance 10" always`, () => {
-            Toggle.set(false)
+        it(`mock called with "user balance 10" always`, () => {
+            toggle.set(false)
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User Balance 33')
+            expect(mock).lastCalledWith('user balance 33')
         })
 
-        it(`mock called with "User Balance 10"`, () => {
-            Balance.set(10)
+        it(`mock called with "user balance 10"`, () => {
+            balance.set(10)
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Balance 10')
+            expect(mock).lastCalledWith('user balance 10')
         })
     })
 })

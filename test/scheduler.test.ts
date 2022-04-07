@@ -10,7 +10,7 @@ describe('Scheduler', () => {
         const b = observable('b')
         const c = computed(function* () {
             while (true) {
-                yield `${yield* a}${yield* b}c`
+                yield `${a.get()}${b.get()}c`
             }
         })
         whatsUp(c, mock)
@@ -32,7 +32,7 @@ describe('Scheduler', () => {
         const b = observable('b')
         const c = computed(function* () {
             while (true) {
-                yield `${yield* a}${yield* b}c`
+                yield `${a.get()}${b.get()}c`
             }
         })
         whatsUp(c, mock)
@@ -54,8 +54,8 @@ describe('Scheduler', () => {
         const a = observable('a')
         const b = computed(function* () {
             while (true) {
-                c.set(`${yield* a}b`)
-                yield `${yield* a}b`
+                c.set(`${a.get()}b`)
+                yield `${a.get()}b`
             }
         })
         const c = observable('c')
@@ -85,9 +85,9 @@ describe('Scheduler', () => {
         const a = observable('a')
         const b = computed(function* () {
             while (true) {
-                c.set(`${yield* a}c`)
-                d.set(`${yield* a}d`)
-                yield `${yield* a}b`
+                c.set(`${a.get()}c`)
+                d.set(`${a.get()}d`)
+                yield `${a.get()}b`
             }
         })
         const c = observable('c')
@@ -127,25 +127,25 @@ describe('Scheduler', () => {
         const mock = jest.fn()
         const mockWallet = jest.fn()
         const mockUser = jest.fn()
-        const Balance = observable(100)
-        const Name = observable<string>('John')
-        const Wallet = computed(function* () {
+        const balance = observable(100)
+        const name = observable<string>('John')
+        const wallet = computed(function* () {
             while (true) {
                 mockWallet()
-                yield `Wallet ${yield* Balance}`
+                yield `Wallet ${balance.get()}`
             }
         })
-        const User = computed(function* () {
+        const user = computed(function* () {
             while (true) {
                 mockUser()
-                yield `User ${yield* Name}`
+                yield `User ${name.get()}`
             }
         })
-        const App = computed(function* () {
-            while (true) yield `App ${yield* User} ${yield* Wallet}`
+        const app = computed(function* () {
+            while (true) yield `App ${user.get()} ${wallet.get()}`
         })
 
-        whatsUp(App, mock)
+        whatsUp(app, mock)
 
         it(`mock to be called 1 time with "App User John Wallet 100"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -155,7 +155,7 @@ describe('Scheduler', () => {
         })
 
         it(`"Barry" as Name and mockWallet to not be called`, () => {
-            Name.set('Barry')
+            name.set('Barry')
             expect(mock).toBeCalledTimes(2)
             expect(mockWallet).toBeCalledTimes(1)
             expect(mockUser).toBeCalledTimes(2)
@@ -163,7 +163,7 @@ describe('Scheduler', () => {
         })
 
         it(`"200" as Balance and mockUser to not be called`, () => {
-            Balance.set(200)
+            balance.set(200)
             expect(mock).toBeCalledTimes(3)
             expect(mockWallet).toBeCalledTimes(2)
             expect(mockUser).toBeCalledTimes(2)

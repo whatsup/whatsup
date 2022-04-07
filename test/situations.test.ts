@@ -5,85 +5,85 @@ import { whatsUp } from '../src/whatsup'
 describe('Situations', () => {
     describe('test reactions with initial values', () => {
         const mock = jest.fn()
-        const Name = observable('John')
-        const Age = observable(33)
-        const User = computed(function* () {
-            while (true) yield `User ${yield* Name} ${yield* Age}`
+        const name = observable('John')
+        const age = observable(33)
+        const user = computed(function* () {
+            while (true) yield `user ${name.get()} ${age.get()}`
         })
 
-        whatsUp(User, mock)
+        whatsUp(user, mock)
 
-        it(`mock called 1 time with "User John 33"`, () => {
+        it(`mock called 1 time with "user John 33"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User John 33')
+            expect(mock).lastCalledWith('user John 33')
         })
     })
 
     describe('react only on connected computeds', () => {
         const mock = jest.fn()
-        const Switch = observable(true)
-        const Name = observable('John')
-        const User = computed(function* () {
+        const toggle = observable(true)
+        const name = observable('John')
+        const user = computed(function* () {
             while (true) {
-                yield `User ${(yield* Switch) ? yield* Name : 'Default'}`
+                yield `user ${toggle.get() ? name.get() : 'Default'}`
             }
         })
 
-        whatsUp(User, mock)
+        whatsUp(user, mock)
 
-        it(`mock called with "User John"`, () => {
+        it(`mock called with "user John"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User John')
+            expect(mock).lastCalledWith('user John')
         })
 
-        it(`change Switch to "false" and mock to be called with "User Default"`, () => {
-            Switch.set(false)
+        it(`change toggle to "false" and mock to be called with "user Default"`, () => {
+            toggle.set(false)
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Default')
+            expect(mock).lastCalledWith('user Default')
         })
 
         it(`change name to "Barry" and mock not to be called`, () => {
-            Name.set('Barry')
+            name.set('Barry')
             expect(mock).toBeCalledTimes(2)
         })
 
-        it(`change Switch to "true" and mock to be called with "User Barry"`, () => {
-            Switch.set(true)
+        it(`change toggle to "true" and mock to be called with "user Barry"`, () => {
+            toggle.set(true)
             expect(mock).toBeCalledTimes(3)
-            expect(mock).lastCalledWith('User Barry')
+            expect(mock).lastCalledWith('user Barry')
         })
 
-        it(`change name to "Jessy" and mock to be called with "User Jessy"`, () => {
-            Name.set('Jessy')
+        it(`change name to "Jessy" and mock to be called with "user Jessy"`, () => {
+            name.set('Jessy')
             expect(mock).toBeCalledTimes(4)
-            expect(mock).lastCalledWith('User Jessy')
+            expect(mock).lastCalledWith('user Jessy')
         })
     })
 
     describe('test reactions on unique values only', () => {
         const mock = jest.fn()
-        const Name = observable<string>('John')
-        const User = computed(function* () {
-            while (true) yield `User ${yield* Name}`
+        const name = observable<string>('John')
+        const user = computed(function* () {
+            while (true) yield `user ${name.get()}`
         })
 
-        whatsUp(User, mock)
+        whatsUp(user, mock)
 
-        it(`mock to be called 1 time with "User John"`, () => {
+        it(`mock to be called 1 time with "user John"`, () => {
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User John')
+            expect(mock).lastCalledWith('user John')
         })
 
-        it(`again use "John" as Name and mock to not be called`, () => {
-            Name.set('John')
+        it(`again use "John" as name and mock to not be called`, () => {
+            name.set('John')
             expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('User John')
+            expect(mock).lastCalledWith('user John')
         })
 
-        it(`use "Barry" as Name and mock to be called 1 time with "User Barry"`, () => {
-            Name.set('Barry')
+        it(`use "Barry" as name and mock to be called 1 time with "user Barry"`, () => {
+            name.set('Barry')
             expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('User Barry')
+            expect(mock).lastCalledWith('user Barry')
         })
     })
 })
