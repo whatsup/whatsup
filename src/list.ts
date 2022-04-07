@@ -55,6 +55,18 @@ export class List<T> extends Observable<T[]> {
     *[Symbol.iterator]() {
         yield* this.get()
     }
+
+    map<U>(cb: (value: T, index: number, array: T[]) => U, thisArg?: any): U[] {
+        const result = [] as U[]
+
+        let i = 0
+
+        for (const item of this) {
+            result.push(cb(item, i++, thisArg))
+        }
+
+        return result
+    }
 }
 
 export function list<T>(items: T[] = []) {

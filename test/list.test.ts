@@ -70,4 +70,21 @@ describe('List', () => {
 
         expect(mock).toBeCalledWith('1,2,3,4')
     })
+
+    it('map', () => {
+        const mock = jest.fn()
+        const li = list<number>([1, 2, 3])
+
+        autorun(() => {
+            const arr = li.map((i) => i + 1)
+
+            mock(arr.join(','))
+        })
+
+        expect(mock).toBeCalledWith('2,3,4')
+
+        li.insert(4)
+
+        expect(mock).toBeCalledWith('2,3,4,5')
+    })
 })
