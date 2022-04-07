@@ -191,7 +191,7 @@ class FnAtom<T> extends Atom<T> {
     }
 }
 
-export const createAtom = <T>(producer: Producer<T>, thisArg: unknown) => {
+export const createAtom = <T>(producer: Producer<T>, thisArg: unknown = undefined) => {
     if (isGenerator(producer)) {
         return new GnAtom(producer as GenProducer<T>, thisArg) as Atom<T>
     }
