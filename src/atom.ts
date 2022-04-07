@@ -12,8 +12,6 @@ enum CacheType {
     Error = 'Error',
 }
 
-export const GET_CONSUMER = Symbol('Get up-level atom (consumer)')
-
 export abstract class Atom<T = unknown> {
     protected abstract builder(): StreamIterator<T>
     readonly relations: Relations
@@ -155,11 +153,6 @@ class GnAtom<T> extends Atom<T> {
 
                 if (done) {
                     this.iterator = undefined
-                }
-
-                if (value === GET_CONSUMER) {
-                    input = this
-                    continue
                 }
 
                 return value as Payload<T>
