@@ -49,4 +49,25 @@ describe('List', () => {
     it(`should clear contexts map on dispose (line 22 coverage)`, () => {
         dispose()
     })
+
+    it('Iteration', () => {
+        const mock = jest.fn()
+        const li = list<number>([1, 2, 3])
+
+        autorun(() => {
+            const acc = []
+
+            for (const item of li) {
+                acc.push(item)
+            }
+
+            mock(acc.join(','))
+        })
+
+        expect(mock).toBeCalledWith('1,2,3')
+
+        li.insert(4)
+
+        expect(mock).toBeCalledWith('1,2,3,4')
+    })
 })
