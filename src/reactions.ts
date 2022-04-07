@@ -1,6 +1,6 @@
 import { Producer } from './stream'
 import { createAtom } from './atom'
-import { action, transaction } from './scheduler'
+import { transaction } from './scheduler'
 
 export type DataHandler<T> = (data: T, prevData?: T | undefined) => void
 export type ErrorHandler = (e: Error) => void
