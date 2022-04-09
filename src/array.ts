@@ -88,7 +88,7 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
     }
 }
 
-export function array<T>(items: T[] = []) {
+export const array = <T>(items: T[] = []) => {
     const target = items.slice()
     const handler = new ArrayProxyHandler(target)
 

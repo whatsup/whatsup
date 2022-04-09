@@ -16,6 +16,6 @@ export class Observable<T = unknown> extends Computed<T> {
     }
 }
 
-export function observable<T>(value: T) {
+export const observable = <T>(value: T) => {
     return new Observable(value)
 }

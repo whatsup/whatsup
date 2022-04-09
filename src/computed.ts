@@ -13,6 +13,6 @@ export class Computed<T = unknown> {
     }
 }
 
-export function computed<T>(producer: Producer<T>, thisArg?: unknown) {
+export const computed = <T>(producer: Producer<T>, thisArg?: unknown) => {
     return new Computed(producer, thisArg)
 }
