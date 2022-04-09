@@ -30,58 +30,57 @@ class Transaction {
 
         while (i < queue.length) {
             const atom = queue[i++]
-            const consumers = atom.consumers
 
             if (atom.rebuild()) {
-                for (const consumer of consumers) {
-                    this.queueCandidates.add(consumer)
+                for (const observer of atom.observers) {
+                    this.queueCandidates.add(observer)
                 }
             }
 
-            this.decrementCounters(consumers)
+            this.decrementCounters(atom.observers)
         }
     }
 
     private incrementCounters(atom: Atom) {
-        for (const consumer of atom.consumers) {
-            const counter = this.incrementCounter(consumer)
+        for (const observer of atom.observers) {
+            const counter = this.incrementCounter(observer)
 
-            if (counter > 1 || !consumer.hasConsumers()) {
+            if (counter > 1 || !observer.hasObservers()) {
                 continue
             }
 
-            this.incrementCounters(consumer)
+            this.incrementCounters(observer)
         }
     }
 
-    private decrementCounters(consumers: Iterable<Atom>) {
-        for (const consumer of consumers) {
-            const counter = this.decrementCounter(consumer)
+    private decrementCounters(observers: Iterable<Atom>) {
+        for (const observer of observers) {
+            const counter = this.decrementCounter(observer)
 
             if (counter === 0) {
-                if (this.queueCandidates.has(consumer)) {
-                    this.queueCandidates.delete(consumer)
-                    this.queue.push(consumer)
+                if (this.queueCandidates.has(observer)) {
+                    this.queueCandidates.delete(observer)
+                    this.queue.push(observer)
                     continue
                 }
 
-                this.decrementCounters(consumer.consumers)
+                this.decrementCounters(observer.observers)
             }
         }
     }
 
-    private incrementCounter(consumer: Atom) {
-        const counter = this.counters.has(consumer) ? this.counters.get(consumer)! + 1 : 1
+    private incrementCounter(observer: Atom) {
+        const counter = this.counters.has(observer) ? this.counters.get(observer)! + 1 : 1
 
-        this.counters.set(consumer, counter)
+        this.counters.set(observer, counter)
 
         return counter
     }
 
-    private decrementCounter(consumer: Atom) {
-        const counter = this.counters.get(consumer)! - 1
+    private decrementCounter(observer: Atom) {
+        const counter = this.counters.get(observer)! - 1
 
-        this.counters.set(consumer, counter)
+        this.counters.set(observer, counter)
 
         return counter
     }
