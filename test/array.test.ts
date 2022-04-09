@@ -90,6 +90,22 @@ describe('List', () => {
     })
 
     describe('Iterations', () => {
+        it('includes', () => {
+            const arr = array([1])
+
+            let result = false
+
+            autorun(() => {
+                result = arr.includes(2)
+            })
+
+            expect(result).toBeFalsy()
+
+            arr.push(2)
+
+            expect(result).toBeTruthy()
+        })
+
         it('concat', () => {
             const arr = array([1])
 
