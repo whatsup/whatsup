@@ -1,6 +1,6 @@
 {
     "name": "whatsup",
-    "description": "Whats Up framework for application development like a Superman",
+    "description": "Simple, fast, reactive state management",
     "version": "1.2.1",
     "author": "Denis Churbanov",
     "license": "MIT",
