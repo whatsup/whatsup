@@ -1,9 +1,13 @@
-import { FnProducer, GnProducer, Payload, Producer, PayloadIterator } from './atomic'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
 
-type Cache<T> = T | Delegation<T> | Error
+export type Payload<T> = T | Delegation<T> | Mutator<T>
+export type PayloadIterator<T> = Iterator<Payload<T>, Payload<T>, unknown>
+export type GnProducer<T> = () => PayloadIterator<T>
+export type FnProducer<T> = () => Payload<T>
+export type Producer<T> = GnProducer<T> | FnProducer<T>
+export type Cache<T> = T | Delegation<T> | Error
 
 enum CacheType {
     Empty = 'Empty',

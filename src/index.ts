@@ -7,7 +7,6 @@ export { action, transaction } from './scheduler'
 export { delegate } from './delegation'
 export { mutator } from './mutator'
 
-export type { Atomic, Producer } from './atomic'
-export type { Atom } from './atom'
+export type { Atom, Producer } from './atom'
 export type { Mutator } from './mutator'
 export type { Delegation } from './delegation'
