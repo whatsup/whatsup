@@ -1,5 +1,4 @@
 import { FnProducer, GnProducer, Payload, Producer, PayloadIterator } from './atomic'
-import { Relations } from './relations'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
@@ -12,14 +11,22 @@ enum CacheType {
     Error = 'Error',
 }
 
+const WATCH_STACK = [] as Set<Atom>[]
+
 export abstract class Atom<T = any> {
     protected abstract builder(): PayloadIterator<T>
-    readonly relations: Relations
+
+    readonly consumers: Set<Atom>
+
+    private dependencies: Set<Atom>
+    private garbage: Set<Atom>
     private cache?: Cache<T>
     private cacheType = CacheType.Empty
 
     constructor() {
-        this.relations = new Relations(this)
+        this.consumers = new Set<Atom>()
+        this.dependencies = new Set<Atom>()
+        this.garbage = new Set<Atom>()
     }
 
     get() {
@@ -27,7 +34,7 @@ export abstract class Atom<T = any> {
         let atom = this as Atom<T>
 
         while (true) {
-            if (atom.relations.link() || atom.relations.hasConsumers()) {
+            if (atom.link() || atom.hasConsumers()) {
                 if (atom.cacheType === CacheType.Empty) {
                     atom.rebuild()
                 }
@@ -57,7 +64,7 @@ export abstract class Atom<T = any> {
 
         let input = undefined
 
-        this.relations.collect()
+        this.collect()
 
         let done: boolean
         let error: boolean
@@ -80,7 +87,7 @@ export abstract class Atom<T = any> {
         }
 
         if (done) {
-            this.relations.normalize()
+            this.normalize()
         } else {
             throw 'What`s up? It shouldn`t have happened'
         }
@@ -114,14 +121,67 @@ export abstract class Atom<T = any> {
         return false
     }
 
+    hasConsumers() {
+        return this.consumers.size > 0
+    }
+
+    addConsumer(atom: Atom) {
+        this.consumers.add(atom)
+    }
+
+    deleteConsumer(atom: Atom) {
+        this.consumers.delete(atom)
+    }
+
+    collect() {
+        const { dependencies, garbage } = this
+
+        this.dependencies = garbage
+        this.garbage = dependencies
+
+        WATCH_STACK.push(new Set())
+    }
+
+    link() {
+        if (WATCH_STACK.length > 0) {
+            WATCH_STACK[WATCH_STACK.length - 1].add(this)
+            return true
+        }
+
+        return false
+    }
+
+    normalize() {
+        const atoms = WATCH_STACK.pop()!
+
+        for (const dependency of atoms) {
+            this.dependencies.add(dependency)
+            this.garbage.delete(dependency)
+
+            dependency.addConsumer(this)
+        }
+
+        for (const dependency of this.garbage) {
+            dependency.dispose(this)
+        }
+
+        this.garbage.clear()
+    }
+
     dispose(initiator?: Atom) {
         if (initiator) {
-            this.relations.deleteConsumer(initiator)
+            this.deleteConsumer(initiator)
         }
-        if (!this.relations.hasConsumers()) {
+
+        if (!this.hasConsumers()) {
             this.cache = undefined
             this.cacheType = CacheType.Empty
-            this.relations.dispose()
+
+            for (const atom of this.dependencies) {
+                atom.dispose(this)
+            }
+
+            this.dependencies.clear()
         }
     }
 }

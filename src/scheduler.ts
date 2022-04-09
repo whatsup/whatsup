@@ -30,7 +30,7 @@ class Transaction {
 
         while (i < queue.length) {
             const atom = queue[i++]
-            const consumers = atom.relations.consumers
+            const consumers = atom.consumers
 
             if (atom.rebuild()) {
                 for (const consumer of consumers) {
@@ -43,11 +43,11 @@ class Transaction {
     }
 
     private incrementCounters(atom: Atom) {
-        for (const consumer of atom.relations.consumers) {
+        for (const consumer of atom.consumers) {
             const counter = this.incrementCounter(consumer)
 
-            if (counter > 1 || !consumer.relations.hasConsumers()) {
-                continue 
+            if (counter > 1 || !consumer.hasConsumers()) {
+                continue
             }
 
             this.incrementCounters(consumer)
@@ -65,7 +65,7 @@ class Transaction {
                     continue
                 }
 
-                this.decrementCounters(consumer.relations.consumers)
+                this.decrementCounters(consumer.consumers)
             }
         }
     }
