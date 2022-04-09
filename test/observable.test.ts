@@ -20,4 +20,22 @@ describe('Observable', () => {
 
         expect(name.get()).toBe('John')
     })
+
+    it(`should decorate`, () => {
+        class User {
+            @observable
+            name = 'John'
+        }
+
+        const user = new User()
+        const mock = jest.fn()
+
+        autorun(() => mock(user.name))
+
+        expect(mock).toBeCalledWith('John')
+
+        user.name = 'Barry'
+
+        expect(mock).toBeCalledWith('Barry')
+    })
 })
