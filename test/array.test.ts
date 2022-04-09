@@ -386,4 +386,16 @@ describe('List', () => {
             expect(result).toEqual([1, 2, 3, 4])
         })
     })
+
+    it('arr instanceof Array to be true', () => {
+        const arr = array([1, 2, 3])
+
+        expect(arr instanceof Array).toBeTruthy()
+    })
+
+    it('Array.isArray(arr) to be true', () => {
+        const arr = array([1, 2, 3])
+
+        expect(Array.isArray(arr)).toBeTruthy()
+    })
 })
