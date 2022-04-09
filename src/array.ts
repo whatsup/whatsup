@@ -30,6 +30,7 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
             prop === 'lastIndexOf' ||
             prop === 'toString' ||
             prop === 'toLocaleString' ||
+            prop === 'values' ||
             prop === Symbol.iterator
         ) {
             return (...args: any[]) => {

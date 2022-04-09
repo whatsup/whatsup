@@ -364,6 +364,28 @@ describe('List', () => {
             expect(result).toEqual([1, 2, 3, 4])
         })
 
+        it('iterate through values', () => {
+            const arr = array([1, 2, 3])
+
+            let result = [] as number[]
+
+            autorun(() => {
+                const acc = []
+
+                for (const item of arr.values()) {
+                    acc.push(item)
+                }
+
+                result = acc
+            })
+
+            expect(result).toEqual([1, 2, 3])
+
+            arr.push(4)
+
+            expect(result).toEqual([1, 2, 3, 4])
+        })
+
         it('iterate through keys', () => {
             const arr = array([1, 2, 3])
 
