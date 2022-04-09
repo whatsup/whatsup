@@ -5,7 +5,7 @@ import { reaction, autorun } from '../src/reactions'
 import { transaction, action } from '../src/scheduler'
 import { delegate } from '../src/delegation'
 import { mutator } from '../src/mutator'
-import { list, List } from '../src/list'
+import { array } from '../src/array'
 
 import {
     createAtom as _createAtom,
@@ -19,8 +19,7 @@ import {
     transaction as _transaction,
     delegate as _delegate,
     mutator as _mutator,
-    list as _list,
-    List as _List,
+    array as _array,
 } from '../src/index'
 
 it('Exports', () => {
@@ -35,6 +34,5 @@ it('Exports', () => {
     expect(transaction).toBe(_transaction)
     expect(delegate).toBe(_delegate)
     expect(mutator).toBe(_mutator)
-    expect(list).toBe(_list)
-    expect(List).toBe(_List)
+    expect(array).toBe(_array)
 })
