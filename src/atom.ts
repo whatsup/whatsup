@@ -1,4 +1,4 @@
-import { FunProducer, GenProducer, Payload, Producer, StreamIterator } from './stream'
+import { FnProducer, GnProducer, Payload, Producer, PayloadIterator } from './atomic'
 import { Relations } from './relations'
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
@@ -13,7 +13,7 @@ enum CacheType {
 }
 
 export abstract class Atom<T = unknown> {
-    protected abstract builder(): StreamIterator<T>
+    protected abstract builder(): PayloadIterator<T>
     readonly relations: Relations
     private cache?: Cache<T>
     private cacheType = CacheType.Empty
@@ -127,22 +127,22 @@ export abstract class Atom<T = unknown> {
 }
 
 class GnAtom<T> extends Atom<T> {
-    private readonly producer: GenProducer<T>
+    private readonly producer: GnProducer<T>
     private readonly thisArg: unknown
-    private iterator?: StreamIterator<T>
+    private iterator?: PayloadIterator<T>
 
-    constructor(producer: GenProducer<T>, thisArg: unknown) {
+    constructor(producer: GnProducer<T>, thisArg: unknown) {
         super()
 
         this.producer = producer
         this.thisArg = thisArg
     }
 
-    protected *builder(): StreamIterator<T> {
+    protected *builder(): PayloadIterator<T> {
         const { producer, thisArg } = this
 
         if (!this.iterator) {
-            this.iterator = producer.call(thisArg) as StreamIterator<T>
+            this.iterator = producer.call(thisArg) as PayloadIterator<T>
         }
 
         let input: unknown
@@ -174,17 +174,17 @@ class GnAtom<T> extends Atom<T> {
 }
 
 class FnAtom<T> extends Atom<T> {
-    private readonly producer: FunProducer<T>
+    private readonly producer: FnProducer<T>
     private readonly thisArg: unknown
 
-    constructor(producer: FunProducer<T>, thisArg: unknown) {
+    constructor(producer: FnProducer<T>, thisArg: unknown) {
         super()
 
         this.producer = producer
         this.thisArg = thisArg
     }
 
-    protected *builder(): StreamIterator<T> {
+    protected *builder(): PayloadIterator<T> {
         const { producer, thisArg } = this
 
         return producer.call(thisArg)
@@ -193,8 +193,8 @@ class FnAtom<T> extends Atom<T> {
 
 export const createAtom = <T>(producer: Producer<T>, thisArg: unknown = undefined) => {
     if (isGenerator(producer)) {
-        return new GnAtom(producer as GenProducer<T>, thisArg) as Atom<T>
+        return new GnAtom(producer as GnProducer<T>, thisArg) as Atom<T>
     }
 
-    return new FnAtom(producer as FunProducer<T>, thisArg) as Atom<T>
+    return new FnAtom(producer as FnProducer<T>, thisArg) as Atom<T>
 }

@@ -7,6 +7,6 @@ export { delegate } from './delegation'
 export { mutator, Mutator } from './mutator'
 export { list, List } from './list'
 
-export type { Stream, Producer } from './stream'
+export type { Atomic, Producer } from './atomic'
 export type { Atom } from './atom'
 export type { Delegation } from './delegation'

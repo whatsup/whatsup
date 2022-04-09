@@ -1,4 +1,4 @@
-import { Producer } from './stream'
+import { Producer } from './atomic'
 import { createAtom } from './atom'
 import { transaction } from './scheduler'
 

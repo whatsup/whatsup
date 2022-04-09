@@ -1,7 +1,7 @@
 import { createAtom, Atom } from './atom'
-import { Stream, Producer } from './stream'
+import { Atomic, Producer } from './atomic'
 
-export class Computed<T = unknown> extends Stream<T> {
+export class Computed<T = unknown> extends Atomic<T> {
     /* @internal */
     readonly atom: Atom<T>
 
