@@ -90,6 +90,54 @@ describe('List', () => {
     })
 
     describe('Iterations', () => {
+        it('flat', () => {
+            const arr = array([[1], [2]])
+
+            let result = [] as number[]
+
+            autorun(() => {
+                result = arr.flat()
+            })
+
+            expect(result).toEqual([1, 2])
+
+            arr.push([3])
+
+            expect(result).toEqual([1, 2, 3])
+        })
+
+        it('flat deep', () => {
+            const arr = array([[1], [2, [3]]])
+
+            let result = [] as number[]
+
+            autorun(() => {
+                result = arr.flat(3)
+            })
+
+            expect(result).toEqual([1, 2, 3])
+
+            arr.push([[4]])
+
+            expect(result).toEqual([1, 2, 3, 4])
+        })
+
+        it('flatMap', () => {
+            const arr = array([[1], 2, [3]])
+
+            let result = [] as number[]
+
+            autorun(() => {
+                result = arr.flatMap((i) => i)
+            })
+
+            expect(result).toEqual([1, 2, 3])
+
+            arr.push(4)
+
+            expect(result).toEqual([1, 2, 3, 4])
+        })
+
         it('includes', () => {
             const arr = array([1])
 

@@ -16,6 +16,8 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
         }
 
         if (
+            prop === 'flat' ||
+            prop === 'flatMap' ||
             prop === 'includes' ||
             prop === 'concat' ||
             prop === 'join' ||
