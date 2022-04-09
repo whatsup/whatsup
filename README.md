@@ -46,38 +46,15 @@ Creates a derived field. Accepts a function or generator as an argument.
 ```ts
 import { computed } from 'whatsup'
 
-const user = cause(() => {
-    return {
-        name: name.get(),
-    }
+const firstName = observable('John')
+const lastName = observale('Lennon')
+
+const fullName = computed(() => {
+    return `${firstName.get()} ${lastName.get()}`
 })
 ```
 
-With generator
-
-```ts
-import { cause } from 'whatsup'
-
-const user = cause(function* () {
-    while (true) {
-        yield {
-            name: name.get(),
-        }
-    }
-})
-```
-
-Inside the generator, the keyword `yield` push data.
-
-The life cycle consists of three steps:
-
-1. create a new iterator using a generator
-2. the iterator starts executing and stops after `yield` or `return`, during this operation, all `.get()` calls automatically establish the observed dependencies
-3. when changing dependencies, if in the previous step the data was obtained using `yield`, the work continues from the second step; if there was a `return`, the work continues from the first step
-
-The `return` statement does the same as the `yield` statement, but it does the iterator reset.
-
-## Reactions
+### `Reaction`
 
 ```ts
 import { reaction } from 'whatsup'
@@ -97,7 +74,7 @@ name.set('Aria')
 dispose() // to stop watching
 ```
 
-### Autorun
+### `Autorun`
 
 ```ts
 import { reaction } from 'whatsup'
@@ -113,6 +90,31 @@ name.set('Aria')
 
 dispose() // to stop watching
 ```
+
+## Use of generators
+
+```ts
+import { computed } from 'whatsup'
+
+const firstName = observable('John')
+const lastName = observale('Lennon')
+
+const fullName = computed(function* () {
+    while (true) {
+        yield `${firstName.get()} ${lastName.get()}`
+    }
+})
+```
+
+Inside the generator, the keyword `yield` push data.
+
+The life cycle consists of three steps:
+
+1. create a new iterator using a generator
+2. the iterator starts executing and stops after `yield` or `return`, during this operation, all `.get()` calls automatically establish the observed dependencies
+3. when changing dependencies, if in the previous step the data was obtained using `yield`, the work continues from the second step; if there was a `return`, the work continues from the first step
+
+The `return` statement does the same as the `yield` statement, but it does the iterator reset.
 
 ## Local-scoped variables & auto-dispose unnecessary dependencies
 
@@ -170,26 +172,25 @@ Allows you to create new data based on previous. You need just to implement the 
 ```ts
 import { observable, computed, mutator } from 'whatsup'
 
-const increment = mutator<number>((n = -1) => n + 1))
+const concat = (letter: string) => {
+    return mutator((prev = '') => prev + letter)
+}
 
-const name = observable('John')
+const output = computed(function* () {
+    const input = observable('')
 
-const counter = computed(()=>{
-    name.get()
-    return increment
-    // we no need to store a local counter "i"
+    window.addEventListener('keypress', (e) => input.set(e.key))
+
+    while (true) {
+        yield concat(input.get())
+    }
 })
 
-autorun(() => {
-    const count = counter.get()
-    console.log(`Name was changed ${count} times`)
-})
+autorun(() => console.log(output.get()))
 
-//> Name was changed 0 times
-
-name.set('Barry')
-
-//> Name was changed 1 times
+// bress 'a' > 'a'
+// press 'b' > 'ab'
+// press 'c' > 'abc'
 ```
 
 ## Mutators as filters
@@ -199,25 +200,14 @@ Mutators can be used to write filters.
 ```ts
 import { computed, reaction, Mutator } from 'whatsup'
 
-class EvenOnly extends Mutator<number> {
-    readonly next: number
-
-    constructor(next: number) {
-        super()
-        this.next = next
-    }
-
-    mutate(prev = 0) {
-        return this.next % 2 === 0 ? this.next : prev
-        // We allow the new value only if it is even,
-        // otherwise we return the old value
-        // if the new value is strictly equal (===) to the old value,
-        // the app will stop updates propagation
-    }
+const evenOnly = (next: number) => {
+    // We allow the new value only if it is even,
+    // otherwise we return the old value
+    return mutator((prev = 0) => (next % 2 === 0 ? next : prev))
 }
 
 const app = computed(() => {
-    return new EvenOnly(timer.get())
+    return evenOnly(timer.get())
 })
 
 reaction(app, (data) => console.log(data))
@@ -227,34 +217,46 @@ reaction(app, (data) => console.log(data))
 //> ...
 ```
 
-You can create custom equal filters
+You can create custom equality filters. For example, we want the computer to not run recalculations if the new list is shallow equal to the previous one.
+
+If we use `mobx` we will do it like this:
+
+<!-- prettier-ignore -->
+```ts
+const users = observable<User>([/*...*/])
+const list = computed(() => users.filter(/*...*/), { equals: comparer.shallow })
+```
+
+Here is `whatsup` way:
+
+<!-- prettier-ignore -->
+```ts
+const users = observable<User>([/*...*/])
+const list = computed(() => shallow(users.filter(/*...*/)))
+```
+
+And somewhere in the utilities
 
 ```ts
-import { Mutator } from 'whatsup'
+// ./utuls.ts
 
-class EqualArr<T> extends Mutator<T[]> {
-    readonly arr: T[]
-
-    constructor(arr: T[]) {
-        super()
-        this.arr = arr
-    }
-
-    mutate(prev) {
-        const { arr } = this
-
+const shallow = <T>(arr: T[]) => {
+    /*
+    We have to compare the old and new value and 
+    if they are equivalent return the old one, 
+    otherwise return the new one.
+    */
+    return mutator((prev?: T[]) => {
         if (Array.isArray(prev) && prev.lenght === arr.length && prev.every((item, i) => item === arr[i])) {
             return prev
         }
 
         return arr
-    }
+    })
 }
-
-/*
-then return new EqualArr([...])
-*/
 ```
+
+Later we will collect the most necessary filters in a separate package.
 
 ## Mutators & JSX
 
@@ -285,52 +287,21 @@ render(<Clicker />)
 
 The mutator gets the old DOMNode and mutates it into a new DOMNode the shortest way.
 
-## Delegation
-
-A useful mechanism by which a stream can delegate its work to another stream.
-
-```ts
-import { computed, observable, reaction, delegate } from 'whatsup'
-
-const name = observable('John')
-
-const user = computed(function* () {
-    while (true) {
-        yield `User ${name.get()}`
-    }
-})
-
-const guest = computed(function* () {
-    while (true) {
-        yield delegate(user) // delegate work to user
-    }
-})
-
-reaction(guest, (data) => console.log(data))
-//> User John
-```
-
 ## Incremental & glitch-free computing
 
 All dependencies are updated synchronously in a topological sequence without unnecessary calculations.
 
 ```ts
-import { observable, compiuted, reaction } from 'whatsup'
+import { observable, computed, reaction } from 'whatsup'
 
 const num = observable(1)
 const evenOrOdd = computed(() => (num.get() % 2 === 0 ? 'even' : 'odd'))
-const isEven = computed(() => `${num.get()} is ${yield * evenOrOdd}`)
-const isZero = computed(() => (num.get() === 0 ? 'zero' : 'not zero'))
+const numInfo = computed(() => `${num.get()} is ${evenOrOdd.get()}`)
 
-reaction(isEven, (data) => console.log(data))
-reaction(isZero, (data) => console.log(data))
+reaction(numInfo, (data) => console.log(data))
 //> 1 is odd
-//> not zero
 num.set(2)
 //> 2 is even
 num.set(3)
 //> 3 is odd
-num.set(0)
-//> 0 is even
-//> zero
 ```
