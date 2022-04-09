@@ -8,7 +8,7 @@ export type GnProducer<T> = () => PayloadIterator<T>
 export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
 
-export abstract class Atomic<T = unknown> {
+export abstract class Atomic<T = any> {
     /* @internal */
     abstract readonly atom: Atom<T>
 }

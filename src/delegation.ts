@@ -4,7 +4,7 @@ export class Delegation<T> {
     constructor(public readonly stream: Atomic<T>) {}
 }
 
-const MAP = new WeakMap<Atomic, Delegation<unknown>>()
+const MAP = new WeakMap<Atomic, Delegation<any>>()
 
 export const delegate = <T>(stream: Atomic<T>) => {
     if (!MAP.has(stream)) {

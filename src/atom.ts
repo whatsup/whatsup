@@ -12,7 +12,7 @@ enum CacheType {
     Error = 'Error',
 }
 
-export abstract class Atom<T = unknown> {
+export abstract class Atom<T = any> {
     protected abstract builder(): PayloadIterator<T>
     readonly relations: Relations
     private cache?: Cache<T>
