@@ -1,6 +1,7 @@
 import { createAtom, Atom, Producer } from './atom'
+import { Atomic } from './atomic'
 
-export class Computed<T = unknown> {
+export class Computed<T = unknown> implements Atomic<T> {
     /* @internal */
     readonly atom: Atom<T>
 
