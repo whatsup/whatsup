@@ -4,7 +4,7 @@ import { observable, Observable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
 import { transaction, action } from '../src/scheduler'
 import { delegate } from '../src/delegation'
-import { mutator, Mutator } from '../src/mutator'
+import { mutator } from '../src/mutator'
 import { list, List } from '../src/list'
 
 import {
@@ -19,7 +19,6 @@ import {
     transaction as _transaction,
     delegate as _delegate,
     mutator as _mutator,
-    Mutator as _Mutator,
     list as _list,
     List as _List,
 } from '../src/index'
@@ -36,7 +35,6 @@ it('Exports', () => {
     expect(transaction).toBe(_transaction)
     expect(delegate).toBe(_delegate)
     expect(mutator).toBe(_mutator)
-    expect(Mutator).toBe(_Mutator)
     expect(list).toBe(_list)
     expect(List).toBe(_List)
 })
