@@ -287,7 +287,7 @@ If we use `mobx` we will do it like this:
 
 <!-- prettier-ignore -->
 ```ts
-const users = observable<User>([/*...*/])
+const users = observable.array<User>([/*...*/])
 const list = computed(() => users.filter(/*...*/), { equals: comparer.shallow })
 ```
 
@@ -295,7 +295,7 @@ Here is `whatsup` way:
 
 <!-- prettier-ignore -->
 ```ts
-const users = observable<User>([/*...*/])
+const users = array<User>([/*...*/])
 const list = computed(() => shallow(users.filter(/*...*/)))
 ```
 
