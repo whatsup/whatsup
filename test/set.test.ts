@@ -6,6 +6,8 @@ describe('Set', () => {
         const mock = jest.fn()
         const s = set([1, 2, 3])
 
+        expect(s.has(0)).toBeFalsy()
+
         expect(s.has(1)).toBeTruthy()
 
         expect([...s['hasMap'].values()].every((v) => v === null)).toBeTruthy()
@@ -15,7 +17,7 @@ describe('Set', () => {
         expect([...s['hasMap'].values()].every((v) => v === null)).toBeFalsy()
 
         expect(mock).toBeCalledTimes(1)
-        expect(mock).toBeCalledWith(false)
+        expect(mock).lastCalledWith(false)
 
         s.add(6)
 
@@ -24,7 +26,7 @@ describe('Set', () => {
         s.add(5)
 
         expect(mock).toBeCalledTimes(2)
-        expect(mock).toBeCalledWith(true)
+        expect(mock).lastCalledWith(true)
 
         s.delete(2)
 
@@ -33,13 +35,81 @@ describe('Set', () => {
         s.delete(5)
 
         expect(mock).toBeCalledTimes(3)
-        expect(mock).toBeCalledWith(false)
+        expect(mock).lastCalledWith(false)
+
+        s.add(5)
+
+        expect(mock).toBeCalledTimes(4)
+        expect(mock).lastCalledWith(true)
 
         expect([...s['hasMap'].values()].every((v) => v === null)).toBeFalsy()
 
         dispose()
 
         expect([...s['hasMap'].values()].every((v) => v === null)).toBeTruthy()
+
+        expect(s.has(5)).toBeTruthy()
+    })
+
+    it(`dispose trigger when set has item`, () => {
+        let r = false
+        const s = set([1, 2, 3])
+
+        const dispose = autorun(() => (r = s.has(1)))
+
+        expect(r).toBeTruthy()
+
+        dispose()
+
+        expect(s['hasMap'].get(1)).toBeNull()
+    })
+
+    it(`dispose trigger when set not has item`, () => {
+        let r = false
+        const s = set([1, 2, 3])
+
+        const dispose = autorun(() => (r = s.has(1)))
+
+        expect(r).toBeTruthy()
+
+        s.delete(1)
+
+        dispose()
+
+        expect(s['hasMap'].has(1)).toBeFalsy()
+    })
+
+    it(`has outside building`, () => {
+        let r = false
+
+        const s = set([1, 2, 3])
+
+        expect(s.has(1)).toBeTruthy()
+
+        const dispose1 = autorun(() => (r = s.has(1)))
+        const dispose2 = autorun(() => (r = s.has(1)))
+
+        expect(r).toBeTruthy()
+
+        expect(s.has(1)).toBeTruthy()
+
+        expect([...s]).toEqual([1, 2, 3])
+
+        dispose1()
+
+        expect(r).toBeTruthy()
+
+        expect(s.has(1)).toBeTruthy()
+
+        expect([...s]).toEqual([1, 2, 3])
+
+        dispose2()
+
+        expect(r).toBeTruthy()
+
+        expect(s.has(1)).toBeTruthy()
+
+        expect([...s]).toEqual([1, 2, 3])
     })
 
     it(`size`, () => {
@@ -48,24 +118,24 @@ describe('Set', () => {
 
         autorun(() => mock(s.size))
 
-        expect(mock).toBeCalledWith(3)
+        expect(mock).lastCalledWith(3)
 
         s.add(6)
 
-        expect(mock).toBeCalledWith(4)
+        expect(mock).lastCalledWith(4)
 
         s.delete(5)
 
         expect(mock).toBeCalledTimes(2)
-        expect(mock).toBeCalledWith(4)
+        expect(mock).lastCalledWith(4)
 
         s.delete(2)
 
-        expect(mock).toBeCalledWith(3)
+        expect(mock).lastCalledWith(3)
 
         s.clear()
 
-        expect(mock).toBeCalledWith(0)
+        expect(mock).lastCalledWith(0)
     })
 
     it(`Symbol.iterator`, () => {
@@ -73,6 +143,40 @@ describe('Set', () => {
         const s = set([1, 2, 3])
 
         autorun(() => (r = [...s]))
+
+        expect(r).toEqual([1, 2, 3])
+
+        s.add(4)
+
+        expect(r).toEqual([1, 2, 3, 4])
+
+        s.delete(1)
+
+        expect(r).toEqual([2, 3, 4])
+    })
+
+    it(`values`, () => {
+        let r = [] as number[]
+        const s = set([1, 2, 3])
+
+        autorun(() => (r = [...s.values()]))
+
+        expect(r).toEqual([1, 2, 3])
+
+        s.add(4)
+
+        expect(r).toEqual([1, 2, 3, 4])
+
+        s.delete(1)
+
+        expect(r).toEqual([2, 3, 4])
+    })
+
+    it(`keys`, () => {
+        let r = [] as number[]
+        const s = set([1, 2, 3])
+
+        autorun(() => (r = [...s.keys()]))
 
         expect(r).toEqual([1, 2, 3])
 
@@ -149,5 +253,13 @@ describe('Set', () => {
             [3, 3],
             [4, 4],
         ])
+    })
+
+    it(`other`, () => {
+        const s = set()
+
+        expect(s.toString()).toBe('[object ObservableSet]')
+        expect(s.toLocaleString()).toBe('[object ObservableSet]')
+        expect(s[Symbol.toStringTag]).toBe('ObservableSet')
     })
 })
