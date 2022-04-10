@@ -8,11 +8,11 @@ describe('Observable', () => {
 
         autorun(() => mock(num.get()))
 
-        expect(mock).toBeCalledWith(1)
+        expect(mock).lastCalledWith(1)
 
         num.set(2)
 
-        expect(mock).toBeCalledWith(2)
+        expect(mock).lastCalledWith(2)
     })
 
     it(`should return current value`, () => {
@@ -32,10 +32,10 @@ describe('Observable', () => {
 
         autorun(() => mock(user.name))
 
-        expect(mock).toBeCalledWith('John')
+        expect(mock).lastCalledWith('John')
 
         user.name = 'Barry'
 
-        expect(mock).toBeCalledWith('Barry')
+        expect(mock).lastCalledWith('Barry')
     })
 })

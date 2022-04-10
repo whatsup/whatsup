@@ -10,11 +10,11 @@ describe('Computed', () => {
 
         autorun(() => mock(cell.get()))
 
-        expect(mock).toBeCalledWith(2)
+        expect(mock).lastCalledWith(2)
 
         source.set(2)
 
-        expect(mock).toBeCalledWith(3)
+        expect(mock).lastCalledWith(3)
     })
 
     it(`no react after disposed`, () => {
@@ -96,15 +96,15 @@ describe('Computed', () => {
 
         autorun(() => mock(cell.get()))
 
-        expect(mock).toBeCalledWith(3)
+        expect(mock).lastCalledWith(3)
 
         one.set(2)
 
-        expect(mock).toBeCalledWith(4)
+        expect(mock).lastCalledWith(4)
 
         two.set(3)
 
-        expect(mock).toBeCalledWith(5)
+        expect(mock).lastCalledWith(5)
     })
 
     it(`should decorate`, () => {
@@ -128,15 +128,15 @@ describe('Computed', () => {
 
         autorun(() => mock(user.name))
 
-        expect(mock).toBeCalledWith('John Lennon')
-        expect(thisMock).toBeCalledWith(user)
+        expect(mock).lastCalledWith('John Lennon')
+        expect(thisMock).lastCalledWith(user)
 
         user.firstName = 'Barry'
 
-        expect(mock).toBeCalledWith('Barry Lennon')
+        expect(mock).lastCalledWith('Barry Lennon')
 
         user.lastName = 'Don'
 
-        expect(mock).toBeCalledWith('Barry Don')
+        expect(mock).lastCalledWith('Barry Don')
     })
 })
