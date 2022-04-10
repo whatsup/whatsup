@@ -1,5 +1,4 @@
-import { Producer } from './atomic'
-import { createAtom } from './atom'
+import { createAtom, Producer } from './atom'
 import { transaction } from './scheduler'
 
 export type DataHandler<T> = (data: T, prevData?: T | undefined) => void
