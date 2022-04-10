@@ -53,7 +53,7 @@ export abstract class Atom<T = any> {
             }
 
             if (cache instanceof Delegation) {
-                atom = cache.stream.atom
+                atom = cache.source.atom
                 continue
             }
 

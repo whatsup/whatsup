@@ -1,14 +1,14 @@
 import { Atomic } from './atomic'
 
 export class Delegation<T> {
-    constructor(public readonly stream: Atomic<T>) {}
+    constructor(public readonly source: Atomic<T>) {}
 }
 
 const MAP = new WeakMap<Atomic, Delegation<any>>()
 
-export const delegate = <T>(stream: Atomic<T>) => {
-    if (!MAP.has(stream)) {
-        MAP.set(stream, new Delegation(stream))
+export const delegate = <T>(source: Atomic<T>) => {
+    if (!MAP.has(source)) {
+        MAP.set(source, new Delegation(source))
     }
-    return MAP.get(stream) as Delegation<T>
+    return MAP.get(source) as Delegation<T>
 }
