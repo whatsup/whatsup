@@ -8,11 +8,11 @@ describe('Set', () => {
 
         expect(s.has(1)).toBeTruthy()
 
-        expect([...s['map'].values()].every((v) => v === null)).toBeTruthy()
+        expect([...s['hasMap'].values()].every((v) => v === null)).toBeTruthy()
 
         const dispose = autorun(() => mock(s.has(5)))
 
-        expect([...s['map'].values()].every((v) => v === null)).toBeFalsy()
+        expect([...s['hasMap'].values()].every((v) => v === null)).toBeFalsy()
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).toBeCalledWith(false)
@@ -35,11 +35,11 @@ describe('Set', () => {
         expect(mock).toBeCalledTimes(3)
         expect(mock).toBeCalledWith(false)
 
-        expect([...s['map'].values()].every((v) => v === null)).toBeFalsy()
+        expect([...s['hasMap'].values()].every((v) => v === null)).toBeFalsy()
 
         dispose()
 
-        expect([...s['map'].values()].every((v) => v === null)).toBeTruthy()
+        expect([...s['hasMap'].values()].every((v) => v === null)).toBeTruthy()
     })
 
     it(`size`, () => {

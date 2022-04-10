@@ -2,14 +2,18 @@ import { observable, Observable } from './observable'
 import { transaction, isBuildProcess } from './scheduler'
 
 export class ObservableSet<T> {
-    private readonly map: Map<T, null | Observable<boolean>>
+    private readonly hasMap: Map<T, null | Observable<boolean>>
     private readonly length: Observable<number>
 
     constructor(entries: Iterable<T>) {
-        const initial = [...entries].map((i) => [i, null]) as [T, null][]
+        const hasMapEntries = [] as [T, null][]
 
-        this.map = new Map(initial)
-        this.length = observable(initial.length)
+        for (const item of entries) {
+            hasMapEntries.push([item, null])
+        }
+
+        this.hasMap = new Map(hasMapEntries)
+        this.length = observable(hasMapEntries.length)
     }
 
     get size() {
@@ -18,27 +22,27 @@ export class ObservableSet<T> {
 
     has(item: T) {
         if (isBuildProcess()) {
-            const has = this.map.has(item)
+            const has = this.hasMap.has(item)
 
-            if (!has || this.map.get(item) === null) {
+            if (!has || this.hasMap.get(item) === null) {
                 const trigger = observable<boolean>(has)
 
                 trigger.atom.onDispose((has) => {
                     if (has) {
-                        this.map.set(item, null)
+                        this.hasMap.set(item, null)
                     } else {
-                        this.map.delete(item)
+                        this.hasMap.delete(item)
                     }
                 })
 
-                this.map.set(item, trigger)
+                this.hasMap.set(item, trigger)
             }
 
-            return this.map.get(item)!.get()
+            return this.hasMap.get(item)!.get()
         }
 
-        if (this.map.has(item)) {
-            const trigger = this.map.get(item)
+        if (this.hasMap.has(item)) {
+            const trigger = this.hasMap.get(item)
 
             if (trigger === null || trigger!.get()) {
                 return true
@@ -49,10 +53,10 @@ export class ObservableSet<T> {
     }
 
     add(item: T) {
-        if (this.map.has(item)) {
-            this.map.get(item)?.set(true)
+        if (this.hasMap.has(item)) {
+            this.hasMap.get(item)?.set(true)
         } else {
-            this.map.set(item, null)
+            this.hasMap.set(item, null)
         }
 
         const length = this.length.get()
@@ -63,11 +67,11 @@ export class ObservableSet<T> {
     }
 
     delete(item: T) {
-        if (this.map.has(item)) {
-            const trigger = this.map.get(item)
+        if (this.hasMap.has(item)) {
+            const trigger = this.hasMap.get(item)
 
             if (trigger === null) {
-                this.map.delete(item)
+                this.hasMap.delete(item)
             } else {
                 trigger!.set(false)
             }
@@ -84,16 +88,17 @@ export class ObservableSet<T> {
 
     clear() {
         transaction(() => {
-            for (const item of this.map.keys()) {
+            for (const item of this.hasMap.keys()) {
                 this.delete(item)
             }
+            this.length.set(0)
         })
     }
 
-    *[Symbol.iterator]() {
+    *[Symbol.iterator](): IterableIterator<T> {
         this.length.get()
 
-        for (const [item, trigger] of this.map.entries()) {
+        for (const [item, trigger] of this.hasMap.entries()) {
             if (trigger === null || trigger.get()) {
                 yield item
             }
