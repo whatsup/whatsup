@@ -30,21 +30,18 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
 
     const [target, prop] = args as [Object, string]
     const key = Symbol(`Observable ${prop}`)
+    const field = function (this: any) {
+        return key in this ? this[key] : (this[key] = observable())
+    }
 
     Object.defineProperties(target, {
         [prop]: {
             get() {
-                return this[key].get()
+                return field.call(this).get()
             },
             set(value: T) {
-                this[key].set(value)
+                field.call(this).set(value)
             },
-            configurable: false,
-        },
-        [key]: {
-            value: observable(),
-            writable: false,
-            enumerable: true,
             configurable: false,
         },
     })
