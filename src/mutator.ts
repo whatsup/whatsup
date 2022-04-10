@@ -1,3 +1,17 @@
+export abstract class Mutator<T> {
+    abstract mutate(prev?: T): T
+}
+
+export const mutator = <T>(cb: (prev?: T) => T) => {
+    return new (class extends Mutator<T> {
+        mutate(prev?: T) {
+            return cb(prev)
+        }
+    })()
+}
+
+/* TODO:
+
 export class Mutator<T> {
     readonly mutate: (prev?: T) => T
 
@@ -9,6 +23,8 @@ export class Mutator<T> {
 export const mutator = <T>(cb: (prev?: T) => T) => {
     return new Mutator<T>(cb)
 }
+
+*/
 
 /*
 const increment = mutator((n = 0) => n + 1)
