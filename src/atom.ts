@@ -21,11 +21,11 @@ export abstract class Atom<T = any> {
     protected abstract builder(): PayloadIterator<T>
 
     readonly observers: Set<Atom>
-
     private dependencies: Set<Atom>
     private garbage: Set<Atom>
     private cache?: Cache<T>
     private cacheType = CacheType.Empty
+    private disposeListeners?: ((cache: Cache<T>) => void)[]
 
     constructor() {
         this.observers = new Set<Atom>()
@@ -172,12 +172,25 @@ export abstract class Atom<T = any> {
         this.garbage.clear()
     }
 
+    onDispose(listener: (cache: Cache<T>) => void) {
+        if (!this.disposeListeners) {
+            this.disposeListeners = []
+        }
+        this.disposeListeners.push(listener)
+    }
+
     dispose(initiator?: Atom) {
         if (initiator) {
             this.deleteObserver(initiator)
         }
 
         if (!this.hasObservers()) {
+            if (this.disposeListeners) {
+                for (const listener of this.disposeListeners) {
+                    listener(this.cache!)
+                }
+            }
+
             this.cache = undefined
             this.cacheType = CacheType.Empty
 
