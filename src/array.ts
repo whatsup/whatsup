@@ -69,7 +69,7 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
     }
 
     set(target: T[], prop: PropertyKey, value: any, receiver: any) {
-        if (typeof prop === 'number' || prop === 'length') {
+        if (typeof prop === 'string' && (prop === 'length' || !isNaN(prop as any))) {
             const result = Reflect.set(target, prop, value, receiver)
 
             transaction((t) => {

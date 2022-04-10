@@ -89,6 +89,41 @@ describe('List', () => {
         })
     })
 
+    describe('Setters', () => {
+        it('length', () => {
+            const arr = array([1, 2, 3])
+
+            let result = ''
+
+            autorun(() => {
+                result = arr.join()
+            })
+
+            expect(result).toBe('1,2,3')
+
+            arr.length = 2
+
+            expect(result).toBe('1,2')
+        })
+
+        it('key', () => {
+            const arr = array([1])
+
+            let result = 0
+
+            autorun(() => {
+                result = arr[0]
+            })
+
+            expect(result).toBe(1)
+
+            arr[0] = 2
+
+            expect(arr[0]).toBe(2)
+            expect(result).toBe(2)
+        })
+    })
+
     describe('Iterations', () => {
         it('flat', () => {
             const arr = array([[1], [2]])
