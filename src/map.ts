@@ -87,10 +87,18 @@ export class ObservableMap<K, V> {
 
     set(key: K, value: V) {
         transaction(() => {
+            let length = this.length.get()
+
             if (this.hasMap.has(key)) {
-                this.hasMap.get(key)?.set(true)
+                const trigger = this.hasMap.get(key)
+
+                if (trigger !== null && trigger?.get() === false) {
+                    trigger.set(true)
+                    length++
+                }
             } else {
                 this.hasMap.set(key, null)
+                length++
             }
 
             if (this.dataMap.has(key)) {
@@ -105,9 +113,7 @@ export class ObservableMap<K, V> {
                 this.dataMap.set(key, value)
             }
 
-            const length = this.length.get()
-
-            this.length.set(length + 1)
+            this.length.set(length)
         })
 
         return this
@@ -115,24 +121,26 @@ export class ObservableMap<K, V> {
 
     delete(key: K) {
         if (this.hasMap.has(key)) {
-            const trigger = this.hasMap.get(key)
-            const data = this.dataMap.get(key)
+            transaction(() => {
+                const trigger = this.hasMap.get(key)
+                const data = this.dataMap.get(key)
 
-            if (trigger === null) {
-                this.hasMap.delete(key)
-            } else {
-                trigger!.set(false)
-            }
+                if (trigger === null) {
+                    this.hasMap.delete(key)
+                } else {
+                    trigger!.set(false)
+                }
 
-            if (data instanceof Observable) {
-                data.set(undefined)
-            } else {
-                this.dataMap.delete(key)
-            }
+                if (data instanceof Observable) {
+                    data.set(undefined)
+                } else {
+                    this.dataMap.delete(key)
+                }
 
-            const length = this.length.get()
+                const length = this.length.get()
 
-            this.length.set(length - 1)
+                this.length.set(length - 1)
+            })
 
             return true
         }
@@ -152,10 +160,9 @@ export class ObservableMap<K, V> {
     *[Symbol.iterator](): IterableIterator<[K, V]> {
         this.length.get()
 
-        for (const [key, trigger] of this.hasMap.entries()) {
-            if (trigger === null || trigger.get()) {
-                const data = this.dataMap.get(key)
-                const value = data instanceof Observable ? data.get()! : data!
+        for (const [key] of this.hasMap.entries()) {
+            if (this.has(key)) {
+                const value = this.get(key)!
 
                 yield [key, value]
             }

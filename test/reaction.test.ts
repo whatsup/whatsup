@@ -12,11 +12,11 @@ describe('Reactions', () => {
 
             reaction(() => target.get(), dataMock, errMock)
 
-            expect(dataMock).toBeCalledWith(1, undefined)
+            expect(dataMock).lastCalledWith(1, undefined)
 
             data.set(2)
 
-            expect(dataMock).toBeCalledWith(2, 1)
+            expect(dataMock).lastCalledWith(2, 1)
 
             expect(errMock).not.toBeCalled()
         })
@@ -31,7 +31,7 @@ describe('Reactions', () => {
             reaction(() => target.get(), dataMock, errMock)
 
             expect(dataMock).not.toBeCalled()
-            expect(errMock).toBeCalledWith('Error')
+            expect(errMock).lastCalledWith('Error')
         })
 
         it(`should not call callbacks when disposed`, () => {
@@ -40,13 +40,13 @@ describe('Reactions', () => {
             const target = computed(() => data.get())
             const disposer = reaction(() => target.get(), mock)
 
-            expect(mock).toBeCalledWith(1, undefined)
+            expect(mock).lastCalledWith(1, undefined)
 
             disposer()
             data.set(2)
 
             expect(mock).toBeCalledTimes(1)
-            expect(mock).toBeCalledWith(1, undefined)
+            expect(mock).lastCalledWith(1, undefined)
         })
     })
 
@@ -57,11 +57,11 @@ describe('Reactions', () => {
 
             autorun(() => mock(one.get()))
 
-            expect(mock).toBeCalledWith(1)
+            expect(mock).lastCalledWith(1)
 
             one.set(2)
 
-            expect(mock).toBeCalledWith(2)
+            expect(mock).lastCalledWith(2)
         })
 
         it(`should not call callback when disposed`, () => {
@@ -69,13 +69,13 @@ describe('Reactions', () => {
             const one = observable(1)
             const disposer = autorun(() => mock(one.get()))
 
-            expect(mock).toBeCalledWith(1)
+            expect(mock).lastCalledWith(1)
 
             disposer()
             one.set(2)
 
             expect(mock).toBeCalledTimes(1)
-            expect(mock).toBeCalledWith(1)
+            expect(mock).lastCalledWith(1)
         })
     })
 })
