@@ -109,6 +109,10 @@ export class ObservableSet<T> {
         yield* this
     }
 
+    *keys() {
+        yield* this
+    }
+
     *entries(): IterableIterator<[T, T]> {
         for (const item of this) {
             yield [item, item]

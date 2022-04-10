@@ -168,6 +168,12 @@ export class ObservableMap<K, V> {
         }
     }
 
+    *keys() {
+        for (const [key] of this) {
+            yield key
+        }
+    }
+
     *entries() {
         yield* this
     }
