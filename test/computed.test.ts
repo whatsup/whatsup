@@ -106,4 +106,37 @@ describe('Computed', () => {
 
         expect(mock).toBeCalledWith(5)
     })
+
+    it(`should decorate`, () => {
+        class User {
+            @observable
+            firstName = 'John'
+
+            @observable
+            lastName = 'Lennon'
+
+            @computed
+            get name() {
+                thisMock(this)
+                return `${this.firstName} ${this.lastName}`
+            }
+        }
+
+        const user = new User()
+        const mock = jest.fn()
+        const thisMock = jest.fn()
+
+        autorun(() => mock(user.name))
+
+        expect(mock).toBeCalledWith('John Lennon')
+        expect(thisMock).toBeCalledWith(user)
+
+        user.firstName = 'Barry'
+
+        expect(mock).toBeCalledWith('Barry Lennon')
+
+        user.lastName = 'Don'
+
+        expect(mock).toBeCalledWith('Barry Don')
+    })
 })
