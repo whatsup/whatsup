@@ -328,7 +328,7 @@ WhatsUp has its own plugin that converts jsx-tags into mutators calls. You can r
 
 ```tsx
 import { observable } from 'whatsup'
-import { render } from '@whatsup-js/jsx'
+import { render } from '@whatsup/jsx'
 
 function* Clicker() {
     const counter = observable(0)
