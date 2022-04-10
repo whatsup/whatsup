@@ -62,6 +62,10 @@ describe('Set', () => {
         s.delete(2)
 
         expect(mock).toBeCalledWith(3)
+
+        s.clear()
+
+        expect(mock).toBeCalledWith(0)
     })
 
     it(`Symbol.iterator`, () => {
