@@ -1,4 +1,4 @@
-![](https://hsto.org/webt/61/ec/pn/61ecpnmixdh_iaan9gth35clj8e.png)
+![](https://hsto.org/webt/rz/9j/mo/rz9jmotxqpxb01rvhwnnjpipxbk.png)
 
 <div align="center">
 <img src="https://img.shields.io/github/workflow/status/whatsup/whatsup/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" />  
@@ -13,7 +13,7 @@
 
 # What is it?
 
-Whats Up is a reactive framework based on the ideas of streams and fractals. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
+Whats Up is a reactive framework. It is very easy to learn and powerful to work with. It has only a few components, but enough to build complex applications.
 
 ## Install
 
@@ -77,7 +77,7 @@ dispose() // to stop watching
 ### `Autorun`
 
 ```ts
-import { reaction } from 'whatsup'
+import { observable, autorun } from 'whatsup'
 
 const name = observable('Natali')
 const dispose = autorun(() => console.log(name.get()))
@@ -87,6 +87,70 @@ const dispose = autorun(() => console.log(name.get()))
 name.set('Aria')
 
 //> 'Aria'
+
+dispose() // to stop watching
+```
+
+### `Observable Array`
+
+```ts
+import { array, autorun } from 'whatsup'
+
+const arr = array([1, 2])
+const dispose = autorun(() => console.log(`Joined: ${arr.join()}`))
+
+//> 'Joined: 1,2'
+
+arr.push(3)
+
+//> 'Joined: 1,2,3'
+
+dispose() // to stop watching
+```
+
+### `Observable Set`
+
+```ts
+import { set, autorun } from 'whatsup'
+
+const mySet = set([1, 2])
+const dispose = autorun(() => console.log(`My set has 3: ${mySet.has(3)}`))
+
+//> 'My set has 3: false'
+
+mySet.add(3)
+
+//> 'My set has 3: true'
+
+dispose() // to stop watching
+```
+
+### `Observable Map`
+
+```ts
+import { map, autorun } from 'whatsup'
+
+const myMap = set([
+    [1, 'John'],
+    [2, 'Barry'],
+])
+const dispose = autorun(() => {
+    console.log(`My map has 3: ${myMap.has(3)}`)
+    console.log(`Value of key 3: ${myMap.get(3)}`)
+})
+
+//> 'My map has 3: false'
+//> 'Value of key 3: undefined'
+
+myMap.set(3, 'Jessy')
+
+//> 'My map has 3: true'
+//> 'Value of key 3: Jessy'
+
+myMap.set(3, 'Bob')
+
+//> 'My map has 3: true'
+//> 'Value of key 3: Bob'
 
 dispose() // to stop watching
 ```
