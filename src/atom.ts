@@ -3,7 +3,7 @@ import { Mutator } from './mutator'
 import { isGenerator } from './utils'
 
 export type Payload<T> = T | Delegation<T> | Mutator<T>
-export type PayloadIterator<T> = Iterator<Payload<T>, Payload<T>, unknown>
+export type PayloadIterator<T> = Iterator<Payload<T>, Payload<T> | unknown, unknown>
 export type GnProducer<T> = () => PayloadIterator<T>
 export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
@@ -72,12 +72,12 @@ export abstract class Atom<T = any> {
 
         let done: boolean
         let error: boolean
-        let value: Symbol | Payload<T> | Error
+        let value: Payload<T> | Error
 
         try {
             const result = iterator.next(input)
 
-            value = result.value!
+            value = result.value as Payload<T>
             done = result.done!
             error = false
         } catch (e) {
