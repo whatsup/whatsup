@@ -2,29 +2,22 @@ export abstract class Mutator<T> {
     abstract mutate(prev?: T): T
 }
 
-export const mutator = <T>(cb: (prev?: T) => T) => {
-    return new (class extends Mutator<T> {
-        mutate(prev?: T) {
-            return cb(prev)
-        }
-    })()
-}
+export class ShortMutator<T> extends Mutator<T> {
+    readonly mutator: (prev?: T) => T
 
-/* TODO:
+    constructor(mutator: (prev?: T) => T) {
+        super()
+        this.mutator = mutator
+    }
 
-export class Mutator<T> {
-    readonly mutate: (prev?: T) => T
-
-    constructor(mutate: (prev?: T) => T) {
-        this.mutate = mutate
+    mutate(prev?: T) {
+        return this.mutator(prev)
     }
 }
 
 export const mutator = <T>(cb: (prev?: T) => T) => {
-    return new Mutator<T>(cb)
+    return new ShortMutator(cb)
 }
-
-*/
 
 /*
 const increment = mutator((n = 0) => n + 1)
