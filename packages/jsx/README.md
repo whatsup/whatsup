@@ -129,15 +129,16 @@ function* App() {
 
 ## Valid JSX elements
 
-WhatsUp can render almost everything! This means that your components can return strings, numbers, html-elements, jsx-components, as well as arrays.
+WhatsUp can render almost everything! This means that your components can return strings, numbers, booleans, jsx-components, as well as any arrays.
 
 ```tsx
 function App() {
     return null // valid
+    return true // valid
+    return false // valid
     return 'str' // valid
     return 1 // valid
     return <div /> // valid
-    return document.createElement('div') // valid
     return ['str', 'str'] // valid
     return [1, 1, 1] // valid
     return [<div key={1} />, <div key={2} />] // valid
