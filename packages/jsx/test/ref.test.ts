@@ -2,7 +2,6 @@
  * @jest-environment jsdom
  */
 
-import { fractal } from 'whatsup'
 import { createRef } from '../src/create_ref'
 import { component, html } from '../src/factories'
 import { render } from '../src/render'
@@ -16,13 +15,14 @@ describe('refs', function () {
         document.body.innerHTML = ''
 
         const ref = createRef()
-        const Root = fractal(function* () {
+
+        function* Root() {
             while (true) {
                 yield html('div', '', '', ref)
             }
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         expect(ref.current).toBe(document.body.children[0])
     })
@@ -36,13 +36,13 @@ describe('refs', function () {
             return html('div', '', undefined, undefined)
         }
 
-        const Root = fractal(function* () {
+        function* Root() {
             while (true) {
                 yield component(Component, '', undefined, ref)
             }
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         expect(ref.current).toBe(document.body.children[0])
     })
@@ -56,13 +56,13 @@ describe('refs', function () {
             return [html('div', '', undefined, undefined), html('div', '', undefined, undefined)]
         }
 
-        const Root = fractal(function* () {
+        function* Root() {
             while (true) {
                 yield component(Component, '', undefined, ref)
             }
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         expect(ref.current).toBeInstanceOf(Array)
         expect(ref.current.length).toBe(2)

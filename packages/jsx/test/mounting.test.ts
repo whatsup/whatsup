@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { Context, fractal } from 'whatsup'
+import { observable } from 'whatsup'
 import { html, component } from '../src/factories'
 import { render } from '../src/render'
 
@@ -11,13 +11,13 @@ describe('Mounting', function () {
         document.body.innerHTML = ''
 
         const onMount = jest.fn()
-        const Root = fractal(function* () {
+        function* Root() {
             while (true) {
                 yield html('div', '', '', undefined, { onMount })
             }
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -28,24 +28,28 @@ describe('Mounting', function () {
     it('should call onUnmount when element unmounted', async function () {
         document.body.innerHTML = ''
 
-        let next: () => void
+        let kickstart: () => void
 
         const onUnmount = jest.fn()
 
-        const Root = fractal(function* (ctx: Context) {
-            next = () => ctx.update()
+        function* Root() {
+            const trigger = observable(0)
+
+            kickstart = () => trigger.set(Math.random())
+
+            trigger.get()
 
             yield html('div', '', '1', undefined, { onUnmount })
             yield html('div', '', '2', undefined)
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         const div = document.body.children[0]
 
         expect(onUnmount).toBeCalledTimes(0)
 
-        next!()
+        kickstart!()
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -62,13 +66,13 @@ describe('Mounting', function () {
             return html('div', '', '', undefined)
         }
 
-        const Root = fractal(function* () {
+        function* Root() {
             while (true) {
                 yield component(Component, '', '', undefined, { onMount })
             }
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -79,7 +83,7 @@ describe('Mounting', function () {
     it('should call onUnmount when component unmounted', async function () {
         document.body.innerHTML = ''
 
-        let next: () => void
+        let kickstart: () => void
 
         const onUnmount = jest.fn()
 
@@ -87,20 +91,24 @@ describe('Mounting', function () {
             return html('div', '', '', undefined)
         }
 
-        const Root = fractal(function* (ctx: Context) {
-            next = () => ctx.update()
+        function* Root() {
+            const trigger = observable(0)
+
+            kickstart = () => trigger.set(Math.random())
+
+            trigger.get()
 
             yield component(Component, '', '1', undefined, { onUnmount })
             yield component(Component, '', '2', undefined)
-        })
+        }
 
-        render(Root)
+        render(component(Root, '', '', undefined))
 
         const div = document.body.children[0]
 
         expect(onUnmount).toBeCalledTimes(0)
 
-        next!()
+        kickstart!()
 
         await new Promise((r) => setTimeout(r, 100))
 

@@ -9,8 +9,22 @@ describe('factories', function () {
         svg('svg', '', '', undefined)
     })
 
-    it('component factory should instantiate ComponentMutator without errors', function () {
-        function Component() {
+    it('component factory should instantiate AtomComponentMutator without errors', function () {
+        function* Component() {
+            return 'Hello'
+        }
+        component(Component, '', '', undefined)
+    })
+
+    it('component factory should instantiate GnComponentMutator without errors', function () {
+        function* Component(_: {}) {
+            return 'Hello'
+        }
+        component(Component, '', '', undefined)
+    })
+
+    it('component factory should instantiate FnComponentMutator without errors', function () {
+        function Component(_: {}) {
             return 'Hello'
         }
         component(Component, '', '', undefined)

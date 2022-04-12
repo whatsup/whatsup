@@ -2,6 +2,8 @@
 // Thanks react team
 
 import * as CSS from 'csstype'
+import { Atom } from 'whatsup'
+import { Context } from './context'
 import { JsxMutator } from './mutator'
 import { ReconcileMap } from './reconcile_map'
 
@@ -1529,7 +1531,12 @@ export namespace WhatsJSX {
         | boolean
         | null
         | Child[]
-    export type Component = <P extends ComponentProps>(props: P) => Child
+        | Generator<Child, Child | unknown>
+
+    export type AmComponent = () => Child | Generator<Child | never, Child | unknown>
+    export type FnComponent<P extends ComponentProps = {}> = (props: P) => Child
+    export type GnComponent<P extends ComponentProps = {}> = (props: P) => Generator<Child | never, Child | unknown>
+    export type Component<P extends ComponentProps = {}> = AmComponent | FnComponent<P> | GnComponent<P>
 
     export interface Ref {
         current?: any
@@ -1560,16 +1567,28 @@ export namespace WhatsJSX {
 
     export interface ComponentMutatorLike<R> extends JsxMutatorLike<R> {
         reconcileMap: ReconcileMap
+        context?: Context
+    }
+
+    export interface GnComponentMutatorLike<R> extends ComponentMutatorLike<R> {
+        iterator?: {
+            next(props: ComponentProps): IteratorResult<Child, Child | unknown>
+        }
+    }
+
+    export interface AtomComponentMutatorLike<R> extends ComponentMutatorLike<R> {
+        atom?: Atom<Child>
     }
 }
 
 declare global {
     namespace JSX {
-        export interface Element extends JsxMutator<any, any> {}
+        export type Element = WhatsJSX.Child
 
         export interface ElementAttributesProperty {
             props: {}
         }
+
         export interface ElementChildrenAttribute {
             children: {}
         }
