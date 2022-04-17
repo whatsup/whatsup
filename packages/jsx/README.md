@@ -91,25 +91,6 @@ function* Timer() {
 render(App, document.getElementById('app'))
 ```
 
-### Error catching
-
-```tsx
-import { render } from '@whatsup/jsx'
-
-function* Timer() {
-    while (true) {
-        try {
-            yield <div>/* children components */</div>
-        } catch (e) {
-            // this block will be rendered if an error occurs in any of the child components
-            yield <div>Error</div>
-        }
-    }
-}
-
-render(App, document.getElementById('app'))
-```
-
 ## Handling mount events
 
 ```tsx
