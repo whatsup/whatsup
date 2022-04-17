@@ -72,13 +72,13 @@ export abstract class Atom<T = any> {
         try {
             value = this.produce()
             error = false
+
+            if (value instanceof Mutator) {
+                value = value.mutate(this.cache as T)
+            }
         } catch (e) {
             value = e as Error
             error = true
-        }
-
-        if (value instanceof Mutator) {
-            value = value.mutate(this.cache as T)
         }
 
         this.consolidateRelations()
