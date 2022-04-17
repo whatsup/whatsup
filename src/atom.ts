@@ -18,7 +18,7 @@ enum CacheType {
 const RELATIONS_STACK = [] as Set<Atom>[]
 
 export abstract class Atom<T = any> {
-    protected abstract builder(): PayloadIterator<T>
+    protected abstract produce(): Payload<T>
 
     readonly observers: Set<Atom>
     private dependencies: Set<Atom>
@@ -64,25 +64,16 @@ export abstract class Atom<T = any> {
     }
 
     build() {
-        const iterator = this.builder()
-
-        let input = undefined
-
         this.trackRelations()
 
-        let done: boolean
         let error: boolean
         let value: Payload<T> | Error
 
         try {
-            const result = iterator.next(input)
-
-            value = result.value as Payload<T>
-            done = result.done!
+            value = this.produce()
             error = false
         } catch (e) {
             value = e as Error
-            done = true
             error = true
         }
 
@@ -90,11 +81,7 @@ export abstract class Atom<T = any> {
             value = value.mutate(this.cache as T)
         }
 
-        if (done) {
-            this.consolidateRelations()
-        } else {
-            throw 'What`s up? It shouldn`t have happened'
-        }
+        this.consolidateRelations()
 
         if (error) {
             throw value
@@ -104,8 +91,8 @@ export abstract class Atom<T = any> {
     }
 
     rebuild() {
-        let newCacheType: CacheType
         let newCache: Cache<T>
+        let newCacheType: CacheType
 
         try {
             newCache = this.build()
@@ -215,29 +202,25 @@ class GnAtom<T> extends Atom<T> {
         this.thisArg = thisArg
     }
 
-    protected *builder(): PayloadIterator<T> {
+    protected produce(): Payload<T> {
         const { producer, thisArg } = this
 
         if (!this.iterator) {
             this.iterator = producer.call(thisArg) as PayloadIterator<T>
         }
 
-        let input: unknown
+        try {
+            const { done, value } = this.iterator!.next()
 
-        while (true) {
-            try {
-                const { done, value } = this.iterator!.next(input)
-
-                if (done) {
-                    this.iterator = undefined
-                }
-
-                return value as Payload<T>
-            } catch (e) {
+            if (done) {
                 this.iterator = undefined
-
-                throw e as Error
             }
+
+            return value as Payload<T>
+        } catch (e) {
+            this.iterator = undefined
+
+            throw e as Error
         }
     }
 
@@ -261,7 +244,7 @@ class FnAtom<T> extends Atom<T> {
         this.thisArg = thisArg
     }
 
-    protected *builder(): PayloadIterator<T> {
+    protected produce(): Payload<T> {
         const { producer, thisArg } = this
 
         return producer.call(thisArg)
