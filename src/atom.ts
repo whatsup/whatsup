@@ -229,6 +229,7 @@ class GnAtom<T> extends Atom<T> {
 
         if (this.iterator) {
             this.iterator!.return!()
+            this.iterator = undefined
         }
     }
 }
