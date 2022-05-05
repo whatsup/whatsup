@@ -95,9 +95,9 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     }
 
     private extractFrom(target: any): JsxMutator<T, R> | void {
-        if (target != null && typeof target === 'object' && JSX_MUTATOR_ATTACH_KEY in target) {
+        if (target != null && typeof target === 'object' && Reflect.has(target, JSX_MUTATOR_ATTACH_KEY)) {
+            const mutator = Reflect.get(target, JSX_MUTATOR_ATTACH_KEY) as JsxMutator<T, R>
             const { type, reconcileId } = this
-            const mutator = target[JSX_MUTATOR_ATTACH_KEY] as JsxMutator<T, R>
 
             if (mutator.reconcileId === reconcileId && mutator.type === type) {
                 return mutator
@@ -179,9 +179,7 @@ export class HTMLElementMutator extends JsxElementMutator {
 export abstract class ComponentMutator<T extends WhatsJSX.Component>
     extends JsxMutator<T, (HTMLElement | SVGElement | Text)[]>
     implements WhatsJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> {
-    abstract getWhatsJSXChilds(
-        oldMutator: WhatsJSX.JsxMutatorLike<(HTMLElement | SVGElement | Text)[]> | void
-    ): WhatsJSX.Child
+    abstract getWhatsJSXChilds(oldMutator: WhatsJSX.JsxMutatorLike<WhatsJSX.Child> | void): WhatsJSX.Child
 
     readonly reconcileMap = new ReconcileMap()
     context?: Context
@@ -201,11 +199,9 @@ export abstract class ComponentMutator<T extends WhatsJSX.Component>
         const { reconcileMap: oldReconcileMap, context } = oldMutator
         const { reconcileMap, type } = this
 
-        if (type !== Fragment) {
-            this.context = context || createContext()
+        this.context = context || createContext(type.name)
 
-            addContextToStack(this.context!)
-        }
+        addContextToStack(this.context!)
 
         const value = this.getWhatsJSXChilds(oldMutator)
         const mutators = Array.isArray(value) ? value : [value]
@@ -214,9 +210,7 @@ export abstract class ComponentMutator<T extends WhatsJSX.Component>
         reconcile(reconcileMap, elements, mutators, oldReconcileMap)
         removeUnreconciledElements(oldReconcileMap)
 
-        if (type !== Fragment) {
-            popContextFromStack()
-        }
+        popContextFromStack()
 
         return elements
     }
@@ -224,54 +218,20 @@ export abstract class ComponentMutator<T extends WhatsJSX.Component>
 
 export class FnComponentMutator<T extends WhatsJSX.FnComponent> extends ComponentMutator<T> {
     getWhatsJSXChilds() {
-        const { type, props } = this
-        return type.call(this.context, props)
-    }
-}
-
-class GnComponentIterator {
-    private readonly iterator: Generator<WhatsJSX.Child | never, WhatsJSX.Child | unknown>
-    private readonly iterableProps: WhatsJSX.ComponentProps
-    private props!: WhatsJSX.ComponentProps
-
-    constructor(producer: WhatsJSX.GnComponent, thisArg: any, props: WhatsJSX.ComponentProps) {
-        this.iterableProps = Object.assign(
-            {},
-            {
-                ...props,
-                [Symbol.iterator]: () => {
-                    return {
-                        next: () => {
-                            return {
-                                done: false,
-                                value: this.props,
-                            }
-                        },
-                    }
-                },
-            }
-        )
-        this.props = props
-        this.iterator = producer.call(thisArg, this.iterableProps)
-    }
-
-    next(props: WhatsJSX.ComponentProps) {
-        Object.assign(this.iterableProps, this.props)
-
-        this.props = props
-
-        return this.iterator.next() as IteratorResult<WhatsJSX.Child, WhatsJSX.Child | unknown>
+        const { type, context, props } = this
+        return type.call(context, props)
     }
 }
 
 export class GnComponentMutator<T extends WhatsJSX.GnComponent> extends ComponentMutator<T> {
     readonly props!: WhatsJSX.ComponentProps
-    iterator?: GnComponentIterator
 
-    getWhatsJSXChilds({ iterator }: WhatsJSX.GnComponentMutatorLike<(HTMLElement | SVGElement | Text)[]>) {
-        const { type, props } = this
+    iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown>
 
-        this.iterator = (iterator as GnComponentIterator) || new GnComponentIterator(type, this.context, props)
+    getWhatsJSXChilds({ iterator }: WhatsJSX.GnComponentMutatorLike<WhatsJSX.Child>) {
+        const { type, context, props } = this
+
+        this.iterator = iterator || type.call(context, props)
 
         const { done, value } = this.iterator.next(props)
 
@@ -286,10 +246,10 @@ export class GnComponentMutator<T extends WhatsJSX.GnComponent> extends Componen
 export class AtomComponentMutator<T extends WhatsJSX.AmComponent> extends ComponentMutator<T> {
     atom?: Atom<WhatsJSX.Child>
 
-    getWhatsJSXChilds({ atom }: WhatsJSX.AtomComponentMutatorLike<(HTMLElement | SVGElement | Text)[]>) {
-        const { type } = this
+    getWhatsJSXChilds({ atom }: WhatsJSX.AtomComponentMutatorLike<WhatsJSX.Child>) {
+        const { type, context } = this
 
-        this.atom = atom || createAtom(type as any, this.context)
+        this.atom = atom || createAtom(type, context)
 
         return this.atom.get()
     }

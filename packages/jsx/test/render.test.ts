@@ -204,7 +204,7 @@ describe('render', function () {
         expect(container.children[0].tagName).toBe('DIV')
     })
 
-    it('should iterate props', function () {
+    it('should pass props', function () {
         const container = document.createElement('div')
         const trigger = observable(0)
 
@@ -213,8 +213,10 @@ describe('render', function () {
         }
 
         function* Nest(props: NextProps) {
-            for (const { value } of props as any) {
-                yield html('div', '', '', undefined, undefined, [value])
+            while (true) {
+                const { value } = props
+
+                props = yield html('div', '', '', undefined, undefined, [value])
             }
         }
 
@@ -236,39 +238,44 @@ describe('render', function () {
         expect(container.innerHTML).toBe('<div><div>1</div></div>')
     })
 
-    it('should keep old props & iterate new props', function () {
+    it('should call dispose mock in Am component', function () {
         const container = document.createElement('div')
         const trigger = observable(0)
         const mock = jest.fn()
 
-        interface NextProps extends WhatsJSX.ComponentProps {
-            value: number
-        }
-
-        function* Nest(props: NextProps) {
-            for (const { value } of props as any) {
-                mock(props.value, value)
-                yield html('div', '', '', undefined, undefined, [value])
+        function* Nest() {
+            try {
+                while (true) {
+                    yield html('div', '', '', undefined, undefined)
+                }
+            } finally {
+                mock()
             }
         }
 
         function* Root() {
             while (true) {
                 const value = trigger.get()
-                yield html('div', '', '', undefined, undefined, [component(Nest, '', undefined, undefined, { value })])
+
+                if (value === 0) {
+                    yield html('div', '', '', undefined, undefined, [component(Nest, '', undefined, undefined)])
+                    continue
+                }
+
+                yield null
             }
         }
 
+        expect(container.childNodes.length).toBe(0)
+
         render(component(Root, '', '', undefined), container)
 
-        expect(mock).lastCalledWith(0, 0)
+        expect(container.innerHTML).toBe('<div><div></div></div>')
+        expect(mock).not.toBeCalled()
 
         trigger.set(1)
 
-        expect(mock).lastCalledWith(0, 1)
-
-        trigger.set(2)
-
-        expect(mock).lastCalledWith(1, 2)
+        expect(container.innerHTML).toBe('')
+        expect(mock).toBeCalled()
     })
 })

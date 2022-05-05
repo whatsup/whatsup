@@ -1535,7 +1535,7 @@ export namespace WhatsJSX {
 
     export type AmComponent = () => Child | Generator<Child | never, Child | unknown>
     export type FnComponent<P extends ComponentProps = {}> = (props: P) => Child
-    export type GnComponent<P extends ComponentProps = {}> = (props: P) => Generator<Child | never, Child | unknown>
+    export type GnComponent<P extends ComponentProps = {}> = (props: P) => Generator<Child | never, Child | unknown, P>
     export type Component<P extends ComponentProps = {}> = AmComponent | FnComponent<P> | GnComponent<P>
 
     export interface Ref {
@@ -1571,9 +1571,7 @@ export namespace WhatsJSX {
     }
 
     export interface GnComponentMutatorLike<R> extends ComponentMutatorLike<R> {
-        iterator?: {
-            next(props: ComponentProps): IteratorResult<Child, Child | unknown>
-        }
+        iterator?: Iterator<Child | never, Child | unknown, unknown>
     }
 
     export interface AtomComponentMutatorLike<R> extends ComponentMutatorLike<R> {

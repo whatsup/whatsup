@@ -8,6 +8,9 @@ export class Context {
     readonly parent: Context | null
 
     /** @internal */
+    readonly name: string
+
+    /** @internal */
     private shared?: Map<symbol | ContextKey<unknown> | Ctor<unknown>, unknown>
 
     /** @internal */
@@ -19,8 +22,9 @@ export class Context {
     /** @internal */
     private deferredTrigger?: Observable<boolean>
 
-    constructor(parent: Context | null) {
+    constructor(parent: Context | null, name: string) {
         this.parent = parent
+        this.name = name
     }
 
     share<T>(key: symbol, value: T): void
@@ -182,10 +186,10 @@ export const createKey: ContextKeyFactory = <T>(...args: [T?]) => {
 
 const CTX_STACK = [] as Context[]
 
-export const createContext = () => {
+export const createContext = (name: string) => {
     const parent = CTX_STACK.length === 0 ? null : CTX_STACK[CTX_STACK.length - 1]
 
-    return new Context(parent)
+    return new Context(parent, name)
 }
 
 export const addContextToStack = (ctx: Context) => {
