@@ -227,8 +227,8 @@ class GnAtom<T> extends Atom<T> {
     dispose(initiator?: Atom) {
         super.dispose(initiator)
 
-        if (this.iterator) {
-            this.iterator!.return!()
+        if (!this.hasObservers() && this.iterator) {
+            this.iterator.return!()
             this.iterator = undefined
         }
     }
