@@ -12,7 +12,9 @@ export class Observable<T = unknown> extends Computed<T> {
     set(value: T) {
         this.value = value
 
-        transaction((t) => t.addEntry(this.atom))
+        if (this.atom.hasObservers()) {
+            transaction((t) => t.addEntry(this.atom))
+        }
     }
 }
 

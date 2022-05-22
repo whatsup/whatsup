@@ -15,7 +15,7 @@ enum CacheType {
     Error = 'Error',
 }
 
-const RELATIONS_STACK = [] as Set<Atom>[]
+const RELATIONS_STACK = [] as Atom[]
 
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
@@ -64,10 +64,8 @@ export abstract class Atom<T = any> {
     }
 
     build() {
-        this.trackRelations()
-
-        let error: boolean
         let value: Payload<T> | Error
+        let error: boolean
 
         try {
             value = this.produce()
@@ -81,8 +79,6 @@ export abstract class Atom<T = any> {
             error = true
         }
 
-        this.consolidateRelations()
-
         if (error) {
             throw value
         }
@@ -91,6 +87,8 @@ export abstract class Atom<T = any> {
     }
 
     rebuild() {
+        this.trackRelations()
+
         let newCache: Cache<T>
         let newCacheType: CacheType
 
@@ -101,6 +99,8 @@ export abstract class Atom<T = any> {
             newCache = e as Error
             newCacheType = CacheType.Error
         }
+
+        this.untrackRelations()
 
         if (this.cache === undefined || this.cacheType !== newCacheType || this.cache !== newCache) {
             this.cache = newCache
@@ -124,33 +124,33 @@ export abstract class Atom<T = any> {
         this.observers.delete(atom)
     }
 
-    trackRelations() {
-        const { dependencies, disposeCandidates: garbage } = this
+    addDependency(atom: Atom) {
+        this.dependencies.add(atom)
+        this.disposeCandidates.delete(atom)
 
-        this.dependencies = garbage
+        atom.addObserver(this)
+    }
+
+    trackRelations() {
+        const { dependencies, disposeCandidates } = this
+
+        this.dependencies = disposeCandidates
         this.disposeCandidates = dependencies
 
-        RELATIONS_STACK.push(new Set())
+        RELATIONS_STACK.push(this)
     }
 
     establishRelations() {
         if (RELATIONS_STACK.length > 0) {
-            RELATIONS_STACK[RELATIONS_STACK.length - 1].add(this)
+            RELATIONS_STACK[RELATIONS_STACK.length - 1].addDependency(this)
             return true
         }
 
         return false
     }
 
-    consolidateRelations() {
-        const atoms = RELATIONS_STACK.pop()!
-
-        for (const dependency of atoms) {
-            this.dependencies.add(dependency)
-            this.disposeCandidates.delete(dependency)
-
-            dependency.addObserver(this)
-        }
+    untrackRelations() {
+        RELATIONS_STACK.pop()!
 
         for (const dependency of this.disposeCandidates) {
             dependency.dispose(this)
