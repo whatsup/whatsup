@@ -1,7 +1,7 @@
 {
     "name": "whatsup",
     "description": "Simple, fast, reactive state management",
-    "version": "2.0.7",
+    "version": "2.1.0",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
