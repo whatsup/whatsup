@@ -5,7 +5,7 @@ export { array } from './array'
 export { set } from './set'
 export { map } from './map'
 export { reaction, autorun } from './reactions'
-export { action, transaction } from './scheduler'
+export { action, runInAction } from './action'
 export { delegate } from './delegation'
 export { mutator, Mutator } from './mutator'
 

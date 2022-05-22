@@ -1,4 +1,3 @@
-import { action } from '../src/scheduler'
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
 import { autorun } from '../src/reactions'
@@ -25,28 +24,6 @@ describe('Scheduler', () => {
         expect(mock).toBeCalledTimes(3)
         expect(mock).nthCalledWith(2, 'Abc')
         expect(mock).nthCalledWith(3, 'ABc')
-    })
-
-    it(`Should run all changes in single transaction`, () => {
-        const mock = jest.fn()
-        const a = observable('a')
-        const b = observable('b')
-        const c = computed(function* () {
-            while (true) {
-                yield `${a.get()}${b.get()}c`
-            }
-        })
-        autorun(() => mock(c.get()))
-
-        expect(mock).toBeCalledTimes(1)
-        expect(mock).lastCalledWith('abc')
-
-        action(() => {
-            a.set('A')
-            b.set('B')
-        })
-        expect(mock).toBeCalledTimes(2)
-        expect(mock).nthCalledWith(2, 'ABc')
     })
 
     it(`Should create slave transaction when call 'transaction' inside transaction`, () => {

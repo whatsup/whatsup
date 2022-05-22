@@ -54,6 +54,48 @@ const fullName = computed(() => {
 })
 ```
 
+### `Actions`
+
+Allows multiple updates in one operation
+
+```ts
+import { observable, computed, action, runInAction } from 'whatsup'
+
+class User {
+    @observable
+    firstName = 'John'
+
+    @observable
+    lastName = 'Lennon'
+
+    @action
+    setName(firstName: string, lastName: string) {
+        this.firstName = firstName
+        this.lastName = lastName
+    }
+}
+
+const user = new User()
+
+user.setName('Barry', 'Baker')
+
+// or as wrapped action callback
+
+const setUserName = action((firstName: string, lastName: string) => {
+    user.firstName = firstName
+    user.lastName = lastName
+})
+
+setUserName('Barry', 'Baker')
+
+// or run in action
+
+runInAction(() => {
+    user.firstName = 'Barry'
+    user.lastName = 'Baker'
+})
+```
+
 ### `Reaction`
 
 ```ts

@@ -2,7 +2,7 @@ import { createAtom } from '../src/atom'
 import { computed, Computed } from '../src/computed'
 import { observable, Observable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
-import { transaction, action } from '../src/scheduler'
+import { action, runInAction } from '../src/action'
 import { delegate } from '../src/delegation'
 import { mutator, Mutator } from '../src/mutator'
 import { array } from '../src/array'
@@ -18,7 +18,7 @@ import {
     reaction as _reaction,
     autorun as _autorun,
     action as _action,
-    transaction as _transaction,
+    runInAction as _runInAction,
     delegate as _delegate,
     mutator as _mutator,
     Mutator as _Mutator,
@@ -36,7 +36,7 @@ it('Exports', () => {
     expect(reaction).toBe(_reaction)
     expect(autorun).toBe(_autorun)
     expect(action).toBe(_action)
-    expect(transaction).toBe(_transaction)
+    expect(runInAction).toBe(_runInAction)
     expect(delegate).toBe(_delegate)
     expect(mutator).toBe(_mutator)
     expect(Mutator).toBe(_Mutator)

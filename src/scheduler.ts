@@ -130,7 +130,3 @@ export const transaction = <T>(cb: (transaction: Transaction) => T): T => {
 export const isBuildProcess = () => {
     return master !== null && !master.pending
 }
-
-export const action = <T>(cb: () => T) => {
-    return transaction(() => cb())
-}
