@@ -1,6 +1,7 @@
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
+import type { Transaction } from './scheduler'
 
 export type Payload<T> = T | Delegation<T> | Mutator<T>
 export type PayloadIterator<T> = Iterator<Payload<T> | never, Payload<T> | unknown, unknown>
@@ -9,6 +10,11 @@ export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
 export type Cache<T> = T | Delegation<T> | Error
 
+enum CacheState {
+    Actual = 'Actual',
+    Check = 'Check',
+    Dirty = 'Dirty',
+}
 enum CacheType {
     Empty = 'Empty',
     Data = 'Data',
@@ -26,6 +32,7 @@ export abstract class Atom<T = any> {
     private disposeListeners?: ((cache: Cache<T>) => void)[]
     private cache?: Cache<T>
     private cacheType = CacheType.Empty
+    private cacheState = CacheState.Dirty
 
     constructor() {
         this.observers = new Set<Atom>()
@@ -39,8 +46,8 @@ export abstract class Atom<T = any> {
 
         while (true) {
             if (atom.establishRelations() || atom.hasObservers()) {
-                if (atom.cacheType === CacheType.Empty) {
-                    atom.rebuild()
+                if (atom.cacheState !== CacheState.Actual) {
+                    atom.actualize()
                 }
 
                 if (atom.cacheType === CacheType.Error) {
@@ -61,6 +68,48 @@ export abstract class Atom<T = any> {
         }
 
         return cache as T
+    }
+
+    actualize() {
+        check: if (this.cacheState === CacheState.Check) {
+            for (const dependency of this.dependencies) {
+                dependency.actualize()
+
+                if ((this.cacheState as CacheState.Check | CacheState.Dirty) === CacheState.Dirty) {
+                    break check
+                }
+            }
+
+            this.cacheState = CacheState.Actual
+        }
+
+        if (this.cacheState === CacheState.Dirty) {
+            if (this.rebuild()) {
+                for (const observer of this.observers) {
+                    observer.mark(CacheState.Dirty)
+                }
+            }
+
+            this.cacheState = CacheState.Actual
+        }
+    }
+
+    preactualize(transaction: Transaction) {
+        this.mark(CacheState.Dirty, transaction)
+    }
+
+    mark(state: CacheState, transaction?: Transaction) {
+        this.cacheState = state
+
+        if (this.observers.size === 0 && transaction) {
+            transaction.addRoot(this)
+        } else {
+            for (const observer of this.observers) {
+                if (observer.cacheState === CacheState.Actual) {
+                    observer.mark(CacheState.Check, transaction)
+                }
+            }
+        }
     }
 
     build() {
@@ -180,6 +229,7 @@ export abstract class Atom<T = any> {
 
             this.cache = undefined
             this.cacheType = CacheType.Empty
+            this.cacheState = CacheState.Dirty
 
             for (const atom of this.dependencies) {
                 atom.dispose(this)

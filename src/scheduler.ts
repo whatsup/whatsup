@@ -1,88 +1,35 @@
-import { Atom } from './atom'
+import type { Atom } from './atom'
 
-class Transaction {
+export class Transaction {
     readonly key = Symbol('Transaction key')
-    private readonly queue = [] as Atom[]
-    private readonly queueCandidates = new Set<Atom>()
-    private readonly counters = new Map<Atom, number>()
+    private readonly entries = [] as Atom[]
+    private readonly roots = [] as Atom[]
     private started = false
 
     get pending() {
         return !this.started
     }
 
+    addRoot(atom: Atom) {
+        this.roots.push(atom)
+    }
+
     addEntry(atom: Atom) {
-        if (!this.queue.includes(atom)) {
-            this.queue.push(atom)
+        if (!this.entries.includes(atom)) {
+            this.entries.push(atom)
         }
     }
 
     run() {
         this.started = true
 
-        const { queue } = this
-
-        for (let atom of queue) {
-            this.incrementCounters(atom)
+        for (const atom of this.entries) {
+            atom.preactualize(this)
         }
 
-        let i = 0
-
-        while (i < queue.length) {
-            const atom = queue[i++]
-
-            if (atom.rebuild()) {
-                for (const observer of atom.observers) {
-                    this.queueCandidates.add(observer)
-                }
-            }
-
-            this.decrementCounters(atom.observers)
+        for (const atom of this.roots) {
+            atom.actualize()
         }
-    }
-
-    private incrementCounters(atom: Atom) {
-        for (const observer of atom.observers) {
-            const counter = this.incrementCounter(observer)
-
-            if (counter > 1 || !observer.hasObservers()) {
-                continue
-            }
-
-            this.incrementCounters(observer)
-        }
-    }
-
-    private decrementCounters(observers: Iterable<Atom>) {
-        for (const observer of observers) {
-            const counter = this.decrementCounter(observer)
-
-            if (counter === 0) {
-                if (this.queueCandidates.has(observer)) {
-                    this.queueCandidates.delete(observer)
-                    this.queue.push(observer)
-                    continue
-                }
-
-                this.decrementCounters(observer.observers)
-            }
-        }
-    }
-
-    private incrementCounter(observer: Atom) {
-        const counter = this.counters.has(observer) ? this.counters.get(observer)! + 1 : 1
-
-        this.counters.set(observer, counter)
-
-        return counter
-    }
-
-    private decrementCounter(observer: Atom) {
-        const counter = this.counters.get(observer)! - 1
-
-        this.counters.set(observer, counter)
-
-        return counter
     }
 }
 
@@ -129,4 +76,12 @@ export const transaction = <T>(cb: (transaction: Transaction) => T): T => {
 
 export const isBuildProcess = () => {
     return master !== null && !master.pending
+}
+
+export const getCurrentTransaction = () => {
+    // if (!isBuildProcess()) {
+    //     throw Error('Actualization outside build process')
+    // }
+
+    return master!
 }
