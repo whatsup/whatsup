@@ -381,7 +381,7 @@ function* Clicker() {
         yield (
             <div>
                 <div>{count}</div>
-                <button onClick={() => counter.set(count + 1)}>Clcik me</button>
+                <button onClick={() => counter.set(count + 1)}>Click me</button>
             </div>
         )
     }
