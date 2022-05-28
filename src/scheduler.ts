@@ -1,87 +1,69 @@
-import type { Atom } from './atom'
+import { Atom, CacheState } from './atom'
 
 export class Transaction {
-    readonly key = Symbol('Transaction key')
-    private readonly entries = [] as Atom[]
-    private readonly roots = [] as Atom[]
-    private started = false
-
-    get pending() {
-        return !this.started
-    }
-
-    addRoot(atom: Atom) {
-        this.roots.push(atom)
-    }
+    private readonly entries = new Set<Atom>()
+    private readonly roots = new Set<Atom>()
 
     addEntry(atom: Atom) {
-        if (!this.entries.includes(atom)) {
-            this.entries.push(atom)
-        }
+        this.entries.add(atom)
     }
 
     run() {
-        this.started = true
-
         for (const atom of this.entries) {
-            atom.preactualize(this)
+            this.findRoots(atom, CacheState.Dirty)
         }
 
         for (const atom of this.roots) {
-            atom.actualize()
+            atom.rebuild()
+        }
+    }
+
+    private findRoots(atom: Atom, state: CacheState) {
+        atom.setCacheState(state)
+
+        if (atom.hasObservers()) {
+            for (const observer of atom.observers) {
+                if (observer.isCacheState(CacheState.Actual)) {
+                    this.findRoots(observer, CacheState.Check)
+                }
+            }
+        } else {
+            this.roots.add(atom)
         }
     }
 }
 
-let master: Transaction | null = null
-let slave: Transaction | null = null
+let key: symbol | null = null
+let trx: Transaction | null = null
 
 export const transaction = <T>(cb: (transaction: Transaction) => T): T => {
-    let key: symbol
-    let transaction: Transaction
+    const localKey = Symbol()
 
-    if (master === null) {
-        transaction = master = new Transaction()
-        key = transaction.key
-    } else if (master.pending) {
-        transaction = master
-    } else if (slave === null) {
-        transaction = slave = new Transaction()
-        key = transaction.key
-    } else if (slave.pending) {
-        transaction = slave
-    } else {
-        throw 'Task error'
+    if (trx === null) {
+        trx = new Transaction()
+
+        if (key === null) {
+            key = localKey
+        }
     }
 
-    const result = cb(transaction)
+    const result = cb(trx)
 
-    while (transaction === master && transaction.key === key!) {
+    while (key === localKey) {
+        const transaction = trx!
+
+        trx = null
+
         transaction.run()
 
-        master = slave
-        slave = null
-
-        if (master !== null) {
-            transaction = master
-            key = transaction.key
-            continue
+        if (trx === null) {
+            key = null
         }
-
-        break
     }
 
     return result
 }
 
 export const isBuildProcess = () => {
-    return master !== null && !master.pending
-}
-
-export const getCurrentTransaction = () => {
-    // if (!isBuildProcess()) {
-    //     throw Error('Actualization outside build process')
-    // }
-
-    return master!
+    return key !== null
 }

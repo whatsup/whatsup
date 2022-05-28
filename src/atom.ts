@@ -1,7 +1,6 @@
 import { Delegation } from './delegation'
 import { Mutator } from './mutator'
 import { isGenerator } from './utils'
-import type { Transaction } from './scheduler'
 
 export type Payload<T> = T | Delegation<T> | Mutator<T>
 export type PayloadIterator<T> = Iterator<Payload<T> | never, Payload<T> | unknown, unknown>
@@ -10,12 +9,13 @@ export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
 export type Cache<T> = T | Delegation<T> | Error
 
-enum CacheState {
+export enum CacheState {
     Actual = 'Actual',
     Check = 'Check',
     Dirty = 'Dirty',
 }
-enum CacheType {
+
+export enum CacheType {
     Empty = 'Empty',
     Data = 'Data',
     Error = 'Error',
@@ -47,7 +47,7 @@ export abstract class Atom<T = any> {
         while (true) {
             if (atom.establishRelations() || atom.hasObservers()) {
                 if (atom.cacheState !== CacheState.Actual) {
-                    atom.actualize()
+                    atom.rebuild()
                 }
 
                 if (atom.cacheType === CacheType.Error) {
@@ -70,46 +70,56 @@ export abstract class Atom<T = any> {
         return cache as T
     }
 
-    actualize() {
-        check: if (this.cacheState === CacheState.Check) {
+    rebuild() {
+        check: if (this.isCacheState(CacheState.Check)) {
             for (const dependency of this.dependencies) {
-                dependency.actualize()
-
-                if ((this.cacheState as CacheState.Check | CacheState.Dirty) === CacheState.Dirty) {
+                if (dependency.rebuild()) {
                     break check
                 }
             }
-
-            this.cacheState = CacheState.Actual
         }
 
-        if (this.cacheState === CacheState.Dirty) {
-            if (this.rebuild()) {
+        if (this.isCacheState(CacheState.Dirty)) {
+            this.trackRelations()
+
+            let newCache: Cache<T>
+            let newCacheType: CacheType
+
+            try {
+                newCache = this.build()
+                newCacheType = CacheType.Data
+            } catch (e) {
+                newCache = e as Error
+                newCacheType = CacheType.Error
+            }
+
+            this.untrackRelations()
+
+            if (this.cache !== newCache || this.cacheType !== newCacheType) {
+                this.cache = newCache
+                this.cacheType = newCacheType
+
                 for (const observer of this.observers) {
-                    observer.mark(CacheState.Dirty)
+                    observer.setCacheState(CacheState.Dirty)
                 }
+
+                this.setCacheState(CacheState.Actual)
+
+                return true
             }
-
-            this.cacheState = CacheState.Actual
         }
+
+        this.setCacheState(CacheState.Actual)
+
+        return false
     }
 
-    preactualize(transaction: Transaction) {
-        this.mark(CacheState.Dirty, transaction)
-    }
-
-    mark(state: CacheState, transaction?: Transaction) {
+    setCacheState(state: CacheState) {
         this.cacheState = state
+    }
 
-        if (this.observers.size === 0 && transaction) {
-            transaction.addRoot(this)
-        } else {
-            for (const observer of this.observers) {
-                if (observer.cacheState === CacheState.Actual) {
-                    observer.mark(CacheState.Check, transaction)
-                }
-            }
-        }
+    isCacheState(state: CacheState) {
+        return this.cacheState === state
     }
 
     build() {
@@ -133,32 +143,6 @@ export abstract class Atom<T = any> {
         }
 
         return value as T | Delegation<T>
-    }
-
-    rebuild() {
-        this.trackRelations()
-
-        let newCache: Cache<T>
-        let newCacheType: CacheType
-
-        try {
-            newCache = this.build()
-            newCacheType = CacheType.Data
-        } catch (e) {
-            newCache = e as Error
-            newCacheType = CacheType.Error
-        }
-
-        this.untrackRelations()
-
-        if (this.cache === undefined || this.cacheType !== newCacheType || this.cache !== newCache) {
-            this.cache = newCache
-            this.cacheType = newCacheType
-
-            return true
-        }
-
-        return false
     }
 
     hasObservers() {
