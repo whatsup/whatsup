@@ -70,6 +70,29 @@ export abstract class Atom<T = any> {
         return cache as T
     }
 
+    build() {
+        let value: Payload<T> | Error
+        let error: boolean
+
+        try {
+            value = this.produce()
+            error = false
+
+            if (value instanceof Mutator) {
+                value = value.mutate(this.cache as T)
+            }
+        } catch (e) {
+            value = e as Error
+            error = true
+        }
+
+        if (error) {
+            throw value
+        }
+
+        return value as T | Delegation<T>
+    }
+
     rebuild() {
         check: if (this.isCacheState(CacheState.Check)) {
             for (const dependency of this.dependencies) {
@@ -122,29 +145,6 @@ export abstract class Atom<T = any> {
         return this.cacheState === state
     }
 
-    build() {
-        let value: Payload<T> | Error
-        let error: boolean
-
-        try {
-            value = this.produce()
-            error = false
-
-            if (value instanceof Mutator) {
-                value = value.mutate(this.cache as T)
-            }
-        } catch (e) {
-            value = e as Error
-            error = true
-        }
-
-        if (error) {
-            throw value
-        }
-
-        return value as T | Delegation<T>
-    }
-
     hasObservers() {
         return this.observers.size > 0
     }
@@ -175,7 +175,10 @@ export abstract class Atom<T = any> {
 
     establishRelations() {
         if (RELATIONS_STACK.length > 0) {
-            RELATIONS_STACK[RELATIONS_STACK.length - 1].addDependency(this)
+            const observer = RELATIONS_STACK[RELATIONS_STACK.length - 1]
+
+            observer.addDependency(this)
+
             return true
         }
 
