@@ -1574,7 +1574,7 @@ export namespace WhatsJSX {
         iterator?: Iterator<Child | never, Child | unknown, unknown>
     }
 
-    export interface AtomComponentMutatorLike<R> extends ComponentMutatorLike<R> {
+    export interface AmComponentMutatorLike<R> extends ComponentMutatorLike<R> {
         atom?: Atom<Child>
     }
 }

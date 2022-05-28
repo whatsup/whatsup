@@ -21,7 +21,7 @@
     },
     "dependencies": {
         "csstype": "^3.0.6",
-        "whatsup": "^2.0.5"
+        "whatsup": "^2.2.0"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^17.0.0",

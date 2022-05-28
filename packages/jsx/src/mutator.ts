@@ -76,7 +76,7 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
         ) {
             /*
                 reuse old data container
-                to prevent recalculation of top-level stream
+                to prevent recalculation of top-level atom
             */
             newData = data
         }
@@ -226,6 +226,8 @@ export class FnComponentMutator<T extends WhatsJSX.FnComponent> extends Componen
 export class GnComponentMutator<T extends WhatsJSX.GnComponent> extends ComponentMutator<T> {
     readonly props!: WhatsJSX.ComponentProps
 
+    private disposeObserver!: MutationObserver
+
     iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown>
 
     getWhatsJSXChilds({ iterator }: WhatsJSX.GnComponentMutatorLike<WhatsJSX.Child>) {
@@ -241,12 +243,30 @@ export class GnComponentMutator<T extends WhatsJSX.GnComponent> extends Componen
 
         return value as WhatsJSX.Child
     }
+
+    mutate(data?: (HTMLElement | SVGElement | Text)[]) {
+        const result = super.mutate(data)
+
+        if (this.disposeObserver) {
+            this.disposeObserver.disconnect()
+        }
+
+        const dispose = () => {
+            if (this.iterator) {
+                this.iterator.return!()
+            }
+        }
+
+        this.disposeObserver = createUnmountObserver(result[0], dispose)
+
+        return result
+    }
 }
 
-export class AtomComponentMutator<T extends WhatsJSX.AmComponent> extends ComponentMutator<T> {
+export class AmComponentMutator<T extends WhatsJSX.AmComponent> extends ComponentMutator<T> {
     atom?: Atom<WhatsJSX.Child>
 
-    getWhatsJSXChilds({ atom }: WhatsJSX.AtomComponentMutatorLike<WhatsJSX.Child>) {
+    getWhatsJSXChilds({ atom }: WhatsJSX.AmComponentMutatorLike<WhatsJSX.Child>) {
         const { type, context } = this
 
         this.atom = atom || createAtom(type, context)
@@ -498,15 +518,11 @@ function isReadonlyProp(prop: string) {
     )
 }
 
-function createMountObserver<T extends Element>(element: T, callback: (el: T) => void) {
+function createMountObserver<T extends Element | Text>(element: T, callback: (el: T) => void) {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
-            const { addedNodes } = mutation
-
-            for (let i = 0; i < addedNodes.length; i++) {
-                const node = addedNodes.item(i)
-
-                if (node === element) {
+            for (const node of mutation.addedNodes) {
+                if (node === element || node.contains(element)) {
                     callback(element)
                     observer.disconnect()
                     return
@@ -523,15 +539,11 @@ function createMountObserver<T extends Element>(element: T, callback: (el: T) =>
     return observer
 }
 
-function createUnmountObserver<T extends Element>(element: T, callback: (el: T) => void) {
+function createUnmountObserver<T extends Element | Text>(element: T, callback: (el: T) => void) {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
-            const { removedNodes } = mutation
-
-            for (let i = 0; i < removedNodes.length; i++) {
-                const node = removedNodes.item(i)
-
-                if (node === element) {
+            for (const node of mutation.removedNodes) {
+                if (node === element || node.contains(element)) {
                     callback(element)
                     observer.disconnect()
                     return

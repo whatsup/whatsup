@@ -1,4 +1,4 @@
-import { createAtom, transaction } from 'whatsup'
+import { createAtom } from 'whatsup'
 import { reconcile, placeElements, removeUnreconciledElements, JsxMutator } from './mutator'
 import { ReconcileMap } from './reconcile_map'
 import { WhatsJSX } from './types'
@@ -35,7 +35,7 @@ export function render(root: WhatsJSX.Child, container: HTMLElement | SVGElement
 
     const atom = createAtom(Render, undefined)
 
-    transaction((t) => t.addEntry(atom))
+    atom.rebuild()
 
     return () => atom.dispose()
 }

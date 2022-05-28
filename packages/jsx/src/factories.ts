@@ -1,6 +1,6 @@
 import { EMPTY_ARR, EMPTY_OBJ } from './constants'
 import {
-    AtomComponentMutator,
+    AmComponentMutator,
     FnComponentMutator,
     GnComponentMutator,
     HTMLElementMutator,
@@ -40,7 +40,7 @@ export function component<P extends WhatsJSX.ComponentProps>(
     children: WhatsJSX.Child[] = EMPTY_ARR as WhatsJSX.Child[]
 ) {
     if (type.length === 0) {
-        return new AtomComponentMutator(type as WhatsJSX.AmComponent, uid, key, ref, props, children)
+        return new AmComponentMutator(type as WhatsJSX.AmComponent, uid, key, ref, props, children)
     } else if (isGenerator(type)) {
         return new GnComponentMutator(type as WhatsJSX.GnComponent, uid, key, ref, props, children)
     } else {
