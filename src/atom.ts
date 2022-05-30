@@ -212,6 +212,8 @@ export abstract class Atom<T = any> {
                 for (const listener of this.disposeListeners) {
                     listener(this.cache!)
                 }
+
+                this.disposeListeners = undefined
             }
 
             this.cache = undefined
