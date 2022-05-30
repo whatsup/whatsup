@@ -220,8 +220,8 @@ export abstract class Atom<T = any> {
             this.cacheType = CacheType.Empty
             this.cacheState = CacheState.Dirty
 
-            for (const atom of this.dependencies) {
-                atom.dispose(this)
+            for (const dependency of this.dependencies) {
+                dependency.dispose(this)
             }
 
             this.dependencies.clear()
