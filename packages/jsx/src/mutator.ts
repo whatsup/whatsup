@@ -1,4 +1,4 @@
-import { Atom, Mutator, createAtom } from 'whatsup'
+import { Atom, Mutator, createAtom, observable, Observable, mutator } from 'whatsup'
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE } from './constants'
 import { addContextToStack, Context, createContext, popContextFromStack } from './context'
 import { ReconcileMap } from './reconcile_map'
@@ -146,7 +146,7 @@ export abstract class JsxElementMutator
     ) {
         super(type, uid, key, ref, props)
 
-        this.children = new FnComponentMutator(Fragment, uid, undefined, undefined, EMPTY_OBJ, children)
+        this.children = new ComponentMutator(Fragment, uid, undefined, undefined, EMPTY_OBJ, children)
     }
 
     doMutation({
@@ -176,13 +176,12 @@ export class HTMLElementMutator extends JsxElementMutator {
     }
 }
 
-export abstract class ComponentMutator<T extends WhatsJSX.Component>
+export class ComponentMutator<T extends WhatsJSX.Component>
     extends JsxMutator<T, (HTMLElement | SVGElement | Text)[]>
     implements WhatsJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> {
-    abstract getWhatsJSXChilds(oldMutator: WhatsJSX.JsxMutatorLike<WhatsJSX.Child> | void): WhatsJSX.Child
-
     readonly reconcileMap = new ReconcileMap()
-    context?: Context
+    atom?: Atom<WhatsJSX.Child>
+    atomProps?: Observable<WhatsJSX.ComponentProps>
 
     constructor(
         type: T,
@@ -196,83 +195,74 @@ export abstract class ComponentMutator<T extends WhatsJSX.Component>
     }
 
     doMutation(oldMutator = FAKE_JSX_COMPONENT_MUTATOR) {
-        const { reconcileMap: oldReconcileMap, context } = oldMutator
-        const { reconcileMap, type } = this
+        const { reconcileMap: oldReconcileMap } = oldMutator
+        const { reconcileMap, type, atom, atomProps, props } = this
 
-        this.context = context || createContext(type.name)
+        this.atomProps = atomProps || observable<WhatsJSX.ComponentProps>()
+        this.atomProps.set(props)
 
-        addContextToStack(this.context!)
+        const amProps = this.atomProps!
 
-        const value = this.getWhatsJSXChilds(oldMutator)
+        this.atom =
+            atom ||
+            createAtom(function* () {
+                let context: Context
+                let iterator: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
+
+                try {
+                    while (true) {
+                        yield mutator((prev?: WhatsJSX.Child) => {
+                            const props = amProps.get()
+
+                            context = context || createContext(type.name)
+
+                            addContextToStack(context)
+
+                            let result: WhatsJSX.Child
+
+                            if (isGeneratorComponent<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown>(type)) {
+                                iterator = iterator || type.call(context, props)
+
+                                const { done, value } = iterator.next(props)
+
+                                if (done) {
+                                    iterator = undefined
+                                }
+
+                                result = value instanceof Mutator ? value.mutate(prev) : value
+                            } else {
+                                const value = type.call(context, props)
+
+                                result = value instanceof Mutator ? value.mutate(prev) : value
+                            }
+
+                            popContextFromStack()
+
+                            return result as WhatsJSX.Child
+                        })
+                    }
+                } finally {
+                    if (iterator) {
+                        iterator.return!()
+                    }
+                }
+            })
+
+        const value = this.atom.get()
         const mutators = Array.isArray(value) ? value : [value]
         const elements = [] as (HTMLElement | Text)[]
 
         reconcile(reconcileMap, elements, mutators, oldReconcileMap)
         removeUnreconciledElements(oldReconcileMap)
 
-        popContextFromStack()
-
         return elements
     }
 }
 
-export class FnComponentMutator<T extends WhatsJSX.FnComponent> extends ComponentMutator<T> {
-    getWhatsJSXChilds() {
-        const { type, context, props } = this
-        return type.call(context, props)
-    }
-}
-
-export class GnComponentMutator<T extends WhatsJSX.GnComponent> extends ComponentMutator<T> {
-    readonly props!: WhatsJSX.ComponentProps
-
-    private disposeObserver!: MutationObserver
-
-    iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown>
-
-    getWhatsJSXChilds({ iterator }: WhatsJSX.GnComponentMutatorLike<WhatsJSX.Child>) {
-        const { type, context, props } = this
-
-        this.iterator = iterator || type.call(context, props)
-
-        const { done, value } = this.iterator.next(props)
-
-        if (done) {
-            this.iterator = undefined
-        }
-
-        return value as WhatsJSX.Child
-    }
-
-    mutate(data?: (HTMLElement | SVGElement | Text)[]) {
-        const result = super.mutate(data)
-
-        if (this.disposeObserver) {
-            this.disposeObserver.disconnect()
-        }
-
-        const dispose = () => {
-            if (this.iterator) {
-                this.iterator.return!()
-            }
-        }
-
-        this.disposeObserver = createUnmountObserver(result[0], dispose)
-
-        return result
-    }
-}
-
-export class AmComponentMutator<T extends WhatsJSX.AmComponent> extends ComponentMutator<T> {
-    atom?: Atom<WhatsJSX.Child>
-
-    getWhatsJSXChilds({ atom }: WhatsJSX.AmComponentMutatorLike<WhatsJSX.Child>) {
-        const { type, context } = this
-
-        this.atom = atom || createAtom(type, context)
-
-        return this.atom.get()
-    }
+export const isGeneratorComponent = <T, TR, TN>(
+    target: Function
+): target is (...args: any[]) => Generator<T, TR, TN> => {
+    return target.constructor.name === 'GeneratorFunction'
 }
 
 export function removeUnreconciledElements(reconcileMap: ReconcileMap) {

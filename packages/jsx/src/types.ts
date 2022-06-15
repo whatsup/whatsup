@@ -1536,7 +1536,7 @@ export namespace WhatsJSX {
     export type AmComponent = () => Child | Generator<Child | never, Child | unknown>
     export type FnComponent<P extends ComponentProps = {}> = (props: P) => Child
     export type GnComponent<P extends ComponentProps = {}> = (props: P) => Generator<Child | never, Child | unknown, P>
-    export type Component<P extends ComponentProps = {}> = AmComponent | FnComponent<P> | GnComponent<P>
+    export type Component<P extends ComponentProps = {}> = FnComponent<P> | GnComponent<P>
 
     export interface Ref {
         current?: any
@@ -1568,6 +1568,7 @@ export namespace WhatsJSX {
     export interface ComponentMutatorLike<R> extends JsxMutatorLike<R> {
         reconcileMap: ReconcileMap
         context?: Context
+        atom?: Atom<WhatsJSX.Child>
     }
 
     export interface GnComponentMutatorLike<R> extends ComponentMutatorLike<R> {

@@ -1,13 +1,6 @@
 import { EMPTY_ARR, EMPTY_OBJ } from './constants'
-import {
-    AmComponentMutator,
-    FnComponentMutator,
-    GnComponentMutator,
-    HTMLElementMutator,
-    SVGElementMutator,
-} from './mutator'
+import { ComponentMutator, HTMLElementMutator, SVGElementMutator } from './mutator'
 import { WhatsJSX } from './types'
-import { isGenerator } from './utils'
 
 export function html(
     type: WhatsJSX.TagName,
@@ -39,11 +32,5 @@ export function component<P extends WhatsJSX.ComponentProps>(
     props: P = EMPTY_OBJ as P,
     children: WhatsJSX.Child[] = EMPTY_ARR as WhatsJSX.Child[]
 ) {
-    if (type.length === 0) {
-        return new AmComponentMutator(type as WhatsJSX.AmComponent, uid, key, ref, props, children)
-    } else if (isGenerator(type)) {
-        return new GnComponentMutator(type as WhatsJSX.GnComponent, uid, key, ref, props, children)
-    } else {
-        return new FnComponentMutator(type as WhatsJSX.FnComponent, uid, key, ref, props, children)
-    }
+    return new ComponentMutator(type as WhatsJSX.Component, uid, key, ref, props, children)
 }
