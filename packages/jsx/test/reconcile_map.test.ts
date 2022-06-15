@@ -86,7 +86,7 @@ describe('Reconcile map', function () {
         reconcileMap.nextReconcilable(arrayReconcileId)
         reconcileMap.deleteRendered(renderedItem)
 
-        const iterator = reconcileMap[Symbol.iterator]()
+        const iterator = reconcileMap.elements()
 
         expect(iterator.next().value).toBe(element)
         expect(iterator.next().value).toBe(textNode)
@@ -101,7 +101,7 @@ describe('Reconcile map', function () {
         reconcileMap.nextReconcilable(elementReconcileId)
         reconcileMap.nextReconcilableTextNode()
 
-        const iterator = reconcileMap[Symbol.iterator]()
+        const iterator = reconcileMap.elements()
 
         expect(iterator.next().value).toBe(array[0])
         expect(iterator.next().value).toBe(array[1])

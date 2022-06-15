@@ -6,8 +6,71 @@ import { Event } from '../src/event'
 import { component, html } from '../src/factories'
 import { Context, createKey } from '../src/context'
 import { render } from '../src/render'
+import { observable, Observable } from 'whatsup'
 
 describe('Context', () => {
+    describe('Parent-Child', () => {
+        let context1: Context
+        let context2: Context
+        let context3: Context
+        let context4: Context
+        let trigger: Observable<boolean>
+
+        function* Test1(this: Context, _: any) {
+            context1 = this
+
+            while (true) {
+                yield component(Test2, '', undefined, undefined, undefined)
+            }
+        }
+
+        function* Test2(this: Context) {
+            context2 = this
+            trigger = observable(false)
+
+            while (true) {
+                if (trigger.get()) {
+                    yield component(Test3, '', undefined, undefined, undefined, [
+                        component(Test4, '', undefined, undefined, undefined, []),
+                    ])
+                    continue
+                }
+
+                yield null
+            }
+        }
+
+        function* Test3(this: Context, props: any) {
+            context3 = this
+            while (true) {
+                yield props.children
+            }
+        }
+        function* Test4(this: Context, _: any) {
+            context4 = this
+            while (true) {
+                yield 'Hello'
+            }
+        }
+
+        render(component(Test1, '', undefined, undefined))
+
+        it('should defined context1 context2', () => {
+            expect(context1).not.toBeUndefined()
+            expect(context2).not.toBeUndefined()
+            expect(context3).toBeUndefined()
+            expect(context4).toBeUndefined()
+        })
+
+        it('should create child contexts', () => {
+            trigger.set(true)
+            expect(context3).not.toBeUndefined()
+            expect(context4).not.toBeUndefined()
+            expect(context3.parent === context2).toBeTruthy()
+            expect(context4.parent === context3).toBeTruthy()
+        })
+    })
+
     describe('Atoms', () => {
         let context1: Context
         let context2: Context

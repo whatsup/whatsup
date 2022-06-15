@@ -3,7 +3,7 @@ import { reconcile, placeElements, removeUnreconciledElements, JsxMutator } from
 import { ReconcileMap } from './reconcile_map'
 import { WhatsJSX } from './types'
 
-export function render(root: WhatsJSX.Child, container: HTMLElement | SVGElement = document.body) {
+export const render = (root: WhatsJSX.Child, container: HTMLElement | SVGElement = document.body) => {
     if (!(root instanceof JsxMutator)) {
         throw new Error('Root element must be Component')
     }

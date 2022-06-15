@@ -1,5 +1,5 @@
 import { WhatsJSX } from './types'
 
-export function createRef(): WhatsJSX.Ref {
-    return { current: null }
+export const createRef = () => {
+    return { current: null } as WhatsJSX.Ref
 }

@@ -2,10 +2,7 @@
 // Thanks react team
 
 import * as CSS from 'csstype'
-import { Atom } from 'whatsup'
-import { Context } from './context'
 import { JsxMutator } from './mutator'
-import { ReconcileMap } from './reconcile_map'
 
 type Booleanish = boolean | 'true' | 'false'
 
@@ -1517,7 +1514,7 @@ export namespace WhatsJSX {
 
     export type TagName = keyof Elements
 
-    export type Type = TagName | Component
+    export type Type = TagName | ComponentProducer
     export type Uid = string
     export type Prop = keyof ComponentProps & string
     export type Key = string | number
@@ -1533,10 +1530,16 @@ export namespace WhatsJSX {
         | Child[]
         | Generator<Child, Child | unknown>
 
-    export type AmComponent = () => Child | Generator<Child | never, Child | unknown>
-    export type FnComponent<P extends ComponentProps = {}> = (props: P) => Child
-    export type GnComponent<P extends ComponentProps = {}> = (props: P) => Generator<Child | never, Child | unknown, P>
-    export type Component<P extends ComponentProps = {}> = FnComponent<P> | GnComponent<P>
+    export type FnComponentProducer<P extends ComponentProps = {}> = (props: P) => Child
+    export type GnComponentProducer<P extends ComponentProps = {}> = (
+        props: P
+    ) => Iterator<Child | never, Child | unknown, P>
+    export type ComponentProducer<P extends ComponentProps = {}> = FnComponentProducer<P> | GnComponentProducer<P>
+
+    export interface Component {
+        setProps(nextProps: WhatsJSX.ComponentProps): void
+        getElements(): (HTMLElement | Text)[]
+    }
 
     export interface Ref {
         current?: any
@@ -1566,17 +1569,7 @@ export namespace WhatsJSX {
     }
 
     export interface ComponentMutatorLike<R> extends JsxMutatorLike<R> {
-        reconcileMap: ReconcileMap
-        context?: Context
-        atom?: Atom<WhatsJSX.Child>
-    }
-
-    export interface GnComponentMutatorLike<R> extends ComponentMutatorLike<R> {
-        iterator?: Iterator<Child | never, Child | unknown, unknown>
-    }
-
-    export interface AmComponentMutatorLike<R> extends ComponentMutatorLike<R> {
-        atom?: Atom<Child>
+        component?: Component
     }
 }
 

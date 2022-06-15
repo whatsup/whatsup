@@ -55,7 +55,7 @@ export class ReconcileMap {
         this.tracker.delete(item)
     }
 
-    *[Symbol.iterator]() {
+    *elements() {
         for (const item of this.tracker) {
             if (Array.isArray(item)) {
                 yield* item

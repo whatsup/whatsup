@@ -1,10 +1,11 @@
-import { Atom, Mutator, createAtom, observable, Observable, mutator } from 'whatsup'
+import { Mutator, createAtom, observable, mutator, Atom, Observable } from 'whatsup'
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE } from './constants'
 import { addContextToStack, Context, createContext, popContextFromStack } from './context'
 import { ReconcileMap } from './reconcile_map'
 import { WhatsJSX } from './types'
+import { isGenerator } from './utils'
 
-export function Fragment(props: WhatsJSX.ComponentProps) {
+export const Fragment = (props: WhatsJSX.ComponentProps) => {
     return props.children!
 }
 
@@ -14,14 +15,10 @@ const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
 
 const FAKE_JSX_ELEMENT_MUTATOR: WhatsJSX.ElementMutatorLike<HTMLElement | SVGElement> = {
     props: {} as WhatsJSX.ElementProps,
-    children: {
-        reconcileMap: new ReconcileMap(),
-    },
+    children: {},
 }
 
-const FAKE_JSX_COMPONENT_MUTATOR: WhatsJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> = {
-    reconcileMap: new ReconcileMap(),
-}
+const FAKE_JSX_COMPONENT_MUTATOR: WhatsJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> = {}
 
 export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | Text) | (Element | Text)[]>
     extends Mutator<R>
@@ -59,33 +56,20 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
         this.onUnmount = onUnmount
     }
 
-    mutate(data?: R) {
-        const oldMutator = this.extractFrom(data)
+    mutate(prev?: R) {
+        const oldMutator = this.extractFrom(prev)
 
         if (oldMutator === this) {
-            return data!
+            return prev!
         }
 
-        let newData = this.doMutation(oldMutator)
+        const next = this.doMutation(oldMutator)
 
-        if (
-            Array.isArray(data) &&
-            Array.isArray(newData) &&
-            data.length === newData.length &&
-            data.every((item, i) => item === (newData as (Element | Text)[])[i])
-        ) {
-            /*
-                reuse old data container
-                to prevent recalculation of top-level atom
-            */
-            newData = data
-        }
+        this.attachSelfTo(next)
+        this.attachMountingCallbacks(next)
+        this.updateRef(next)
 
-        this.attachSelfTo(newData)
-        this.attachMountingCallbacks(newData)
-        this.updateRef(newData)
-
-        return (this.result = newData)
+        return (this.result = next)
     }
 
     private updateRef(target: R) {
@@ -134,7 +118,7 @@ export abstract class JsxElementMutator
     implements WhatsJSX.ElementMutatorLike<HTMLElement | SVGElement> {
     protected abstract createElement(): HTMLElement | SVGElement
 
-    readonly children: ComponentMutator<WhatsJSX.Component>
+    readonly children: ComponentMutator<WhatsJSX.ComponentProducer>
 
     constructor(
         type: WhatsJSX.TagName,
@@ -176,12 +160,11 @@ export class HTMLElementMutator extends JsxElementMutator {
     }
 }
 
-export class ComponentMutator<T extends WhatsJSX.Component>
+export class ComponentMutator<T extends WhatsJSX.ComponentProducer>
     extends JsxMutator<T, (HTMLElement | SVGElement | Text)[]>
     implements WhatsJSX.ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]> {
     readonly reconcileMap = new ReconcileMap()
-    atom?: Atom<WhatsJSX.Child>
-    atomProps?: Observable<WhatsJSX.ComponentProps>
+    component?: WhatsJSX.Component
 
     constructor(
         type: T,
@@ -195,83 +178,136 @@ export class ComponentMutator<T extends WhatsJSX.Component>
     }
 
     doMutation(oldMutator = FAKE_JSX_COMPONENT_MUTATOR) {
-        const { reconcileMap: oldReconcileMap } = oldMutator
-        const { reconcileMap, type, atom, atomProps, props } = this
+        const { component } = oldMutator
+        const { type, props } = this
 
-        this.atomProps = atomProps || observable<WhatsJSX.ComponentProps>()
-        this.atomProps.set(props)
+        this.component = component || createComponent(type, props)
+        this.component!.setProps(props)
 
-        const amProps = this.atomProps!
-
-        this.atom =
-            atom ||
-            createAtom(function* () {
-                let context: Context
-                let iterator: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
-
-                try {
-                    while (true) {
-                        yield mutator((prev?: WhatsJSX.Child) => {
-                            const props = amProps.get()
-
-                            context = context || createContext(type.name)
-
-                            addContextToStack(context)
-
-                            let result: WhatsJSX.Child
-
-                            if (isGeneratorComponent<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown>(type)) {
-                                iterator = iterator || type.call(context, props)
-
-                                const { done, value } = iterator.next(props)
-
-                                if (done) {
-                                    iterator = undefined
-                                }
-
-                                result = value instanceof Mutator ? value.mutate(prev) : value
-                            } else {
-                                const value = type.call(context, props)
-
-                                result = value instanceof Mutator ? value.mutate(prev) : value
-                            }
-
-                            popContextFromStack()
-
-                            return result as WhatsJSX.Child
-                        })
-                    }
-                } finally {
-                    if (iterator) {
-                        iterator.return!()
-                    }
-                }
-            })
-
-        const value = this.atom.get()
-        const mutators = Array.isArray(value) ? value : [value]
-        const elements = [] as (HTMLElement | Text)[]
-
-        reconcile(reconcileMap, elements, mutators, oldReconcileMap)
-        removeUnreconciledElements(oldReconcileMap)
-
-        return elements
+        return this.component!.getElements()
     }
 }
 
-export const isGeneratorComponent = <T, TR, TN>(
-    target: Function
-): target is (...args: any[]) => Generator<T, TR, TN> => {
-    return target.constructor.name === 'GeneratorFunction'
+abstract class Component<P extends WhatsJSX.ComponentProps> {
+    protected abstract produce(ctx: Context): WhatsJSX.Child
+
+    private atom: Atom<(HTMLElement | Text)[]>
+    protected producer: WhatsJSX.ComponentProducer<P>
+    protected props: Observable<P>
+
+    constructor(producer: WhatsJSX.ComponentProducer<P>, props: P) {
+        this.atom = createAtom(this.whatsup, this)
+        this.producer = producer
+        this.props = observable(props)
+    }
+
+    setProps(props: P) {
+        this.props.set(props)
+    }
+
+    getElements() {
+        return this.atom.get()
+    }
+
+    private *whatsup() {
+        let context: Context
+        let oldReconcileMap = new ReconcileMap()
+
+        try {
+            while (true) {
+                yield mutator((prev?: (HTMLElement | Text)[]) => {
+                    const reconcileMap = new ReconcileMap()
+
+                    context = context || createContext(this.producer.name)
+
+                    addContextToStack(context)
+
+                    const result = this.produce(context)
+                    const childs = Array.isArray(result) ? result : [result]
+                    const next = [] as (HTMLElement | Text)[]
+
+                    reconcile(reconcileMap, next, childs, oldReconcileMap)
+                    removeUnreconciledElements(oldReconcileMap)
+                    popContextFromStack()
+
+                    oldReconcileMap = reconcileMap
+
+                    if (
+                        prev &&
+                        prev.length === next.length &&
+                        prev.every((item, i) => item === (next as (Element | Text)[])[i])
+                    ) {
+                        /*
+                            reuse old data container
+                            to prevent recalculation of top-level atom
+                        */
+                        return prev
+                    }
+
+                    return next
+                })
+            }
+        } finally {
+            this.dispose()
+        }
+    }
+
+    protected dispose() {}
 }
 
-export function removeUnreconciledElements(reconcileMap: ReconcileMap) {
-    for (const element of reconcileMap) {
+class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
+    protected producer!: WhatsJSX.FnComponentProducer<P>
+
+    produce(context: Context) {
+        const props = this.props.get()
+        return this.producer.call(context, props)
+    }
+}
+
+class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
+    protected producer!: WhatsJSX.GnComponentProducer<P>
+    private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
+
+    produce(context: Context) {
+        const props = this.props.get()
+
+        if (!this.iterator) {
+            this.iterator = this.producer.call(context, props)
+        }
+
+        const { done, value } = this.iterator.next(props)
+
+        if (done) {
+            this.iterator = undefined
+        }
+
+        return value as WhatsJSX.Child
+    }
+
+    protected dispose() {
+        super.dispose()
+
+        if (this.iterator) {
+            this.iterator.return!()
+            this.iterator = undefined
+        }
+    }
+}
+
+const createComponent = (producer: WhatsJSX.ComponentProducer, props: WhatsJSX.ComponentProps): WhatsJSX.Component => {
+    if (isGenerator(producer)) {
+        return new GnComponent(producer, props)
+    }
+    return new FnComponent(producer, props)
+}
+
+export const removeUnreconciledElements = (reconcileMap: ReconcileMap) => {
+    for (const element of reconcileMap.elements()) {
         element.remove()
     }
 }
 
-export function placeElements(node: HTMLElement | SVGElement, elements: (HTMLElement | SVGElement | Text)[]) {
+export const placeElements = (node: HTMLElement | SVGElement, elements: (HTMLElement | SVGElement | Text)[]) => {
     const { childNodes } = node
     const { length } = elements
 
@@ -289,12 +325,12 @@ export function placeElements(node: HTMLElement | SVGElement, elements: (HTMLEle
     }
 }
 
-export function reconcile(
+export const reconcile = (
     reconcileMap: ReconcileMap,
     elements: (HTMLElement | SVGElement | Text)[],
     children: WhatsJSX.Child[],
     oldReconcileMap: ReconcileMap
-) {
+) => {
     for (let i = 0; i < children.length; i++) {
         const child = children[i]
 
@@ -358,7 +394,7 @@ class InvalidJSXChildError extends Error {
     }
 }
 
-function mutateProps<T extends WhatsJSX.ElementProps>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
+const mutateProps = <T extends WhatsJSX.ElementProps>(node: HTMLElement | SVGElement, props: T, oldProps: T) => {
     for (const prop in oldProps) {
         if (!(prop in props)) {
             mutateProp(node, prop, undefined, oldProps[prop])
@@ -371,12 +407,12 @@ function mutateProps<T extends WhatsJSX.ElementProps>(node: HTMLElement | SVGEle
     }
 }
 
-function mutateProp<T extends WhatsJSX.ElementProps, K extends keyof T & string>(
+const mutateProp = <T extends WhatsJSX.ElementProps, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     value: T[K] | undefined,
     oldValue: T[K] | undefined
-) {
+) => {
     if (isSVG(node)) {
         // Normalize incorrect prop usage for SVG
         // Thanks prettier team
@@ -402,12 +438,12 @@ function mutateProp<T extends WhatsJSX.ElementProps, K extends keyof T & string>
     }
 }
 
-function mutateEventListener<T extends WhatsJSX.ElementProps, K extends keyof T & string>(
+const mutateEventListener = <T extends WhatsJSX.ElementProps, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     listener: T[K] | undefined,
     oldListener: T[K] | undefined
-) {
+) => {
     const capture = isEventCaptureListener(prop)
     const event = getEventName(prop, capture)
 
@@ -419,11 +455,11 @@ function mutateEventListener<T extends WhatsJSX.ElementProps, K extends keyof T 
     }
 }
 
-function mutateStyle<T extends CSSStyleDeclaration | WhatsJSX.ElementProps>(
+const mutateStyle = <T extends CSSStyleDeclaration | WhatsJSX.ElementProps>(
     node: HTMLElement | SVGElement,
     value: T = EMPTY_OBJ as T,
     oldValue: T = EMPTY_OBJ as T
-) {
+) => {
     if (value instanceof CSSStyleDeclaration) {
         node.style.cssText = value.cssText
     } else {
@@ -441,11 +477,11 @@ function mutateStyle<T extends CSSStyleDeclaration | WhatsJSX.ElementProps>(
     }
 }
 
-function mutateStyleProp<T extends WhatsJSX.ElementProps, K extends keyof T & string>(
+const mutateStyleProp = <T extends WhatsJSX.ElementProps, K extends keyof T & string>(
     style: CSSStyleDeclaration,
     prop: K,
     value: T[K]
-) {
+) => {
     if (typeof value !== 'number' || NON_DIMENSIONAL_STYLE_PROP.test(prop)) {
         style[prop as any] = value
     } else {
@@ -453,11 +489,11 @@ function mutateStyleProp<T extends WhatsJSX.ElementProps, K extends keyof T & st
     }
 }
 
-function mutatePropThroughAttributeApi<T extends HTMLElement | SVGElement>(
+const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
     node: T,
     prop: keyof WhatsJSX.ElementProps & string,
     value: WhatsJSX.ElementProps[keyof WhatsJSX.ElementProps]
-) {
+) => {
     if (value == null) {
         node.removeAttribute(prop)
     } else {
@@ -465,39 +501,39 @@ function mutatePropThroughAttributeApi<T extends HTMLElement | SVGElement>(
     }
 }
 
-function mutatePropThroughUsualWay<T extends HTMLElement | SVGElement>(
+const mutatePropThroughUsualWay = <T extends HTMLElement | SVGElement>(
     node: T,
     prop: keyof WhatsJSX.ElementProps,
     value: WhatsJSX.ElementProps[keyof WhatsJSX.ElementProps]
-) {
+) => {
     node[prop as keyof T] = value == null ? '' : value
 }
 
-function getEventName(prop: string, capture: boolean) {
+const getEventName = (prop: string, capture: boolean) => {
     return prop.slice(2, capture ? -7 : Infinity).toLowerCase()
 }
 
-function isSVG(node: HTMLElement | SVGElement) {
+const isSVG = (node: HTMLElement | SVGElement) => {
     return node.namespaceURI === SVG_NAMESPACE
 }
 
-function isEventListener(prop: string) {
+const isEventListener = (prop: string) => {
     return prop.startsWith('on')
 }
 
-function isEventCaptureListener(prop: string) {
+const isEventCaptureListener = (prop: string) => {
     return (prop as string).endsWith('Capture')
 }
 
-function isStyleProp(prop: string) {
+const isStyleProp = (prop: string) => {
     return prop === 'style'
 }
 
-function isIgnorableProp(prop: string) {
+const isIgnorableProp = (prop: string) => {
     return prop === 'key' || prop === 'ref' || prop === 'children' || prop === 'onMount' || prop === 'onUnmount'
 }
 
-function isReadonlyProp(prop: string) {
+const isReadonlyProp = (prop: string) => {
     return (
         prop === 'list' ||
         prop === 'form' ||
@@ -508,7 +544,7 @@ function isReadonlyProp(prop: string) {
     )
 }
 
-function createMountObserver<T extends Element | Text>(element: T, callback: (el: T) => void) {
+const createMountObserver = <T extends Element | Text>(element: T, callback: (el: T) => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
@@ -529,7 +565,7 @@ function createMountObserver<T extends Element | Text>(element: T, callback: (el
     return observer
 }
 
-function createUnmountObserver<T extends Element | Text>(element: T, callback: (el: T) => void) {
+const createUnmountObserver = <T extends Element | Text>(element: T, callback: (el: T) => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.removedNodes) {

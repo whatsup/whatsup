@@ -3,7 +3,10 @@ import { Event, EventCtor, EventListener } from './event'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)
 
+let id = 0
+
 export class Context {
+    id = ++id
     /** @internal */
     readonly parent: Context | null
 
