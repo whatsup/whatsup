@@ -238,7 +238,7 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
                         prev.every((item, i) => item === (next as (Element | Text)[])[i])
                     ) {
                         /*
-                            reuse old data container
+                            reuse old elements container
                             to prevent recalculation of top-level atom
                         */
                         return prev
