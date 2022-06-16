@@ -3,7 +3,6 @@
  */
 
 import { observable } from 'whatsup'
-import { html, component } from '../src/factories'
 import { render } from '../src/render'
 
 describe('Mounting', function () {
@@ -11,13 +10,14 @@ describe('Mounting', function () {
         document.body.innerHTML = ''
 
         const onMount = jest.fn()
+
         function* Root() {
             while (true) {
-                yield html('div', '', '', undefined, { onMount })
+                yield <div onMount={onMount} />
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -29,13 +29,18 @@ describe('Mounting', function () {
         document.body.innerHTML = ''
 
         const onMount = jest.fn()
+
         function* Root() {
             while (true) {
-                yield html('div', '', '', undefined, undefined, [html('div', '', '', undefined, { onMount })])
+                yield (
+                    <div>
+                        <div onMount={onMount} />
+                    </div>
+                )
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -46,9 +51,9 @@ describe('Mounting', function () {
     it('should call onUnmount when element unmounted', async function () {
         document.body.innerHTML = ''
 
-        let kickstart: () => void
-
         const onUnmount = jest.fn()
+
+        let kickstart: () => void
 
         function* Root() {
             const trigger = observable(0)
@@ -57,11 +62,11 @@ describe('Mounting', function () {
 
             trigger.get()
 
-            yield html('div', '', '1', undefined, { onUnmount })
-            yield html('div', '', '2', undefined)
+            yield <div onUnmount={onUnmount} />
+            yield <div />
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         const div = document.body.children[0]
 
@@ -78,9 +83,9 @@ describe('Mounting', function () {
     it('should call child onUnmount when element unmounted', async function () {
         document.body.innerHTML = ''
 
-        let kickstart: () => void
-
         const onUnmount = jest.fn()
+
+        let kickstart: () => void
 
         function* Root() {
             const trigger = observable(0)
@@ -89,11 +94,15 @@ describe('Mounting', function () {
 
             trigger.get()
 
-            yield html('div', '', '1', undefined, undefined, [html('div', '', '1', undefined, { onUnmount })])
-            yield html('div', '', '2', undefined)
+            yield (
+                <div>
+                    <div onUnmount={onUnmount} />
+                </div>
+            )
+            yield <div />
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         const div = document.body.children[0].children[0]
 
@@ -113,16 +122,16 @@ describe('Mounting', function () {
         const onMount = jest.fn()
 
         function Component() {
-            return html('div', '', '', undefined)
+            return <div />
         }
 
         function* Root() {
             while (true) {
-                yield component(Component, '', '', undefined, { onMount })
+                yield <Component onMount={onMount} />
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -136,18 +145,20 @@ describe('Mounting', function () {
         const onMount = jest.fn()
 
         function Component(props: any) {
-            return html('div', '', '', undefined, undefined, props.children)
+            return <div>{props.children}</div>
         }
 
         function* Root() {
             while (true) {
-                yield component(Component, '', '', undefined, undefined, [
-                    component(Component, '', '', undefined, { onMount }),
-                ])
+                yield (
+                    <Component>
+                        <Component onMount={onMount} />
+                    </Component>
+                )
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -163,7 +174,7 @@ describe('Mounting', function () {
         const onUnmount = jest.fn()
 
         function Component() {
-            return html('div', '', '', undefined)
+            return <div />
         }
 
         function* Root() {
@@ -173,11 +184,11 @@ describe('Mounting', function () {
 
             trigger.get()
 
-            yield component(Component, '', '1', undefined, { onUnmount })
-            yield component(Component, '', '2', undefined)
+            yield <Component onUnmount={onUnmount} />
+            yield <Component />
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         const div = document.body.children[0]
 
@@ -199,7 +210,7 @@ describe('Mounting', function () {
         const onUnmount = jest.fn()
 
         function Component(props: any) {
-            return html('div', '', '', undefined, undefined, props.children)
+            return <div>{props.children}</div>
         }
 
         function* Root() {
@@ -209,13 +220,15 @@ describe('Mounting', function () {
 
             trigger.get()
 
-            yield component(Component, '', '1', undefined, undefined, [
-                component(Component, '', '1', undefined, { onUnmount }),
-            ])
-            yield component(Component, '', '2', undefined)
+            yield (
+                <Component>
+                    <Component onUnmount={onUnmount} />
+                </Component>
+            )
+            yield <Component />
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         const div = document.body.children[0].children[0]
 
@@ -229,7 +242,7 @@ describe('Mounting', function () {
         expect(onUnmount).lastCalledWith(div)
     })
 
-    it('should call return on generator when am component unmounted', async function () {
+    it('should call return on generator when component unmounted', async function () {
         document.body.innerHTML = ''
 
         let kickstart: () => void
@@ -239,7 +252,7 @@ describe('Mounting', function () {
         function* Component() {
             try {
                 while (true) {
-                    yield html('div', '', '', undefined)
+                    yield <div />
                 }
             } finally {
                 mock()
@@ -253,50 +266,11 @@ describe('Mounting', function () {
 
             trigger.get()
 
-            yield component(Component, '', '1', undefined)
-            yield html('div', '', '', undefined)
+            yield <Component />
+            yield <div />
         }
 
-        render(component(Root, '', '', undefined))
-
-        expect(mock).toBeCalledTimes(0)
-
-        kickstart!()
-
-        await new Promise((r) => setTimeout(r, 100))
-
-        expect(mock).toBeCalledTimes(1)
-    })
-
-    it('should call return on generator when gn component unmounted', async function () {
-        document.body.innerHTML = ''
-
-        let kickstart: () => void
-
-        const mock = jest.fn()
-
-        function* Component(props: any) {
-            try {
-                while (true) {
-                    props = yield html('div', '', '', undefined, props)
-                }
-            } finally {
-                mock()
-            }
-        }
-
-        function* Root() {
-            const trigger = observable(0)
-
-            kickstart = () => trigger.set(Math.random())
-
-            trigger.get()
-
-            yield component(Component, '', '1', undefined)
-            yield html('div', '', '', undefined)
-        }
-
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         expect(mock).toBeCalledTimes(0)
 

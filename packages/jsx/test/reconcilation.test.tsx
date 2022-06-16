@@ -2,64 +2,34 @@
  * @jest-environment jsdom
  */
 import { html, svg, component } from '../src/factories'
+import { ElementMutator } from '../src/mutator'
 
 describe('reconcilation', function () {
-    it('expect uid to be "uiniqueId"', function () {
-        const uid = 'uiniqueId'
-        const mutator = html('div', uid, '', undefined)
-
-        expect(mutator.uid).toBe(uid)
-    })
-
-    it('expect key to be "elementKey"', function () {
-        const key = 'elementKey'
-        const mutator = html('div', '', key, undefined)
-
-        expect(mutator.key).toBe(key)
-    })
-
-    it('expect reconcileId to be "uiniqueId|elementKey"', function () {
-        const uid = 'uiniqueId'
-        const key = 'elementKey'
-        const mutator = html('div', uid, key, undefined)
-
-        expect(mutator.reconcileId).toBe(uid + '|' + key)
-    })
-
     it('expect HTMLElementMutator.mutate return div element', function () {
-        const mutator = html('div', '', '', undefined)
+        const mutator = (<div />) as ElementMutator
         const element = mutator.mutate()
 
         expect(element.tagName).toBe('DIV')
     })
 
     it('expect SVGElementMutator.mutate return svg element', function () {
-        const mutator = svg('svg', '', '', undefined)
+        const mutator = (<svg />) as ElementMutator
         const element = mutator.mutate()
 
         expect(element.tagName).toBe('svg')
     })
 
     it('should return data when old mutator is same mutator', function () {
-        const mutator = svg('svg', '', '', undefined)
+        const mutator = (<div />) as ElementMutator
         const element = mutator.mutate()
         const nextElement = mutator.mutate(element)
 
         expect(nextElement).toBe(element)
     })
 
-    it('should reuse element when old mutator have same type & reconcileId', function () {
-        const mutatorOne = html('div', 'uid', 'key', undefined)
-        const mutatorTwo = html('div', 'uid', 'key', undefined)
-        const elementOne = mutatorOne.mutate()
-        const elementTwo = mutatorTwo.mutate(elementOne)
-
-        expect(elementOne).toBe(elementTwo)
-    })
-
     it('should not reuse element when old mutator not have same type & reconcileId', function () {
-        const mutatorOne = html('div', 'uid1', 'key1', undefined)
-        const mutatorTwo = html('div', 'uid2', 'key2', undefined)
+        const mutatorOne = (<div key={1} />) as ElementMutator
+        const mutatorTwo = (<div key={2} />) as ElementMutator
         const elementOne = mutatorOne.mutate()
         const elementTwo = mutatorTwo.mutate(elementOne)
 
@@ -67,47 +37,48 @@ describe('reconcilation', function () {
     })
 
     it('should render children', function () {
-        const mutator = html('div', 'uid1', '', undefined, undefined, [
-            html('div', 'child1', '', undefined, undefined, ['child1']),
-            html('div', 'child2', '', undefined, undefined, ['child2']),
-        ])
+        const mutator = (
+            <div>
+                <div>child1</div>
+                <div>child2</div>
+            </div>
+        ) as ElementMutator
+
         const element = mutator.mutate()
 
-        expect(element.childNodes.length).toBe(2)
-        expect(element.childNodes[0].textContent).toBe('child1')
-        expect(element.childNodes[1].textContent).toBe('child2')
+        expect(element.outerHTML).toBe('<div><div>child1</div><div>child2</div></div>')
     })
 
     it('should render children elements, mutators, strings, numbers & ignore null & booleans', function () {
-        const mutator = html('div', 'uid1', '', undefined, undefined, [
-            html('div', 'child1', '', undefined, undefined, ['child1']),
-            html('div', 'child2', '', undefined, undefined, ['child2']),
-            'child3',
-            1612,
-            null,
-            false,
-            true,
-        ])
+        const mutator = (
+            <div>
+                <div>child1</div>
+                <div>child2</div>
+                child3
+                {1612}
+                {null}
+                {false}
+                {true}
+            </div>
+        ) as ElementMutator
         const element = mutator.mutate()
 
-        expect(element.childNodes.length).toBe(4)
-        expect(element.childNodes[0].textContent).toBe('child1')
-        expect(element.childNodes[1].textContent).toBe('child2')
-        expect(element.childNodes[2].nodeValue).toBe('child3')
-        expect(element.childNodes[3].nodeValue).toBe('1612')
+        expect(element.outerHTML).toBe('<div><div>child1</div><div>child2</div> child3 1612</div>')
     })
 
     it('should throw error on all children except elements, mutators, strings, numbers, booleans, null', function () {
-        const mutator = html('div', 'uid1', '', undefined, undefined, [
-            html('div', 'child1', '', undefined, undefined, ['child1']),
-            html('div', 'child2', '', undefined, undefined, ['child2']),
-            'child3',
-            1612,
-            null,
-            undefined as any,
-            false,
-            true,
-        ])
+        const mutator = (
+            <div>
+                <div>child1</div>
+                <div>child2</div>
+                child3
+                {undefined}
+                {1612}
+                {null}
+                {false}
+                {true}
+            </div>
+        ) as ElementMutator
 
         expect(() => mutator.mutate()).toThrow('Invalid JSX Child')
     })

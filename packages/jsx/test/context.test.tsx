@@ -3,13 +3,12 @@
  */
 
 import { Event } from '../src/event'
-import { component, html } from '../src/factories'
 import { Context, createKey } from '../src/context'
 import { render } from '../src/render'
 import { observable, Observable } from 'whatsup'
 
 describe('Context', () => {
-    describe('Parent-Child', () => {
+    describe('should create new rich context when chil render new element', () => {
         let context1: Context
         let context2: Context
         let context3: Context
@@ -20,7 +19,7 @@ describe('Context', () => {
             context1 = this
 
             while (true) {
-                yield component(Test2, '', undefined, undefined, undefined)
+                yield <Test2 />
             }
         }
 
@@ -30,9 +29,11 @@ describe('Context', () => {
 
             while (true) {
                 if (trigger.get()) {
-                    yield component(Test3, '', undefined, undefined, undefined, [
-                        component(Test4, '', undefined, undefined, undefined, []),
-                    ])
+                    yield (
+                        <Test3>
+                            <Test4 />
+                        </Test3>
+                    )
                     continue
                 }
 
@@ -53,7 +54,7 @@ describe('Context', () => {
             }
         }
 
-        render(component(Test1, '', undefined, undefined))
+        render(<Test1 />)
 
         it('should defined context1 context2', () => {
             expect(context1).not.toBeUndefined()
@@ -71,7 +72,7 @@ describe('Context', () => {
         })
     })
 
-    describe('Atoms', () => {
+    describe('Nested', () => {
         let context1: Context
         let context2: Context
         let context3: Context
@@ -80,19 +81,19 @@ describe('Context', () => {
         function* Test1(this: Context) {
             context1 = this
             while (true) {
-                yield component(Test2, '', undefined, undefined)
+                yield <Test2 />
             }
         }
         function* Test2(this: Context) {
             context2 = this
             while (true) {
-                yield component(Test3, '', undefined, undefined)
+                yield <Test3 />
             }
         }
         function* Test3(this: Context) {
             context3 = this
             while (true) {
-                yield component(Test4, '', undefined, undefined)
+                yield <Test4 />
             }
         }
         function* Test4(this: Context) {
@@ -102,7 +103,7 @@ describe('Context', () => {
             }
         }
 
-        render(component(Test1, '', undefined, undefined))
+        render(<Test1 />)
 
         describe('Sharing', () => {
             const testkey = createKey('default')
@@ -315,44 +316,46 @@ describe('Context', () => {
         })
     })
 
-    describe('Generators', () => {
+    describe('Nested children (generators)', () => {
         let context1: Context
         let context2: Context
         let context3: Context
         let context4: Context
 
-        function* Test1(this: Context, _: any) {
+        function* Test1(this: Context) {
             context1 = this
             while (true) {
-                yield html('div', '', undefined, undefined, undefined, [
-                    component(Test2, '', undefined, undefined, undefined, [
-                        component(Test3, '', undefined, undefined, undefined, [
-                            component(Test4, '', undefined, undefined, undefined, []),
-                        ]),
-                    ]),
-                ])
+                yield (
+                    <div>
+                        <Test2>
+                            <Test3>
+                                <Test4 />
+                            </Test3>
+                        </Test2>
+                    </div>
+                )
             }
         }
         function* Test2(this: Context, props: any) {
             context2 = this
             while (true) {
-                yield html('div', '', undefined, undefined, undefined, [props.children])
+                yield <div>{props.children}</div>
             }
         }
         function* Test3(this: Context, props: any) {
             context3 = this
             while (true) {
-                yield html('div', '', undefined, undefined, undefined, [props.children])
+                yield <div>{props.children}</div>
             }
         }
-        function* Test4(this: Context, _: any) {
+        function* Test4(this: Context) {
             context4 = this
             while (true) {
                 yield 'Hello'
             }
         }
 
-        render(component(Test1, '', undefined, undefined))
+        render(<Test1 />)
 
         describe('Sharing', () => {
             const testKey = createKey('default')
@@ -564,7 +567,7 @@ describe('Context', () => {
             })
         })
     })
-    describe('Functions', () => {
+    describe('Nested children (Functions)', () => {
         let context1: Context
         let context2: Context
         let context3: Context
@@ -573,23 +576,25 @@ describe('Context', () => {
         function Test1(this: Context, _: any) {
             context1 = this
 
-            return html('div', '', undefined, undefined, undefined, [
-                component(Test2, '', undefined, undefined, undefined, [
-                    component(Test3, '', undefined, undefined, undefined, [
-                        component(Test4, '', undefined, undefined, undefined, []),
-                    ]),
-                ]),
-            ])
+            return (
+                <div>
+                    <Test2>
+                        <Test3>
+                            <Test4 />
+                        </Test3>
+                    </Test2>
+                </div>
+            )
         }
         function Test2(this: Context, props: any) {
             context2 = this
 
-            return html('div', '', undefined, undefined, undefined, [props.children])
+            return <div>{props.children}</div>
         }
         function Test3(this: Context, props: any) {
             context3 = this
 
-            return html('div', '', undefined, undefined, undefined, [props.children])
+            return <div>{props.children}</div>
         }
         function Test4(this: Context, _: any) {
             context4 = this
@@ -597,7 +602,7 @@ describe('Context', () => {
             return 'Hello'
         }
 
-        render(component(Test1, '', undefined, undefined))
+        render(<Test1 />)
 
         describe('Sharing', () => {
             const testKey = createKey('default')
@@ -836,7 +841,7 @@ describe('Context', () => {
     })
 
     describe('Defer', () => {
-        const delay = <T>(t: number) => new Promise<T>((r) => setTimeout(r, t))
+        const delay = (t: number) => new Promise((r) => setTimeout(r, t))
 
         it(`should trigger context.update`, async () => {
             const container = document.createElement('div')
@@ -847,7 +852,7 @@ describe('Context', () => {
                 yield 'World'
             }
 
-            render(component(Root, '', undefined, undefined), container)
+            render(<Root />, container)
 
             expect(container.innerHTML).toBe('Hello')
 
@@ -869,7 +874,7 @@ describe('Context', () => {
                 yield 2
             }
 
-            render(component(Root, '', undefined, undefined))
+            render(<Root />)
 
             expect(mock.mock.calls[0][0]).toEqual({ done: false })
 
@@ -907,7 +912,7 @@ describe('Context', () => {
                 yield result.value as string
             }
 
-            render(component(Root, '', undefined, undefined), container)
+            render(<Root />, container)
 
             expect(container.innerHTML).toBe('this is sync flow ')
 
@@ -938,7 +943,7 @@ describe('Context', () => {
                 yield str
             }
 
-            render(component(Root, '', undefined, undefined), container)
+            render(<Root />, container)
 
             expect(container.innerHTML).toBe('this is sync flow ')
 

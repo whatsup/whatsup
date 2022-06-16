@@ -3,7 +3,6 @@
  */
 
 import { createRef } from '../src/create_ref'
-import { component, html } from '../src/factories'
 import { render } from '../src/render'
 
 describe('refs', function () {
@@ -18,11 +17,11 @@ describe('refs', function () {
 
         function* Root() {
             while (true) {
-                yield html('div', '', '', ref)
+                yield <div ref={ref} />
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         expect(ref.current).toBe(document.body.children[0])
     })
@@ -33,16 +32,16 @@ describe('refs', function () {
         const ref = createRef()
 
         function Component() {
-            return html('div', '', undefined, undefined)
+            return <div />
         }
 
         function* Root() {
             while (true) {
-                yield component(Component, '', undefined, ref)
+                yield <Component ref={ref} />
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         expect(ref.current).toBe(document.body.children[0])
     })
@@ -53,16 +52,16 @@ describe('refs', function () {
         const ref = createRef()
 
         function Component() {
-            return [html('div', '', undefined, undefined), html('div', '', undefined, undefined)]
+            return [<div />, <div />]
         }
 
         function* Root() {
             while (true) {
-                yield component(Component, '', undefined, ref)
+                yield <Component ref={ref} />
             }
         }
 
-        render(component(Root, '', '', undefined))
+        render(<Root />)
 
         expect(ref.current).toBeInstanceOf(Array)
         expect(ref.current.length).toBe(2)

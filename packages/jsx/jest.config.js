@@ -1,9 +1,12 @@
 module.exports = {
     testEnvironment: 'node',
     transform: {
-        '^.+\\.ts$': 'ts-jest',
+        '^.+\\.tsx?$': 'babel-jest',
     },
-    moduleFileExtensions: ['ts', 'js'],
+    moduleFileExtensions: ['js', 'ts', 'tsx'],
+    moduleNameMapper: {
+        '@whatsup/jsx': '<rootDir>/src/',
+    },
     coverageDirectory: 'coverage',
-    collectCoverageFrom: ['src/**/*.ts'],
+    collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 }

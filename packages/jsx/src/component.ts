@@ -73,6 +73,7 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
 
     protected dispose() {}
 }
+
 class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
     protected producer!: WhatsJSX.FnComponentProducer<P>
 
@@ -81,6 +82,7 @@ class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
         return this.producer.call(context, props)
     }
 }
+
 class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
     protected producer!: WhatsJSX.GnComponentProducer<P>
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined

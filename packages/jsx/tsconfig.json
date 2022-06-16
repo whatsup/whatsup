@@ -16,6 +16,7 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "declarationDir": "./dist",
+        "jsx": "preserve",
         "rootDir": "./src",
         "baseUrl": "./",
         "paths": {
