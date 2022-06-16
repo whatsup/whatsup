@@ -44,6 +44,14 @@ exports[`transform children Should transform without children 1`] = `
 _html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, undefined);"
 `;
 
+exports[`transform children Should trim newlines  1`] = `
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, [_html2(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, undefined), _html3(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, undefined)]);"
+`;
+
 exports[`transform children Should trim whitespaces and create empty children 1`] = `
 "import { html as _html } from \\"@whatsup/jsx\\";
 

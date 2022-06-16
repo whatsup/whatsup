@@ -36,4 +36,13 @@ describe('transform children', function () {
     it('Should trim whitespaces and create empty children', function () {
         expect(transform('<div>    </div>')).toMatchSnapshot()
     })
+
+    it('Should trim newlines ', function () {
+        expect(
+            transform(`<div>
+            <div></div>
+            <div></div>
+        </div>`)
+        ).toMatchSnapshot()
+    })
 })

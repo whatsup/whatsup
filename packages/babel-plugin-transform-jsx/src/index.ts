@@ -186,7 +186,7 @@ function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpres
             if (i === length - 1) {
                 value = value.trimRight()
             }
-            if (value !== '') {
+            if (value !== '' && value !== ' ') {
                 members.push(stringLiteral(value))
             }
 
