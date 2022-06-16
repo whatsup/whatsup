@@ -1559,16 +1559,15 @@ export namespace WhatsJSX {
 
     export interface ComponentProps extends Attributes {}
 
-    export interface JsxMutatorLike<R> {
-        result?: R
-    }
+    export interface JsxMutatorLike {}
 
-    export interface ElementMutatorLike<R> extends JsxMutatorLike<R> {
+    export interface ElementMutatorLike extends JsxMutatorLike {
         props: ElementProps
-        children: ComponentMutatorLike<(HTMLElement | SVGElement | Text)[]>
+        children: ComponentMutatorLike
+        node?: HTMLElement | SVGElement
     }
 
-    export interface ComponentMutatorLike<R> extends JsxMutatorLike<R> {
+    export interface ComponentMutatorLike extends JsxMutatorLike {
         component?: Component
     }
 }

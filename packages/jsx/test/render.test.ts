@@ -8,8 +8,32 @@ import { render } from '../src/render'
 import { WhatsJSX } from '../src/types'
 
 describe('render', function () {
-    it('should take only JsxMutator', function () {
-        expect(() => render('')).toThrowError()
+    // it('should take only JsxMutator', function () {
+    //     expect(() => render('')).toThrowError()
+    // })
+
+    it('should render string', function () {
+        const container = document.createElement('div')
+
+        render('hello', container)
+
+        expect(container.innerHTML).toBe('hello')
+    })
+
+    it('should render number', function () {
+        const container = document.createElement('div')
+
+        render(1, container)
+
+        expect(container.innerHTML).toBe('1')
+    })
+
+    it('should render array', function () {
+        const container = document.createElement('div')
+
+        render([1, 'hello'], container)
+
+        expect(container.innerHTML).toBe('1hello')
     })
 
     it('should render single child', function () {
