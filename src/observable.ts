@@ -1,15 +1,16 @@
+import { Payload } from './atom'
 import { Computed } from './computed'
 import { transaction } from './scheduler'
 
 export class Observable<T = unknown> extends Computed<T> {
-    private value: T
+    private value: Payload<T>
 
-    constructor(value: T) {
+    constructor(value: Payload<T>) {
         super(() => this.value)
         this.value = value
     }
 
-    set(value: T) {
+    set(value: Payload<T>) {
         this.value = value
 
         if (this.atom.hasObservers()) {
@@ -19,7 +20,7 @@ export class Observable<T = unknown> extends Computed<T> {
 }
 
 interface ObservableFactory {
-    <T>(value?: T): Observable<T>
+    <T>(value?: Payload<T>): Observable<T>
     (target: Object, prop: string): void
 }
 
