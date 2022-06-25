@@ -6,6 +6,7 @@ export { set } from './set'
 export { map } from './map'
 export { reaction, autorun } from './reactions'
 export { action, runInAction } from './action'
+export { rebuild } from './rebuild'
 export { delegate } from './delegation'
 export { mutator, Mutator } from './mutator'
 

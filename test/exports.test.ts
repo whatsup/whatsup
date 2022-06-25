@@ -3,6 +3,7 @@ import { computed, Computed } from '../src/computed'
 import { observable, Observable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
 import { action, runInAction } from '../src/action'
+import { rebuild } from '../src/rebuild'
 import { delegate } from '../src/delegation'
 import { mutator, Mutator } from '../src/mutator'
 import { array } from '../src/array'
@@ -18,6 +19,7 @@ import {
     reaction as _reaction,
     autorun as _autorun,
     action as _action,
+    rebuild as _rebuild,
     runInAction as _runInAction,
     delegate as _delegate,
     mutator as _mutator,
@@ -36,6 +38,7 @@ it('Exports', () => {
     expect(reaction).toBe(_reaction)
     expect(autorun).toBe(_autorun)
     expect(action).toBe(_action)
+    expect(rebuild).toBe(_rebuild)
     expect(runInAction).toBe(_runInAction)
     expect(delegate).toBe(_delegate)
     expect(mutator).toBe(_mutator)
