@@ -1,3 +1,6 @@
+import { JsxMutator } from './mutator'
+import { WhatsJSX } from './types'
+
 class ReconcileQueue<T> {
     private readonly items = [] as T[]
     private cursor = 0
@@ -71,5 +74,85 @@ export class ReconcileMap {
                 yield item
             }
         }
+    }
+
+    reconcile(
+        oldReconcileMap: ReconcileMap,
+        child: WhatsJSX.Child | WhatsJSX.Child[],
+        elements: (HTMLElement | SVGElement | Text)[] = []
+    ) {
+        if (Array.isArray(child)) {
+            for (let i = 0; i < child.length; i++) {
+                this.reconcileChild(oldReconcileMap, child[i], elements)
+            }
+        } else {
+            this.reconcileChild(oldReconcileMap, child, elements)
+        }
+
+        return elements
+    }
+
+    private reconcileChild(
+        oldReconcileMap: ReconcileMap,
+        child: WhatsJSX.Child,
+        elements: (HTMLElement | SVGElement | Text)[]
+    ) {
+        if (Array.isArray(child)) {
+            this.reconcile(oldReconcileMap, child, elements)
+            return
+        }
+
+        if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
+            oldReconcileMap.deleteRendered(child)
+            this.addRendered(child)
+            elements.push(child)
+
+            return
+        }
+
+        if (child instanceof JsxMutator) {
+            const candidate = oldReconcileMap.nextReconcilable(child.id)
+            const result = child.mutate(candidate) as HTMLElement | (HTMLElement | Text)[]
+
+            this.addReconcilable(child.id, result)
+
+            if (Array.isArray(result)) {
+                elements.push(...result)
+            } else {
+                elements.push(result)
+            }
+
+            return
+        }
+
+        if (typeof child === 'string' || typeof child === 'number') {
+            const value = child.toString()
+
+            let candidate = oldReconcileMap.nextReconcilableTextNode()
+
+            if (!candidate) {
+                candidate = document.createTextNode(value)
+            } else if (candidate.nodeValue !== value) {
+                candidate.nodeValue = value
+            }
+
+            this.addReconcilableTextNode(candidate)
+            elements.push(candidate)
+
+            return
+        }
+
+        if (child === null || child === true || child === false) {
+            // Ignore null & booleans
+            return
+        }
+
+        throw new InvalidJSXChildError(child)
+    }
+}
+
+class InvalidJSXChildError extends Error {
+    constructor(readonly child: any) {
+        super('Invalid JSX Child')
     }
 }

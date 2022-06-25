@@ -2,7 +2,7 @@ import { createAtom, observable, mutator, Atom, Observable } from 'whatsup'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
 import { removeElements } from './dom'
-import { JsxMutator } from './mutator'
+//import { JsxMutator } from './mutator'
 import { ReconcileMap } from './reconcile_map'
 import { WhatsJSX } from './types'
 import { isGenerator } from './utils'
@@ -10,7 +10,7 @@ import { isGenerator } from './utils'
 abstract class Component<P extends WhatsJSX.ComponentProps> {
     protected abstract produce(ctx: Context): WhatsJSX.Child
 
-    private atom: Atom<(HTMLElement | Text)[]>
+    private atom: Atom<(HTMLElement | SVGElement | Text)[]>
     protected producer: WhatsJSX.ComponentProducer<P>
     protected props: Observable<P>
 
@@ -29,23 +29,20 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     }
 
     private *whatsup() {
-        let context: Context
+        const context: Context = createContext(this.producer.name)
+
         let oldReconcileMap = new ReconcileMap()
 
         try {
             while (true) {
-                yield mutator((prev?: (HTMLElement | Text)[]) => {
+                yield mutator((prev?: (HTMLElement | SVGElement | Text)[]) => {
                     const reconcileMap = new ReconcileMap()
-
-                    context = context || createContext(this.producer.name)
 
                     addContextToStack(context)
 
-                    const result = this.produce(context)
-                    const childs = Array.isArray(result) ? result : [result]
-                    const next = [] as (HTMLElement | Text)[]
+                    const child = this.produce(context)
+                    const next = reconcileMap.reconcile(oldReconcileMap, child)
 
-                    reconcile(reconcileMap, next, childs, oldReconcileMap)
                     removeElements(oldReconcileMap.elements())
                     popContextFromStack()
 
@@ -122,75 +119,6 @@ export const createComponent = (
     }
 
     return new FnComponent(producer, props)
-}
-
-export const reconcile = (
-    reconcileMap: ReconcileMap,
-    elements: (HTMLElement | SVGElement | Text)[],
-    children: WhatsJSX.Child[],
-    oldReconcileMap: ReconcileMap
-) => {
-    for (let i = 0; i < children.length; i++) {
-        const child = children[i]
-
-        if (Array.isArray(child)) {
-            reconcile(reconcileMap, elements, child, oldReconcileMap)
-            continue
-        }
-
-        if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
-            oldReconcileMap.deleteRendered(child)
-            reconcileMap.addRendered(child)
-            elements.push(child)
-
-            continue
-        }
-
-        if (child instanceof JsxMutator) {
-            const candidate = oldReconcileMap.nextReconcilable(child.id)
-            const result = child.mutate(candidate) as HTMLElement | (HTMLElement | Text)[]
-
-            reconcileMap.addReconcilable(child.id, result)
-
-            if (Array.isArray(result)) {
-                elements.push(...result)
-            } else {
-                elements.push(result)
-            }
-
-            continue
-        }
-
-        if (typeof child === 'string' || typeof child === 'number') {
-            const value = child.toString()
-
-            let candidate = oldReconcileMap.nextReconcilableTextNode()
-
-            if (!candidate) {
-                candidate = document.createTextNode(value)
-            } else if (candidate.nodeValue !== value) {
-                candidate.nodeValue = value
-            }
-
-            reconcileMap.addReconcilableTextNode(candidate)
-            elements.push(candidate)
-
-            continue
-        }
-
-        if (child === null || child === true || child === false) {
-            // Ignore null & booleans
-            continue
-        }
-
-        throw new InvalidJSXChildError(child)
-    }
-}
-
-class InvalidJSXChildError extends Error {
-    constructor(readonly child: any) {
-        super('Invalid JSX Child')
-    }
 }
 
 const uniqPropsFilter = <P extends WhatsJSX.ComponentProps>(next: P) => {

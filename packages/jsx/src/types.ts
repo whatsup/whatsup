@@ -1538,7 +1538,7 @@ export namespace WhatsJSX {
 
     export interface Component {
         setProps(nextProps: WhatsJSX.ComponentProps): void
-        getElements(): (HTMLElement | Text)[]
+        getElements(): (HTMLElement | SVGElement | Text)[]
     }
 
     export interface Ref {
