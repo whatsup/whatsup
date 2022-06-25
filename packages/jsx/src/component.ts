@@ -21,7 +21,7 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     }
 
     setProps(props: P) {
-        this.props.set(props)
+        this.props.set(uniqPropsFilter(props))
     }
 
     getElements() {
@@ -147,10 +147,10 @@ export const reconcile = (
         }
 
         if (child instanceof JsxMutator) {
-            const candidate = oldReconcileMap.nextReconcilable(child.reconcileId)
+            const candidate = oldReconcileMap.nextReconcilable(child.id)
             const result = child.mutate(candidate) as HTMLElement | (HTMLElement | Text)[]
 
-            reconcileMap.addReconcilable(child.reconcileId, result)
+            reconcileMap.addReconcilable(child.id, result)
 
             if (Array.isArray(result)) {
                 elements.push(...result)
@@ -191,4 +191,39 @@ class InvalidJSXChildError extends Error {
     constructor(readonly child: any) {
         super('Invalid JSX Child')
     }
+}
+
+const uniqPropsFilter = <P extends WhatsJSX.ComponentProps>(next: P) => {
+    return mutator((prev?: P) => {
+        if (!prev) {
+            return next
+        }
+
+        const prevKeys = Object.keys(prev)
+        const nextKeys = Object.keys(next)
+
+        if (prevKeys.length !== nextKeys.length) {
+            return next
+        }
+
+        for (const key of prevKeys) {
+            if (key !== 'children' && prev[key] !== next[key]) {
+                return next
+            }
+        }
+
+        if (Array.isArray(prev.children) && Array.isArray(next.children)) {
+            if (prev.children.length !== next.children.length) {
+                return next
+            }
+
+            for (let i = 0; i < prev.children.length; i++) {
+                if (prev.children[i] !== next.children[i]) {
+                    return next
+                }
+            }
+        }
+
+        return prev
+    })
 }

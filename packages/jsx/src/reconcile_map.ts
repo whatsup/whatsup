@@ -1,35 +1,43 @@
-class Queue<T> extends Array<T> {
+class ReconcileQueue<T> {
+    private readonly items = [] as T[]
     private cursor = 0
 
-    next() {
-        if (this.cursor < this.length) {
-            return this[this.cursor++]
+    enqueue(item: T) {
+        this.items.push(item)
+    }
+
+    dequeue() {
+        if (this.cursor < this.items.length) {
+            return this.items[this.cursor++]
         }
         return
     }
 }
 
-const TEXT_NODE_RECONCILE_ID = (Symbol('TextNode reconcile id') as unknown) as string
+const TEXT_NODE_RECONCILE_ID = '__TEXT_NODE_RECONCILE_ID__'
 
 type Item = Text | HTMLElement | SVGElement
 
 export class ReconcileMap {
     private readonly tracker = new Set<Item | Item[]>()
-    private readonly queueMap = {} as {
-        [k: string]: Queue<Item | Item[]>
-    }
+    private readonly queueMap = new Map<string, ReconcileQueue<Item | Item[]>>()
 
     addReconcilable(reconcileId: string, item: Item | Item[]) {
-        if (!(reconcileId in this.queueMap)) {
-            this.queueMap[reconcileId] = new Queue()
+        if (!this.queueMap.has(reconcileId)) {
+            this.queueMap.set(reconcileId, new ReconcileQueue())
         }
-        this.queueMap[reconcileId].push(item)
+
+        const queue = this.queueMap.get(reconcileId)!
+
+        queue.enqueue(item)
+
         this.tracker.add(item)
     }
 
     nextReconcilable(reconcileId: string): Item | Item[] | void {
-        if (reconcileId in this.queueMap) {
-            const item = this.queueMap[reconcileId].next()
+        if (this.queueMap.has(reconcileId)) {
+            const queue = this.queueMap.get(reconcileId)!
+            const item = queue.dequeue()
 
             if (item) {
                 this.tracker.delete(item)

@@ -24,11 +24,9 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     implements WhatsJSX.JsxMutatorLike {
     abstract doMutation(oldMutator: WhatsJSX.JsxMutatorLike | void): R
 
+    readonly id: string
     readonly type: T
-    readonly uid: WhatsJSX.Uid
-    readonly key: WhatsJSX.Key | undefined
     readonly ref: WhatsJSX.Ref | undefined
-    readonly reconcileId: string
     readonly props: WhatsJSX.ElementProps
     readonly onMount: ((el: Element) => void) | undefined
     readonly onUnmount: ((el: Element) => void) | undefined
@@ -44,11 +42,9 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
 
         const { onMount, onUnmount, ...other } = props
 
+        this.id = key ? `${uid}|${key}` : uid
         this.type = type
-        this.uid = uid
-        this.key = key
         this.ref = ref
-        this.reconcileId = key != null ? `${uid}|${key}` : uid
         this.props = other
         this.onMount = onMount
         this.onUnmount = onUnmount
@@ -79,9 +75,9 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     private extractFrom(target: any): JsxMutator<T, R> | void {
         if (target != null && typeof target === 'object' && Reflect.has(target, JSX_MUTATOR_ATTACH_KEY)) {
             const mutator = Reflect.get(target, JSX_MUTATOR_ATTACH_KEY) as JsxMutator<T, R>
-            const { type, reconcileId } = this
+            const { type, id } = this
 
-            if (mutator.reconcileId === reconcileId && mutator.type === type) {
+            if (mutator.id === id && mutator.type === type) {
                 return mutator
             }
         }

@@ -1557,7 +1557,9 @@ export namespace WhatsJSX {
         [k: string]: any
     }
 
-    export interface ComponentProps extends Attributes {}
+    export interface ComponentProps extends Attributes {
+        [k: string]: any
+    }
 
     export interface JsxMutatorLike {}
 

@@ -28,7 +28,7 @@ describe('Reconcile map', function () {
         reconcileMap.addReconcilable(elementReconcileId, element)
 
         expect(reconcileMap['tracker'].has(element)).toBeTruthy()
-        expect(reconcileMap['queueMap'][elementReconcileId][0]).toBe(element)
+        expect(reconcileMap['queueMap'].get(elementReconcileId)['items'][0]).toBe(element)
     })
 
     it('should give next reconcilable element', () => {
@@ -40,7 +40,7 @@ describe('Reconcile map', function () {
         reconcileMap.addReconcilable(arrayReconcileId, array)
 
         expect(reconcileMap['tracker'].has(array)).toBeTruthy()
-        expect(reconcileMap['queueMap'][arrayReconcileId][0]).toBe(array)
+        expect(reconcileMap['queueMap'].get(arrayReconcileId)['items'][0]).toBe(array)
     })
 
     it('should give next reconcilable elements array', () => {
