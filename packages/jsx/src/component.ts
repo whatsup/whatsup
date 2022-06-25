@@ -2,15 +2,22 @@ import { createAtom, observable, mutator, Atom, Observable } from 'whatsup'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
 import { removeElements } from './dom'
-//import { JsxMutator } from './mutator'
-import { ReconcileMap } from './reconcile_map'
+import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
 import { isGenerator } from './utils'
+
+const TEXT_NODE_RECONCILE_ID = '__TEXT_NODE_RECONCILE_ID__'
+
+type ReconcileNode = Text | HTMLElement | SVGElement
 
 abstract class Component<P extends WhatsJSX.ComponentProps> {
     protected abstract produce(ctx: Context): WhatsJSX.Child
 
-    private atom: Atom<(HTMLElement | SVGElement | Text)[]>
+    private readonly atom: Atom<(HTMLElement | SVGElement | Text)[]>
+    private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
+    private reconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
+    private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
+    private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
     protected producer: WhatsJSX.ComponentProducer<P>
     protected props: Observable<P>
 
@@ -31,27 +38,20 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     private *whatsup() {
         const context: Context = createContext(this.producer.name)
 
-        let oldReconcileMap = new ReconcileMap()
-
         try {
             while (true) {
                 yield mutator((prev?: (HTMLElement | SVGElement | Text)[]) => {
-                    const reconcileMap = new ReconcileMap()
-
                     addContextToStack(context)
 
                     const child = this.produce(context)
-                    const next = reconcileMap.reconcile(oldReconcileMap, child)
+                    const next = this.reconcile(child)
 
-                    removeElements(oldReconcileMap.elements())
                     popContextFromStack()
-
-                    oldReconcileMap = reconcileMap
 
                     if (
                         prev &&
                         prev.length === next.length &&
-                        prev.every((item, i) => item === (next as (Element | Text)[])[i])
+                        prev.every((item, i) => item === (next as (HTMLElement | SVGElement | Text)[])[i])
                     ) {
                         /*
                             reuse old elements container
@@ -69,6 +69,134 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     }
 
     protected dispose() {}
+
+    private reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
+        const elements: (HTMLElement | SVGElement | Text)[] = []
+        const { reconsileTracker, oldReconsileTracker, reconsileQueueMap, oldReconsileQueueMap } = this
+
+        this.reconsileTracker = oldReconsileTracker
+        this.reconsileQueueMap = oldReconsileQueueMap
+        this.oldReconsileTracker = reconsileTracker
+        this.oldReconsileQueueMap = reconsileQueueMap
+        this.doReconcile(child, elements)
+        this.removeOldElements()
+        this.oldReconsileTracker.clear()
+        this.oldReconsileQueueMap.clear()
+
+        return elements
+    }
+
+    private doReconcile(child: WhatsJSX.Child | WhatsJSX.Child[], elements: (HTMLElement | SVGElement | Text)[] = []) {
+        if (Array.isArray(child)) {
+            for (let i = 0; i < child.length; i++) {
+                this.reconcileChild(child[i], elements)
+            }
+        } else {
+            this.reconcileChild(child, elements)
+        }
+
+        return elements
+    }
+
+    private reconcileChild(child: WhatsJSX.Child, elements: (HTMLElement | SVGElement | Text)[]) {
+        if (Array.isArray(child)) {
+            this.doReconcile(child, elements)
+            return
+        }
+
+        if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
+            this.oldReconsileTracker.delete(child)
+            this.reconsileTracker.add(child)
+            elements.push(child)
+
+            return
+        }
+
+        if (child instanceof JsxMutator) {
+            const candidate = this.getReconcileNode(child.id)
+            const result = child.mutate(candidate) as HTMLElement | SVGElement | (HTMLElement | SVGElement | Text)[]
+
+            this.addReconcileNode(child.id, result)
+
+            if (Array.isArray(result)) {
+                elements.push(...result)
+            } else {
+                elements.push(result)
+            }
+
+            return
+        }
+
+        if (typeof child === 'string' || typeof child === 'number') {
+            const value = child.toString()
+
+            let candidate = this.getReconcileNode(TEXT_NODE_RECONCILE_ID) as Text | undefined
+
+            if (!candidate) {
+                candidate = document.createTextNode(value)
+            } else if (candidate.nodeValue !== value) {
+                candidate.nodeValue = value
+            }
+
+            this.addReconcileNode(TEXT_NODE_RECONCILE_ID, candidate)
+
+            elements.push(candidate)
+
+            return
+        }
+
+        if (child === null || child === true || child === false) {
+            // Ignore null & booleans
+            return
+        }
+
+        throw new InvalidJSXChildError(child)
+    }
+
+    private addReconcileNode(reconcileId: string, node: ReconcileNode | ReconcileNode[]) {
+        if (!this.reconsileQueueMap.has(reconcileId)) {
+            this.reconsileQueueMap.set(reconcileId, new ReconcileQueue())
+        }
+
+        const queue = this.reconsileQueueMap.get(reconcileId)!
+
+        queue.enqueue(node)
+
+        this.reconsileTracker.add(node)
+    }
+
+    private getReconcileNode(reconcileId: string): ReconcileNode | ReconcileNode[] | void {
+        if (this.oldReconsileQueueMap.has(reconcileId)) {
+            const queue = this.oldReconsileQueueMap.get(reconcileId)!
+            const node = queue.dequeue()
+
+            if (node) {
+                this.oldReconsileTracker.delete(node)
+            }
+
+            return node
+        }
+    }
+
+    private removeOldElements() {
+        removeElements(this.oldTrackableNodes())
+    }
+
+    private *oldTrackableNodes() {
+        for (const item of this.oldReconsileTracker) {
+            if (Array.isArray(item)) {
+                yield* item
+            } else {
+                yield item
+            }
+        }
+    }
+}
+
+class InvalidJSXChildError extends Error {
+    constructor(readonly child: any) {
+        super('Invalid JSX Child')
+    }
 }
 
 class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
@@ -119,6 +247,22 @@ export const createComponent = (
     }
 
     return new FnComponent(producer, props)
+}
+
+class ReconcileQueue<T> {
+    private readonly items = [] as T[]
+    private cursor = 0
+
+    enqueue(item: T) {
+        this.items.push(item)
+    }
+
+    dequeue() {
+        if (this.cursor < this.items.length) {
+            return this.items[this.cursor++]
+        }
+        return
+    }
 }
 
 const uniqPropsFilter = <P extends WhatsJSX.ComponentProps>(next: P) => {
