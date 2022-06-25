@@ -1,7 +1,7 @@
-import { createAtom, observable, mutator, Atom, Observable } from 'whatsup'
+import { createAtom, mutator, Atom, rebuild } from 'whatsup'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
-import { removeElements } from './dom'
+import { removeNodes } from './dom'
 import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
 import { isGenerator } from './utils'
@@ -12,27 +12,30 @@ type ReconcileNode = Text | HTMLElement | SVGElement
 
 abstract class Component<P extends WhatsJSX.ComponentProps> {
     protected abstract produce(ctx: Context): WhatsJSX.Child
+    protected producer: WhatsJSX.ComponentProducer<P>
+    protected props: P
 
-    private readonly atom: Atom<(HTMLElement | SVGElement | Text)[]>
+    private readonly nodes: Atom<(HTMLElement | SVGElement | Text)[]>
     private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private reconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
     private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
-    protected producer: WhatsJSX.ComponentProducer<P>
-    protected props: Observable<P>
 
     constructor(producer: WhatsJSX.ComponentProducer<P>, props: P) {
-        this.atom = createAtom(this.whatsup, this)
         this.producer = producer
-        this.props = observable(props)
+        this.nodes = createAtom(this.whatsup, this)
+        this.props = props
     }
 
     setProps(props: P) {
-        this.props.set(uniqPropsFilter(props))
+        if (!isEqualProps(this.props, props)) {
+            this.props = props
+            rebuild(this.nodes)
+        }
     }
 
-    getElements() {
-        return this.atom.get()
+    getNodes() {
+        return this.nodes.get()
     }
 
     private *whatsup() {
@@ -71,43 +74,43 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     protected dispose() {}
 
     private reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
-        const elements: (HTMLElement | SVGElement | Text)[] = []
+        const nodes: (HTMLElement | SVGElement | Text)[] = []
         const { reconsileTracker, oldReconsileTracker, reconsileQueueMap, oldReconsileQueueMap } = this
 
         this.reconsileTracker = oldReconsileTracker
         this.reconsileQueueMap = oldReconsileQueueMap
         this.oldReconsileTracker = reconsileTracker
         this.oldReconsileQueueMap = reconsileQueueMap
-        this.doReconcile(child, elements)
+        this.doReconcile(child, nodes)
         this.removeOldElements()
         this.oldReconsileTracker.clear()
         this.oldReconsileQueueMap.clear()
 
-        return elements
+        return nodes
     }
 
-    private doReconcile(child: WhatsJSX.Child | WhatsJSX.Child[], elements: (HTMLElement | SVGElement | Text)[] = []) {
+    private doReconcile(child: WhatsJSX.Child | WhatsJSX.Child[], nodes: (HTMLElement | SVGElement | Text)[] = []) {
         if (Array.isArray(child)) {
             for (let i = 0; i < child.length; i++) {
-                this.reconcileChild(child[i], elements)
+                this.reconcileChild(child[i], nodes)
             }
         } else {
-            this.reconcileChild(child, elements)
+            this.reconcileChild(child, nodes)
         }
 
-        return elements
+        return nodes
     }
 
-    private reconcileChild(child: WhatsJSX.Child, elements: (HTMLElement | SVGElement | Text)[]) {
+    private reconcileChild(child: WhatsJSX.Child, nodes: (HTMLElement | SVGElement | Text)[]) {
         if (Array.isArray(child)) {
-            this.doReconcile(child, elements)
+            this.doReconcile(child, nodes)
             return
         }
 
         if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
             this.oldReconsileTracker.delete(child)
             this.reconsileTracker.add(child)
-            elements.push(child)
+            nodes.push(child)
 
             return
         }
@@ -119,9 +122,9 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
             this.addReconcileNode(child.id, result)
 
             if (Array.isArray(result)) {
-                elements.push(...result)
+                nodes.push(...result)
             } else {
-                elements.push(result)
+                nodes.push(result)
             }
 
             return
@@ -140,7 +143,7 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
 
             this.addReconcileNode(TEXT_NODE_RECONCILE_ID, candidate)
 
-            elements.push(candidate)
+            nodes.push(candidate)
 
             return
         }
@@ -179,7 +182,7 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     }
 
     private removeOldElements() {
-        removeElements(this.oldTrackableNodes())
+        removeNodes(this.oldTrackableNodes())
     }
 
     private *oldTrackableNodes() {
@@ -203,8 +206,8 @@ class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
     protected producer!: WhatsJSX.FnComponentProducer<P>
 
     produce(context: Context) {
-        const props = this.props.get()
-        return this.producer.call(context, props)
+        const { producer, props } = this
+        return producer.call(context, props)
     }
 }
 
@@ -213,10 +216,10 @@ class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
 
     produce(context: Context) {
-        const props = this.props.get()
+        const { producer, props } = this
 
         if (!this.iterator) {
-            this.iterator = this.producer.call(context, props)
+            this.iterator = producer.call(context, props)
         }
 
         const { done, value } = this.iterator.next(props)
@@ -265,37 +268,31 @@ class ReconcileQueue<T> {
     }
 }
 
-const uniqPropsFilter = <P extends WhatsJSX.ComponentProps>(next: P) => {
-    return mutator((prev?: P) => {
-        if (!prev) {
-            return next
+const isEqualProps = <P extends WhatsJSX.ComponentProps>(prev: P, next: P) => {
+    const prevKeys = Object.keys(prev)
+    const nextKeys = Object.keys(next)
+
+    if (prevKeys.length !== nextKeys.length) {
+        return false
+    }
+
+    for (const key of prevKeys) {
+        if (key !== 'children' && prev[key] !== next[key]) {
+            return false
+        }
+    }
+
+    if (Array.isArray(prev.children) && Array.isArray(next.children)) {
+        if (prev.children.length !== next.children.length) {
+            return false
         }
 
-        const prevKeys = Object.keys(prev)
-        const nextKeys = Object.keys(next)
-
-        if (prevKeys.length !== nextKeys.length) {
-            return next
-        }
-
-        for (const key of prevKeys) {
-            if (key !== 'children' && prev[key] !== next[key]) {
-                return next
+        for (let i = 0; i < prev.children.length; i++) {
+            if (prev.children[i] !== next.children[i]) {
+                return false
             }
         }
+    }
 
-        if (Array.isArray(prev.children) && Array.isArray(next.children)) {
-            if (prev.children.length !== next.children.length) {
-                return next
-            }
-
-            for (let i = 0; i < prev.children.length; i++) {
-                if (prev.children[i] !== next.children[i]) {
-                    return next
-                }
-            }
-        }
-
-        return prev
-    })
+    return true
 }

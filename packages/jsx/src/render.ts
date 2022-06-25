@@ -1,6 +1,6 @@
 import { autorun } from 'whatsup'
 import { createComponent } from './component'
-import { placeElements } from './dom'
+import { placeNodes } from './dom'
 import { WhatsJSX } from './types'
 
 export const render = (child: WhatsJSX.Child, container: HTMLElement | SVGElement = document.body) => {
@@ -10,8 +10,8 @@ export const render = (child: WhatsJSX.Child, container: HTMLElement | SVGElemen
 
     return autorun(() => {
         try {
-            const elements = root.getElements()
-            placeElements(container, elements)
+            const nodes = root.getNodes()
+            placeNodes(container, nodes)
         } catch (e) {
             console.error(e)
         }

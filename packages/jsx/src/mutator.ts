@@ -1,7 +1,7 @@
 import { Mutator } from 'whatsup'
 import { createComponent } from './component'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
-import { placeElements, mutateProps, createMountObserver, createUnmountObserver } from './dom'
+import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX } from './types'
 
 export const Fragment = (props: WhatsJSX.ComponentProps) => {
@@ -88,20 +88,20 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     }
 
     private attachMountingCallbacks(target: R) {
-        const element: Element | null = !Array.isArray(target)
+        const node: Element | null = !Array.isArray(target)
             ? (target as Element)
             : target.length === 1
             ? (target[0] as Element)
             : null
 
-        if (element) {
-            if (this.onMount && !Reflect.has(element, JSX_MOUNT_OBSERVER)) {
-                const observer = createMountObserver(element, this.onMount)
-                Reflect.set(element, JSX_MOUNT_OBSERVER, observer)
+        if (node) {
+            if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
+                const observer = createMountObserver(node, this.onMount)
+                Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
             }
-            if (this.onUnmount && !Reflect.has(element, JSX_MOUNT_OBSERVER)) {
-                const observer = createUnmountObserver(element, this.onUnmount)
-                Reflect.set(element, JSX_UNMOUNT_OBSERVER, observer)
+            if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
+                const observer = createUnmountObserver(node, this.onUnmount)
+                Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
             }
         }
     }
@@ -135,7 +135,7 @@ export abstract class ElementMutator
         this.node = node || this.createElement()
 
         mutateProps(this.node!, props, oldProps)
-        placeElements(this.node!, childNodes)
+        placeNodes(this.node!, childNodes)
 
         return this.node!
     }
@@ -176,6 +176,6 @@ export class ComponentMutator<T extends WhatsJSX.ComponentProducer>
         this.component = component || createComponent(type, props)
         this.component!.setProps(props)
 
-        return this.component!.getElements()
+        return this.component!.getNodes()
     }
 }

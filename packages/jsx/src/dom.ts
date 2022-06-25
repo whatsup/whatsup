@@ -1,27 +1,27 @@
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE } from './constants'
 import { WhatsJSX } from './types'
 
-export const placeElements = (node: HTMLElement | SVGElement, elements: (HTMLElement | SVGElement | Text)[]) => {
-    const { childNodes } = node
-    const { length } = elements
+export const placeNodes = (container: HTMLElement | SVGElement, nodes: (HTMLElement | SVGElement | Text)[]) => {
+    const { childNodes } = container
+    const { length } = nodes
 
     for (let i = 0; i < length; i++) {
-        const element = elements[i]
+        const node = nodes[i]
 
-        if (childNodes[i] !== element) {
-            if (element.parentNode === node) {
+        if (childNodes[i] !== node) {
+            if (node.parentNode === container) {
                 // swap nodes
-                node.insertBefore(childNodes[i], element)
+                container.insertBefore(childNodes[i], node)
             }
 
-            node.insertBefore(element, childNodes[i])
+            container.insertBefore(node, childNodes[i])
         }
     }
 }
 
-export const removeElements = (elements: Iterable<Text | Element>) => {
-    for (const element of elements) {
-        element.remove()
+export const removeNodes = (nodes: Iterable<Text | Element>) => {
+    for (const node of nodes) {
+        node.remove()
     }
 }
 
@@ -176,12 +176,12 @@ const isReadonlyProp = (prop: string) => {
     )
 }
 
-export const createMountObserver = <T extends Element | Text>(element: T, callback: (el: T) => void) => {
+export const createMountObserver = <T extends Element | Text>(target: T, callback: (el: T) => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
-                if (node === element || node.contains(element)) {
-                    callback(element)
+                if (node === target || node.contains(target)) {
+                    callback(target)
                     observer.disconnect()
                     return
                 }
@@ -197,12 +197,12 @@ export const createMountObserver = <T extends Element | Text>(element: T, callba
     return observer
 }
 
-export const createUnmountObserver = <T extends Element | Text>(element: T, callback: (el: T) => void) => {
+export const createUnmountObserver = <T extends Element | Text>(target: T, callback: (el: T) => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.removedNodes) {
-                if (node === element || node.contains(element)) {
-                    callback(element)
+                if (node === target || node.contains(target)) {
+                    callback(target)
                     observer.disconnect()
                     return
                 }
