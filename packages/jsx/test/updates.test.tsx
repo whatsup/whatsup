@@ -59,4 +59,28 @@ describe('Updates', function () {
 
         expect(mock).toBeCalledTimes(1)
     })
+
+    it('should rerender when child updated', function () {
+        const container = document.createElement('div')
+        const trigger = observable(false)
+
+        function Child() {
+            if (trigger.get()) {
+                return <div>Child</div>
+            }
+            return null
+        }
+
+        function Root() {
+            return <Child />
+        }
+
+        render(<Root />, container)
+
+        expect(container.innerHTML).toBe('')
+
+        trigger.set(true)
+
+        expect(container.innerHTML).toBe('<div>Child</div>')
+    })
 })
