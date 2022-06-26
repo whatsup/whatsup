@@ -1528,7 +1528,7 @@ export namespace WhatsJSX {
         | boolean
         | null
         | Child[]
-        | Generator<Child, Child | unknown>
+        | Iterator<Child | never, Child | unknown, any>
 
     export type FnComponentProducer<P extends ComponentProps = {}> = (props: P) => Child
     export type GnComponentProducer<P extends ComponentProps = {}> = (
