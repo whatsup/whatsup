@@ -52,11 +52,6 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
 
     mutate(prev?: R) {
         const oldMutator = this.extractFrom(prev)
-
-        if (oldMutator === this) {
-            return prev!
-        }
-
         const next = this.doMutation(oldMutator)
 
         this.attachSelfTo(next)
