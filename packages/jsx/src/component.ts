@@ -269,6 +269,10 @@ class ReconcileQueue<T> {
 }
 
 const isEqualProps = <P extends WhatsJSX.ComponentProps>(prev: P, next: P) => {
+    if (prev === next) {
+        return true
+    }
+
     const prevKeys = Object.keys(prev)
     const nextKeys = Object.keys(next)
 
