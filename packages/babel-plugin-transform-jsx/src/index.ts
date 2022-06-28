@@ -178,7 +178,7 @@ function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpres
         const child = children[i]
 
         if (isJSXText(child)) {
-            let value = child.value.replace(/\s+/g, ' ')
+            let value = child.value.replace(/ +/g, ' ').replace(/ ?\n ?/g, '\n')
 
             if (i === 0) {
                 value = value.trimLeft()
@@ -186,7 +186,7 @@ function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpres
             if (i === length - 1) {
                 value = value.trimRight()
             }
-            if (value !== '' && value !== ' ') {
+            if (value !== '' && value !== '\n') {
                 members.push(stringLiteral(value))
             }
 

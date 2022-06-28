@@ -37,6 +37,10 @@ describe('transform children', function () {
         expect(transform('<div>    </div>')).toMatchSnapshot()
     })
 
+    it('Should safe whitespaces between children', function () {
+        expect(transform('<div>User {name} {age}</div>')).toMatchSnapshot()
+    })
+
     it('Should trim newlines ', function () {
         expect(
             transform(`<div>

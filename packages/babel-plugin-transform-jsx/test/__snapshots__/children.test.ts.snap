@@ -1,5 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`transform children Should safe whitespaces between children 1`] = `
+"import { html as _html } from \\"@whatsup/jsx\\";
+
+_html(\\"div\\", \\"UniqueId\\", undefined, undefined, undefined, [\\"User \\", name, \\" \\", age]);"
+`;
+
 exports[`transform children Should transform children spread 1`] = `
 "import { html as _html2 } from \\"@whatsup/jsx\\";
 import { html as _html } from \\"@whatsup/jsx\\";
