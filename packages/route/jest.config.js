@@ -1,9 +1,9 @@
 module.exports = {
     testEnvironment: 'node',
     transform: {
-        '^.+\\.ts$': 'ts-jest',
+        '^.+\\.tsx?$': 'babel-jest',
     },
-    moduleFileExtensions: ['ts', 'js'],
+    moduleFileExtensions: ['js', 'ts', 'tsx'],
     coverageDirectory: 'coverage',
-    collectCoverageFrom: ['src/**/*.ts'],
+    collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 }

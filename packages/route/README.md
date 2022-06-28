@@ -22,94 +22,106 @@ yarn add @whatsup/route
 Using the whatsup route is very simple. See this example:
 
 ```tsx
-import { fractal, Context, Cause } from 'whatsup'
 import { render } from '@whatsup/jsx'
-import { route, redirect } from '@whatsup/route'
+import { Route, RouteLink } from '@whatsup/route'
 
-const app = fractal(function* () {
-    const aboutRoute = route('/about', aboutPage)
-    // pattern must be string ↑↑↑↑↑↑ ↓↓↓↓↓↓ or RegExp
-    const userRoute = route(/\/user([0-9]+)/, function* (ctx: Context, id: Cause<string>) {
-        //               this match ^^^^^^ - will be available here  - ^^^^^^^^^^^^^^^^^^^^
-        while (true) {
-            yield (
-                <div>
-                    <p>This is info about user with id={yield* id}</p>
-                    <a onClick={() => redirect('/about')}>Go to about page</a>
-                </div>
-            )
-        }
-    })
-
-    while (true) {
-        yield (
+function App() {
+    return (
+        <div>
+            <div>App</div>
             <div>
-                {yield* aboutRoute}
-                {yield* userRoute}
+                <Route index component={Index} />
+                <Route path="/about" component={About} />
+                <Route path="/user" component={User} />
             </div>
-        )
-    }
-})
-
-const aboutPage = fractal(function* () {
-    while (true) {
-        yield (
             <div>
-                <p>About company info</p>
-                <a onClick={() => redirect('/user25')}>Go to user page</a>
+                <RouteLink to="/about">Goto about</RouteLink>
+                <RouteLink to="/user">Goto user</RouteLink>
             </div>
-        )
-    }
-})
+        </div>
+    )
+}
 
-render(app)
+function Index() {
+    return <div>Index route</div>
+}
+
+function About() {
+    return <div>About route</div>
+}
+
+function User() {
+    return <div>User route</div>
+}
+
+render(<App />, container)
 ```
 
-## Exact path
+## Params
 
-The whatsup route path is worked over regular expression. To have exact paths, insert the `$` at the end of the inserted string or regular expression. Here's an example:
+You can use patterns like `:param` or native regular expressions
 
 ```tsx
-import { fractal, Context, Cause } from 'whatsup'
-import { render } from '@whatsup/jsx'
-import { redirect } from '@whatsup/browser-pathname'
-import { route } from '@whatsup/route'
+function App() {
+    return (
+        <div>
+            <Route path="/user/:id" component={User} />
+        </div>
+    )
+}
 
-const app = fractal(function* () {
-    const homeRoute = route('/$', homePage)
-    const aboutRoute = route('/about$', aboutPage)
+interface UserProps {
+    id: number
+}
 
-    while (true) {
-        yield (
-            <div>
-                {yield* homeRoute}
-                {yield* aboutRoute}
-            </div>
-        )
-    }
-})
+function User(props: UserProps) {
+    return <div>User {props.id}</div>
+}
+```
 
-const homePage = fractal(function* () {
-    while (true) {
-        yield (
-            <div>
-                <p>Home</p>
-                <a onClick={() => redirect('/about')}>Go to about page</a>
-            </div>
-        )
-    }
-})
+```tsx
+function App(this: Context) {
+    return (
+        <div>
+            <Route path={/\/user\/(?<id>[0-9]+)/} component={User} />
+        </div>
+    )
+}
 
-const aboutPage = fractal(function* () {
-    while (true) {
-        yield (
-            <div>
-                <p>About company info</p>
-                <a onClick={() => redirect('/')}>Go to home page</a>
-            </div>
-        )
-    }
-})
+interface UserProps {
+    id: number
+}
 
-render(app)
+function User(props: UserProps) {
+    return <div>User {props.id}</div>
+}
+```
+
+## Navigator
+
+You can access to route Navigator through context
+
+```tsx
+import { render, Context } from '@whatsup/jsx'
+import { Route, RouteLink, NAVIGATOR } from '@whatsup/route'
+
+function App() {
+    return (
+        <div>
+            <Route path="/user" component={User} />
+            <Route path="/about" component={About} />
+        </div>
+    )
+}
+
+function User(this: Context) {
+    const navigator = this.find(NAVIGATOR)
+
+    return (
+        <div>
+            <div>User {props.id}</div>
+            <button onClick={() => navigator.navigate('/about')}>Goto about</button>
+        </div>
+    )
+}
 ```

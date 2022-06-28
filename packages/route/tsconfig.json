@@ -1,13 +1,15 @@
 {
     "include": ["src"],
     "compilerOptions": {
+        "experimentalDecorators": true,
         "module": "esnext",
         "target": "ES2019",
-        "lib": ["esnext", "dom"],
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
         "importHelpers": true,
         "declaration": true,
         "sourceMap": true,
         "strict": true,
+        "stripInternal": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,
@@ -15,11 +17,11 @@
         "esModuleInterop": true,
         "moduleResolution": "node",
         "declarationDir": "./dist",
+        "jsx": "preserve",
         "rootDir": "./src",
         "baseUrl": "./",
-        "jsx": "preserve",
         "paths": {
-            "*": ["src/*", "node_modules/*"]
+            "*": ["node_modules/*"]
         }
     }
 }
