@@ -1,6 +1,6 @@
 import { Context, WhatsJSX } from '@whatsup/jsx'
-import { NAVIGATOR } from './keys'
-import { NestedNavigator } from './navigator'
+import { NAVIGATION } from './keys'
+import { NestedNavigation } from './navigation'
 
 export interface RouteProps {
     component: WhatsJSX.ComponentProducer<any>
@@ -12,13 +12,13 @@ export interface RouteProps {
 export function* Route(this: Context, props: RouteProps) {
     const { path, index, sensitive, component: Component } = props
     const regexp = compileRegexp(path, sensitive, index)
-    const parentNavigator = this.find(NAVIGATOR)
-    const navigator = new NestedNavigator(parentNavigator, regexp)
+    const parentNavigation = this.find(NAVIGATION)
+    const navigation = new NestedNavigation(parentNavigation, regexp)
 
-    this.share(NAVIGATOR, navigator)
+    this.share(NAVIGATION, navigation)
 
     while (true) {
-        yield navigator.isMatched ? <Component {...navigator.matchedParams} /> : null
+        yield navigation.isMatched ? <Component {...navigation.matchedParams} /> : null
     }
 }
 

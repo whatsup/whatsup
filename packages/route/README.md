@@ -97,13 +97,13 @@ function User(props: UserProps) {
 }
 ```
 
-## Navigator
+## Navigation
 
-You can access to route Navigator through context
+You can access to route Navigation through context
 
 ```tsx
 import { render, Context } from '@whatsup/jsx'
-import { Route, RouteLink, NAVIGATOR } from '@whatsup/route'
+import { Route, RouteLink, NAVIGATION } from '@whatsup/route'
 
 function App() {
     return (
@@ -115,12 +115,12 @@ function App() {
 }
 
 function User(this: Context) {
-    const navigator = this.find(NAVIGATOR)
+    const navigation = this.find(NAVIGATION)
 
     return (
         <div>
             <div>User {props.id}</div>
-            <button onClick={() => navigator.navigate('/about')}>Goto about</button>
+            <button onClick={() => navigation.navigate('/about')}>Goto about</button>
         </div>
     )
 }

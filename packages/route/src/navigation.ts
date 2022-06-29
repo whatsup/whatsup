@@ -1,6 +1,6 @@
 import { Computed, computed, mutator, observable } from 'whatsup'
 
-export abstract class Navigator {
+export abstract class Navigation {
     abstract tail: string
     abstract matchedUrl: string
     abstract matchedParams: Params
@@ -31,7 +31,7 @@ export abstract class Navigator {
     }
 }
 
-export class RootNavigator extends Navigator {
+export class RootNavigation extends Navigation {
     private readonly browserPathname: Computed<string>
 
     constructor() {
@@ -68,11 +68,11 @@ export class RootNavigator extends Navigator {
     }
 }
 
-export class NestedNavigator extends Navigator {
-    private readonly parent: Navigator
+export class NestedNavigation extends Navigation {
+    private readonly parent: Navigation
     private readonly regexp: RegExp
 
-    constructor(parent: Navigator, regexp: RegExp) {
+    constructor(parent: Navigation, regexp: RegExp) {
         super()
         this.parent = parent
         this.regexp = regexp

@@ -1,3 +1,5 @@
-export { NAVIGATOR } from './keys'
-export { Route, RouteProps } from './route'
-export { RouteLink, RouteLinkProps } from './link'
+export { NAVIGATION } from './keys'
+export { Route } from './route'
+export { RouteLink } from './link'
+export type { RouteProps } from './route'
+export type { RouteLinkProps } from './link'

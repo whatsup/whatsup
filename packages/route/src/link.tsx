@@ -1,5 +1,5 @@
 import { WhatsJSX, Context } from '@whatsup/jsx'
-import { NAVIGATOR } from './keys'
+import { NAVIGATION } from './keys'
 
 export interface RouteLinkProps extends WhatsJSX.AnchorHTMLAttributes<HTMLAnchorElement> {
     to: string
@@ -8,19 +8,19 @@ export interface RouteLinkProps extends WhatsJSX.AnchorHTMLAttributes<HTMLAnchor
 }
 
 export function* RouteLink(this: Context, props: RouteLinkProps) {
-    const navigator = this.find(NAVIGATOR)
+    const navigation = this.find(NAVIGATION)
 
     while (true) {
         const { to, children, useReplace, onClick, ...other } = props
-        const pathname = navigator.createPathname(to)
+        const pathname = navigation.createPathname(to)
         const handleClick = (e: WhatsJSX.MouseEvent<HTMLAnchorElement>) => {
             if (onClick) {
                 onClick(e)
             }
             if (useReplace) {
-                navigator.replace(pathname)
+                navigation.replace(pathname)
             } else {
-                navigator.navigate(pathname)
+                navigation.navigate(pathname)
             }
             e.preventDefault()
         }

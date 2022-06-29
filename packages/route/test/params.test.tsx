@@ -3,18 +3,18 @@
  */
 
 import { Context, render } from '@whatsup/jsx'
-import { NAVIGATOR } from '../src/keys'
-import type { Navigator } from '../src/navigator'
+import { NAVIGATION } from '../src/keys'
+import type { Navigation } from '../src/navigation'
 import { Route } from '../src/route'
 
 describe('Params test', () => {
     it('should extract params and pass they as props', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>
@@ -56,10 +56,10 @@ describe('Params test', () => {
     it('should convert number-like params to numbers', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>
@@ -102,10 +102,10 @@ describe('Params test', () => {
     it('should extract params in nested routes and pass they as props', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>

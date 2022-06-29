@@ -3,18 +3,18 @@
  */
 
 import { Context, render } from '@whatsup/jsx'
-import { NAVIGATOR } from '../src/keys'
-import type { Navigator } from '../src/navigator'
+import { NAVIGATION } from '../src/keys'
+import type { Navigation } from '../src/navigation'
 import { Route } from '../src/route'
 
 describe('Base test', () => {
     it('should switch routes', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>
@@ -58,10 +58,10 @@ describe('Base test', () => {
     it('should switch nested routes', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>
@@ -127,10 +127,10 @@ describe('Base test', () => {
         const mockUserProfile = jest.fn()
         const mockUserSettings = jest.fn()
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             mockApp()
 
@@ -250,10 +250,10 @@ describe('Base test', () => {
     it('should not to be case sensitive', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>
@@ -283,10 +283,10 @@ describe('Base test', () => {
     it('should to be case sensitive', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigator
+        let navigator!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATOR)
+            navigator = this.find(NAVIGATION)
 
             return (
                 <>
