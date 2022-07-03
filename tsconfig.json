@@ -5,7 +5,6 @@
         "target": "ES2019",
         "lib": ["esnext"],
         "importHelpers": true,
-        "declaration": true,
         "sourceMap": true,
         "strict": true,
         "stripInternal": true,
@@ -16,7 +15,6 @@
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
-        "declarationDir": "./dist",
         "baseUrl": "./"
     }
 }

@@ -1,8 +1,9 @@
-import resolve from '@rollup/plugin-commonjs'
-import commonjs from '@rollup/plugin-node-resolve'
-import typescript from 'rollup-plugin-typescript2'
+import { babel } from '@rollup/plugin-babel'
+import resolve from '@rollup/plugin-node-resolve'
 import clear from 'rollup-plugin-delete'
 import pkg from './package.json'
+
+const extensions = ['.ts', '.tsx']
 
 export default [
     {
@@ -19,6 +20,18 @@ export default [
                 sourcemap: true,
             },
         ],
-        plugins: [resolve(), commonjs(), typescript(), clear({ targets: './dist' })],
+        plugins: [
+            resolve({
+                extensions,
+            }),
+            babel({
+                babelHelpers: 'bundled',
+                extensions,
+            }),
+            clear({
+                targets: 'dist/*',
+                runOnce: true,
+            }),
+        ],
     },
 ]
