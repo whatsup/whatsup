@@ -31,21 +31,19 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
         return new Observable<T>(value)
     }
 
-    const [target, prop] = args as [Object, string]
+    const [, prop, descriptor] = args as [Object, string, PropertyDescriptor & { initializer: () => T }]
     const key = Symbol(`Observable ${prop}`)
     const field = function (this: any) {
-        return key in this ? this[key] : (this[key] = observable())
+        return key in this ? this[key] : (this[key] = observable(descriptor.initializer.call(this)))
     }
 
-    Object.defineProperties(target, {
-        [prop]: {
-            get() {
-                return field.call(this).get()
-            },
-            set(value: T) {
-                field.call(this).set(value)
-            },
-            configurable: false,
+    return {
+        get() {
+            return field.call(this).get()
         },
-    })
+        set(value: T) {
+            return field.call(this).set(value)
+        },
+        configurable: false,
+    }
 }
