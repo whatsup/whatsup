@@ -5,6 +5,10 @@
             "path": "../"
         },
         {
+            "name": "@whatsup/whatsup",
+            "path": "../packages/whatsup"
+        },
+        {
             "name": "@whatsup/core",
             "path": "../packages/core"
         },

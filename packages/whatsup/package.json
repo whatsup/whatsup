@@ -1,0 +1,29 @@
+{
+    "name": "whatsup",
+    "description": "whatsup framework",
+    "version": "2.2.3",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whatsup/whatsup.git",
+        "directory": "packages/whatsup"
+    },
+    "scripts": {
+        "build": "rollup -c && tsc -p ./tsconfig.build.json",
+        "prepublishOnly": "npm run build"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "exports": {
+        ".": "./dist/core",
+        "./jsx": "./dist/jsx",
+        "./route": "./dist/route"
+    },
+    "dependencies": {
+        "@whatsup/core": "2.2.3",
+        "@whatsup/jsx": "0.2.5",
+        "@whatsup/route": "1.0.0"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "include": ["src", "__tests__"],
+    "compilerOptions": {
+        "module": "esnext",
+        "target": "ES2019",
+        "lib": ["ESNext"],
+        "importHelpers": true,
+        "sourceMap": true,
+        "strict": true,
+        "stripInternal": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node",
+        "experimentalDecorators": true,
+        "baseUrl": "./"
+    }
+}
