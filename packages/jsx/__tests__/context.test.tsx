@@ -5,7 +5,7 @@
 import { Event } from '../src/event'
 import { Context, createKey } from '../src/context'
 import { render } from '../src/render'
-import { observable, Observable } from 'whatsup'
+import { observable, Observable } from '@whatsup/core'
 
 describe('Context', () => {
     describe('should create new rich context when chil render new element', () => {

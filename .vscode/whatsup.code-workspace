@@ -7,6 +7,10 @@
         {
             "name": "@whatsup/core",
             "path": "../packages/core"
+        },
+        {
+            "name": "@whatsup/jsx",
+            "path": "../packages/jsx"
         }
     ],
     "settings": {

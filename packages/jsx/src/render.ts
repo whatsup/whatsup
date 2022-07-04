@@ -1,4 +1,4 @@
-import { autorun } from 'whatsup'
+import { autorun } from '@whatsup/core'
 import { createComponent } from './component'
 import { placeNodes } from './dom'
 import { WhatsJSX } from './types'

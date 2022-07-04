@@ -63,7 +63,7 @@ describe('reconcilation', function () {
         ) as ElementMutator
         const element = mutator.mutate()
 
-        expect(element.outerHTML).toBe('<div><div>child1</div><div>child2</div> child3 1612</div>')
+        expect(element.outerHTML).toBe('<div><div>child1</div><div>child2</div>\nchild3\n1612</div>')
     })
 
     it('should throw error on all children except elements, mutators, strings, numbers, booleans, null', function () {
@@ -72,7 +72,7 @@ describe('reconcilation', function () {
                 <div>child1</div>
                 <div>child2</div>
                 child3
-                {undefined}
+                {undefined as any}
                 {1612}
                 {null}
                 {false}

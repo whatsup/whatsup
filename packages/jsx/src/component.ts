@@ -1,4 +1,4 @@
-import { createAtom, mutator, Atom, rebuild } from 'whatsup'
+import { createAtom, mutator, Atom, rebuild } from '@whatsup/core'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
 import { removeNodes } from './dom'

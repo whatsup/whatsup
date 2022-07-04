@@ -1,4 +1,4 @@
-import { Mutator } from 'whatsup'
+import { Mutator } from '@whatsup/core'
 import { createComponent } from './component'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
@@ -21,7 +21,8 @@ const FAKE_JSX_ELEMENT_MUTATOR: WhatsJSX.ElementMutatorLike = {
 
 export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | Text) | (Element | Text)[]>
     extends Mutator<R>
-    implements WhatsJSX.JsxMutatorLike {
+    implements WhatsJSX.JsxMutatorLike
+{
     abstract doMutation(oldMutator: WhatsJSX.JsxMutatorLike | void): R
 
     readonly id: string
@@ -104,7 +105,8 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
 
 export abstract class ElementMutator
     extends JsxMutator<WhatsJSX.TagName, HTMLElement | SVGElement>
-    implements WhatsJSX.ElementMutatorLike {
+    implements WhatsJSX.ElementMutatorLike
+{
     protected abstract createElement(): HTMLElement | SVGElement
 
     readonly children: ComponentMutator<WhatsJSX.ComponentProducer>
@@ -150,7 +152,8 @@ export class HTMLElementMutator extends ElementMutator {
 
 export class ComponentMutator<T extends WhatsJSX.ComponentProducer>
     extends JsxMutator<T, (HTMLElement | SVGElement | Text)[]>
-    implements WhatsJSX.ComponentMutatorLike {
+    implements WhatsJSX.ComponentMutatorLike
+{
     component?: WhatsJSX.Component
 
     constructor(

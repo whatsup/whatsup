@@ -1,4 +1,4 @@
-import { Observable, observable } from 'whatsup'
+import { Observable, observable } from '@whatsup/core'
 import { Event, EventCtor, EventListener } from './event'
 
 type Ctor<T> = Function | (new (...args: unknown[]) => T)

@@ -3,7 +3,7 @@
     "compilerOptions": {
         "module": "esnext",
         "target": "ES2019",
-        "lib": ["esnext"],
+        "lib": ["ESNext"],
         "importHelpers": true,
         "sourceMap": true,
         "strict": true,
@@ -11,10 +11,10 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,
-        "experimentalDecorators": true,
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
         "moduleResolution": "node",
+        "experimentalDecorators": true,
         "baseUrl": "./"
     }
 }

@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { observable } from 'whatsup'
+import { observable } from '@whatsup/core'
 import { render } from '../src/render'
 
 describe('render', function () {
