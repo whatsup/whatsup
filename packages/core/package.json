@@ -1,0 +1,30 @@
+{
+    "name": "@whatsup/core",
+    "description": "whatsup reactive system",
+    "version": "2.2.3",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whatsup/whatsup.git",
+        "directory": "packages/core"
+    },
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "typings": "dist/index.d.ts",
+    "scripts": {
+        "start": "rollup -c -w",
+        "build": "rollup -c && tsc -p ./tsconfig.build.json",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "test:uncache": "jest --clearCache",
+        "prepublishOnly": "npm run build"
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "publishConfig": {
+        "access": "public"
+    }
+}

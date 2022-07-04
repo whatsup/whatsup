@@ -1,23 +1,14 @@
 {
-    "name": "whatsup",
-    "description": "Simple, fast, reactive state management",
-    "version": "2.2.3",
-    "author": "Denis Churbanov",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/whatsup/whatsup.git"
-    },
-    "main": "dist/index.cjs.js",
-    "module": "dist/index.esm.js",
-    "typings": "dist/index.d.ts",
+    "name": "root",
+    "description": "whatsup monorepo",
+    "private": true,
     "scripts": {
-        "start": "rollup -c -w",
-        "build": "rollup -c && tsc -p ./tsconfig.build.json",
-        "test": "jest",
-        "test:coverage": "jest --coverage",
-        "test:uncache": "jest --clearCache",
-        "prepublishOnly": "npm run build"
+        "build": "lerna run build",
+        "test": "lerna run test",
+        "test:coverage": "lerna run test:coverage",
+        "test:uncache": "lerna run test:uncache",
+        "postinstall": "lerna bootstrap",
+        "publish": "lerna publish"
     },
     "devDependencies": {
         "@babel/cli": "^7.18.6",
@@ -29,19 +20,17 @@
         "@babel/preset-env": "^7.18.6",
         "@babel/preset-typescript": "^7.18.6",
         "@rollup/plugin-babel": "^5.3.1",
-        "@rollup/plugin-commonjs": "^17.0.0",
-        "@rollup/plugin-node-resolve": "^11.0.1",
-        "@types/jest": "^26.0.20",
+        "@rollup/plugin-node-resolve": "^13.3.0",
+        "@types/jest": "^28.1.4",
         "babel-jest": "^28.1.2",
         "core-js": "^3.23.3",
-        "husky": "^4.3.7",
-        "jest": "^26.6.3",
-        "prettier": "^2.2.1",
-        "rollup": "^2.36.1",
-        "rollup-plugin-delete": "^2.0.0"
-    },
-    "files": [
-        "dist",
-        "src"
-    ]
+        "jest": "^28.1.2",
+        "jest-environment-jsdom": "^28.1.2",
+        "lerna": "^5.1.6",
+        "prettier": "^2.7.1",
+        "rollup": "^2.75.7",
+        "rollup-plugin-auto-external": "^2.0.0",
+        "rollup-plugin-delete": "^2.0.0",
+        "typescript": "^4.7.4"
+    }
 }

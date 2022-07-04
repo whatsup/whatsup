@@ -14,11 +14,9 @@ jobs:
                   node-version: 16
                   registry-url: https://registry.npmjs.org/
             - name: Install dependencies
-              run: npm install --frozen-lockfile
+              run: npm install
             - name: Run tests
               run: npm run test
-            - name: Build
-              run: npm run build
             - name: Npm publish
               run: npm publish
               env:

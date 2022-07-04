@@ -1,0 +1,20 @@
+{
+    "folders": [
+        {
+            "name": "@whatsup",
+            "path": "../"
+        },
+        {
+            "name": "@whatsup/core",
+            "path": "../packages/core"
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "node_modules": true,
+            "packages": true
+        },
+        "jest.jestCommandLine": "npm test --",
+        "jest.disabledWorkspaceFolders": ["@whatsup"]
+    }
+}
