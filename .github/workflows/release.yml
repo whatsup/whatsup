@@ -20,6 +20,6 @@ jobs:
             - name: Run tests
               run: npm run test
             - name: Npm publish
-              run: npm publish
+              run: npm run publishing
               env:
                   NODE_AUTH_TOKEN: ${{secrets.npm_token}}
