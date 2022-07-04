@@ -17,9 +17,20 @@
         "access": "public"
     },
     "exports": {
-        ".": "./dist/core",
-        "./jsx": "./dist/jsx",
-        "./route": "./dist/route"
+        ".": "./dist/core.js",
+        "./jsx": "./dist/jsx.js",
+        "./route": "./dist/route.js"
+    },
+    "typings": "dist/core.d.ts",
+    "typesVersions": {
+        "*": {
+            "jsx": [
+                "./dist/jsx.d.ts"
+            ],
+            "route": [
+                "./dist/route.d.ts"
+            ]
+        }
     },
     "dependencies": {
         "@whatsup/core": "^2.2.4",

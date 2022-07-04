@@ -6,18 +6,11 @@ const extensions = ['.ts', '.tsx']
 
 export default ['core', 'jsx', 'route'].map((pkg) => ({
     input: `src/${pkg}.ts`,
-    output: [
-        {
-            file: `dist/${pkg}.cjs.js`,
-            format: 'cjs',
-            sourcemap: true,
-        },
-        {
-            file: `dist/${pkg}.esm.js`,
-            format: 'esm',
-            sourcemap: true,
-        },
-    ],
+    output: {
+        file: `dist/${pkg}.js`,
+        format: 'cjs',
+        sourcemap: true,
+    },
     plugins: [
         autoExternal(),
         resolve({
