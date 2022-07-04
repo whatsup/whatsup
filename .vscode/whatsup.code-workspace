@@ -13,6 +13,10 @@
             "path": "../packages/jsx"
         },
         {
+            "name": "@whatsup/route",
+            "path": "../packages/route"
+        },
+        {
             "name": "@whatsup/transform-jsx",
             "path": "../packages/babel-plugin-transform-jsx"
         }

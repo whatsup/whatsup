@@ -22,13 +22,18 @@ export default [
             },
         ],
         plugins: [
-            resolve({ extensions }),
             autoExternal(),
-            babel({
-                babelHelpers: 'bundled',
+            resolve({
                 extensions,
             }),
-            clear(),
+            babel({
+                extensions,
+                babelHelpers: 'bundled',
+            }),
+            clear({
+                targets: 'dist/*',
+                runOnce: true,
+            }),
         ],
     },
 ]

@@ -1,4 +1,4 @@
-import { Computed, computed, mutator, observable } from 'whatsup'
+import { Computed, computed, mutator, observable } from '@whatsup/core'
 
 export abstract class Navigation {
     abstract tail: string
@@ -115,7 +115,7 @@ export class NestedNavigation extends Navigation {
             }
         }
 
-        return (shallowParamsEquality(acc) as unknown) as Params
+        return shallowParamsEquality(acc) as unknown as Params
     }
 
     @computed
