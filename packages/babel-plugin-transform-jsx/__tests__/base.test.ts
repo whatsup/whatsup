@@ -1,4 +1,4 @@
-import { transform } from './config/transform'
+import { transform } from './__config__/transform'
 
 describe('transform types', function () {
     it('Should transform div', function () {

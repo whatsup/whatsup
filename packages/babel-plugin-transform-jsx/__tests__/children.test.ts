@@ -1,4 +1,4 @@
-import { transform } from './config/transform'
+import { transform } from './__config__/transform'
 
 describe('transform children', function () {
     it('Should transform without children', function () {
@@ -46,6 +46,20 @@ describe('transform children', function () {
             transform(`<div>
             <div></div>
             <div></div>
+        </div>`)
+        ).toMatchSnapshot()
+    })
+
+    it('Should trim newlines 2', function () {
+        expect(
+            transform(`<div>
+            <div>child1</div>
+            <div>child2</div>
+            child3
+            {1612}
+            {null}
+            {false}
+            {true}
         </div>`)
         ).toMatchSnapshot()
     })

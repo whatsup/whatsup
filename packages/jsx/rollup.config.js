@@ -27,8 +27,8 @@ export default [
                 extensions,
             }),
             babel({
-                babelHelpers: 'bundled',
                 extensions,
+                babelHelpers: 'bundled',
             }),
             clear({
                 targets: 'dist/*',

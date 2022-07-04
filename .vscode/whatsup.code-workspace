@@ -11,11 +11,15 @@
         {
             "name": "@whatsup/jsx",
             "path": "../packages/jsx"
+        },
+        {
+            "name": "@whatsup/transform-jsx",
+            "path": "../packages/babel-plugin-transform-jsx"
         }
     ],
     "settings": {
         "files.exclude": {
-            "node_modules": true,
+            "node_modules": false,
             "packages": true
         },
         "jest.jestCommandLine": "npm test --",

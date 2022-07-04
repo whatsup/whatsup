@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@whatsup/core": "^2.2.3",
-        "csstype": "^3.0.6"
+        "csstype": "^3.1.0"
     },
     "devDependencies": {
         "@whatsup/babel-plugin-transform-jsx": "^0.2.4"

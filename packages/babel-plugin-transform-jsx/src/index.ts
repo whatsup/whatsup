@@ -1,3 +1,4 @@
+/// <reference path="./types.d.ts" />
 import JsxSyntax from '@babel/plugin-syntax-jsx'
 import { addNamed } from '@babel/helper-module-imports'
 import { Node, NodePath } from '@babel/core'
@@ -140,14 +141,16 @@ function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
         const { name } = attr.name
         const value = parseAttrValue(attr.value)
 
-        if (name === 'key') {
-            key = value
-        } else if (name === 'ref') {
-            ref = value
-        } else {
-            const prop = identifier(name)
-            const member = objectProperty(prop, value)
-            members.push(member)
+        if (value !== undefined) {
+            if (name === 'key') {
+                key = value
+            } else if (name === 'ref') {
+                ref = value
+            } else {
+                const prop = identifier(name)
+                const member = objectProperty(prop, value)
+                members.push(member)
+            }
         }
     }
 
@@ -156,7 +159,7 @@ function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
     return { key, ref, props }
 }
 
-function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExpressionContainer | null) {
+function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExpressionContainer | null | undefined) {
     if (isJSXExpressionContainer(value)) {
         if (isJSXEmptyExpression(value.expression)) {
             // Uncoveraged. JSX attributes must only be assigned a non-empty expression
@@ -181,13 +184,13 @@ function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpres
             let value = child.value.replace(/ +/g, ' ').replace(/ ?\n ?/g, '\n')
 
             if (i === 0) {
-                value = value.trimLeft()
+                value = value.trimStart()
             }
             if (i === length - 1) {
-                value = value.trimRight()
+                value = value.trimEnd()
             }
             if (value !== '' && value !== '\n') {
-                members.push(stringLiteral(value))
+                members.push(stringLiteral(value.replace(/\n+/g, ' ')))
             }
 
             continue
