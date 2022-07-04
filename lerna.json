@@ -1,5 +1,7 @@
 {
-    "packages": ["packages/*"],
+    "packages": [
+        "packages/*"
+    ],
     "useNx": false,
-    "version": "2.2.3"
+    "version": "2.2.4"
 }
