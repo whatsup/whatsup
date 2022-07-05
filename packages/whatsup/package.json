@@ -1,7 +1,7 @@
 {
     "name": "whatsup",
     "description": "whatsup framework",
-    "version": "2.2.10",
+    "version": "2.2.15",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -37,7 +37,7 @@
     },
     "dependencies": {
         "@whatsup/core": "^2.2.6",
-        "@whatsup/jsx": "^2.2.6",
-        "@whatsup/route": "^2.2.6"
+        "@whatsup/jsx": "^2.2.15",
+        "@whatsup/route": "^2.2.15"
     }
 }
