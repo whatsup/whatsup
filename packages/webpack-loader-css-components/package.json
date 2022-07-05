@@ -1,5 +1,5 @@
 {
-    "name": "@whatsup/webpack-loader-css",
+    "name": "@whatsup/webpack-loader-css-components",
     "description": "Webpack css loader for whatsup application",
     "version": "2.2.9",
     "author": "Denis Churbanov",
@@ -7,7 +7,7 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/whatsup/whatsup.git",
-        "directory": "packages/webpack-loader-css"
+        "directory": "packages/webpack-loader-css-components"
     },
     "exports": {
         ".": "./dist/index.js",

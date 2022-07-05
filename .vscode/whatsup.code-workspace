@@ -5,28 +5,28 @@
             "path": "../"
         },
         {
-            "name": "@whatsup/whatsup",
+            "name": "whatsup",
             "path": "../packages/whatsup"
         },
         {
-            "name": "@whatsup/core",
+            "name": "core",
             "path": "../packages/core"
         },
         {
-            "name": "@whatsup/jsx",
+            "name": "jsx",
             "path": "../packages/jsx"
         },
         {
-            "name": "@whatsup/route",
+            "name": "route",
             "path": "../packages/route"
         },
         {
-            "name": "@whatsup/transform-jsx",
+            "name": "babel-plugin-transform-jsx",
             "path": "../packages/babel-plugin-transform-jsx"
         },
         {
-            "name": "@whatsup/loader-css",
-            "path": "../packages/webpack-loader-css"
+            "name": "webpack-loader-css-components",
+            "path": "../packages/webpack-loader-css-components"
         }
     ],
     "settings": {
@@ -35,6 +35,6 @@
             "packages": true
         },
         "jest.jestCommandLine": "npm test --",
-        "jest.disabledWorkspaceFolders": ["@whatsup", "@whatsup/whatsup"]
+        "jest.disabledWorkspaceFolders": ["@whatsup", "whatsup"]
     }
 }
