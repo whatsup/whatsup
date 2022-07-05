@@ -61,7 +61,7 @@ export default async function loader(this: LoaderContext, source: string) {
                     const tag = htmlTags[i]
                     const component = htmlComponents[i]
 
-                    out.push(`export const ${component} = createComponent('${tag}', styles)`)
+                    out.push(`export const ${component} = /*#__PURE__*/ createComponent('${tag}', styles)`)
                 }
             },
         }),
