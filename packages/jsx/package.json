@@ -17,8 +17,7 @@
         "build": "rollup -c && tsc -p ./tsconfig.build.json",
         "test": "jest",
         "test:coverage": "jest --coverage",
-        "test:uncache": "jest --clearCache",
-        "prepublishOnly": "npm run build"
+        "test:uncache": "jest --clearCache"
     },
     "files": [
         "dist",

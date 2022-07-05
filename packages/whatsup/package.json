@@ -10,8 +10,7 @@
         "directory": "packages/whatsup"
     },
     "scripts": {
-        "build": "rollup -c && tsc -p ./tsconfig.build.json",
-        "prepublishOnly": "npm run build"
+        "build": "rollup -c && tsc -p ./tsconfig.build.json"
     },
     "publishConfig": {
         "access": "public"
