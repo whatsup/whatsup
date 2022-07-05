@@ -8,7 +8,7 @@ export default ['core', 'jsx', 'route'].map((pkg) => ({
     input: `src/${pkg}.ts`,
     output: {
         file: `dist/${pkg}.js`,
-        format: 'cjs',
+        format: 'esm',
         sourcemap: true,
     },
     plugins: [
