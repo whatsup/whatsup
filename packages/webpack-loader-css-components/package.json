@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/webpack-loader-css-components",
     "description": "Webpack css loader for whatsup application",
-    "version": "2.2.12",
+    "version": "2.2.13",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
