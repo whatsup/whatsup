@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/typescript-plugin-css-components",
     "description": "A typescript language service fow whatsup css components",
-    "version": "2.2.11",
+    "version": "2.2.14",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
