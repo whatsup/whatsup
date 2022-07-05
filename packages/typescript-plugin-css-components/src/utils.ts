@@ -1,12 +1,12 @@
 import tss from 'typescript/lib/tsserverlibrary'
 import { Processor } from 'postcss'
 import { extractICSS } from 'icss-utils'
-import { tags, components } from './tags'
+import { htmlTags, htmlComponents } from './tags'
 import sass from 'sass'
 import stylus from 'stylus'
 import less from 'less'
 
-const CANDY_SIGN = '// Candy'
+const SIGN = '// WhatsupCSSComponents'
 
 export const isCss = (fileName: string) => fileName.endsWith('.css')
 
@@ -28,7 +28,7 @@ export const getDtsSnapshot = (
 ) => {
     const source = scriptSnapshot.getText(0, scriptSnapshot.getLength())
 
-    if (source.startsWith(CANDY_SIGN)) {
+    if (source.startsWith(SIGN)) {
         return scriptSnapshot
     }
 
@@ -36,8 +36,7 @@ export const getDtsSnapshot = (
     const classnames = getClassnames(fileName, css, processor)
     const dts = [] as string[]
 
-    dts.push(CANDY_SIGN)
-    dts.push(`import type { ComponentProps } from 'react'`)
+    dts.push(SIGN)
     dts.push(`type Props = {`)
     dts.push('[k: `__${string}`]: string | number')
 
@@ -51,12 +50,12 @@ export const getDtsSnapshot = (
 
     dts.push(`}`)
     dts.push(
-        `type Component<T extends keyof JSX.IntrinsicElements> = (props: ComponentProps<T> & Props) => JSX.IntrinsicElements<T>`
+        `type Component<T extends keyof JSX.IntrinsicElements> = (props: JSX.IntrinsicElements[T] & Props) => JSX.Element`
     )
 
-    for (let i = 0; i < tags.length; i++) {
-        const tag = tags[i]
-        const component = components[i]
+    for (let i = 0; i < htmlTags.length; i++) {
+        const tag = htmlTags[i]
+        const component = htmlComponents[i]
 
         dts.push(`export const ${component}: Component<'${tag}'>`)
     }
