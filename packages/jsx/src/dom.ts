@@ -115,9 +115,9 @@ const mutateStyleProp = <T extends WhatsJSX.ElementProps, K extends keyof T & st
     value: T[K]
 ) => {
     if (typeof value !== 'number' || NON_DIMENSIONAL_STYLE_PROP.test(prop)) {
-        style[prop as any] = value
+        style.setProperty(prop, value)
     } else {
-        style[prop as any] = ((value + 'px') as unknown) as T[K]
+        style.setProperty(prop, value + 'px')
     }
 }
 
