@@ -12,6 +12,10 @@
     "scripts": {
         "build": "rollup -c && tsc -p ./tsconfig.build.json"
     },
+    "files": [
+        "dist",
+        "src"
+    ],
     "publishConfig": {
         "access": "public"
     },
