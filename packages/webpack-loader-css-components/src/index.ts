@@ -27,7 +27,7 @@ type PostcssUrlAsset = {
 export default async function loader(this: LoaderContext, source: string) {
     const { plugins, processOptions } = await loadConfig(this)
 
-    const out = [`import { createComponent } from '@whatsup/webpack-loader-css/factory'`]
+    const out = [`import { createComponent } from '@whatsup/webpack-loader-css-modules/factory'`]
 
     const { css } = await postcss([
         postcssImport({
