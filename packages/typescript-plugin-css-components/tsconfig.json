@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "commonjs",
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
+        "incremental": true,
+        "baseUrl": "./",
+        "outDir": "./dist",
+        "declaration": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules"]
+}

@@ -27,6 +27,10 @@
         {
             "name": "webpack-loader-css-components",
             "path": "../packages/webpack-loader-css-components"
+        },
+        {
+            "name": "typescript-plugin-css-components",
+            "path": "../packages/typescript-plugin-css-components"
         }
     ],
     "settings": {
