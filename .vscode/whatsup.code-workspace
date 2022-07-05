@@ -31,6 +31,6 @@
             "packages": true
         },
         "jest.jestCommandLine": "npm test --",
-        "jest.disabledWorkspaceFolders": ["@whatsup"]
+        "jest.disabledWorkspaceFolders": ["@whatsup", "@whatsup/whatsup"]
     }
 }
