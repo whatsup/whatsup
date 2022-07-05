@@ -1,4 +1,6 @@
-/// <reference path="./types.d.ts" />
+/// <reference path="./@types/babel__helper-module-imports.d.ts" />
+/// <reference path="./@types/babel__plugin-syntax-jsx.d.ts" />
+
 import JsxSyntax from '@babel/plugin-syntax-jsx'
 import { addNamed } from '@babel/helper-module-imports'
 import { Node, NodePath } from '@babel/core'

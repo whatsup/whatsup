@@ -1,8 +1,3 @@
-declare module '@babel/plugin-syntax-jsx' {
-    const defaultExport: any
-    export default defaultExport
-}
-
 declare module '@babel/helper-module-imports' {
     import { Node, NodePath } from '@babel/core'
     import { Identifier } from '@babel/types'
