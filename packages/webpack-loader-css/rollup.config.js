@@ -35,7 +35,7 @@ export default [
         output: [
             {
                 file: 'dist/factory.js',
-                format: 'cjs',
+                format: 'esm',
                 sourcemap: true,
             },
         ],
