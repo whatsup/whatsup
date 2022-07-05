@@ -23,6 +23,10 @@
         {
             "name": "@whatsup/transform-jsx",
             "path": "../packages/babel-plugin-transform-jsx"
+        },
+        {
+            "name": "@whatsup/loader-css",
+            "path": "../packages/webpack-loader-css"
         }
     ],
     "settings": {
