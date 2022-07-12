@@ -4,14 +4,14 @@ sidebar_position: 5
 
 # Styling
 
-Whatsup has a hybrid styling system that allows you to use familiar CSS modules or a new approach.
+Whatsup has a hybrid styling system that allows you to use familiar CSS modules or a new approach. Both systems work out of the box - you decide which one to use. You can also use both at once.
 
 Imagine that we have such a css.
 
 ```css
 /* styles.css */
 
-.bagde {
+.badge {
     color: white;
 }
 
@@ -19,8 +19,8 @@ Imagine that we have such a css.
     backgroung-color: red;
 }
 
-.greed {
-    backgroung-color: red;
+.green {
+    backgroung-color: green;
 }
 ```
 

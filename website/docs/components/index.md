@@ -29,15 +29,13 @@ import { render } from 'whatsup/jsx'
 
 function* App() {
     const counter = observable(0)
+    const handleClick = () => counter(counter() + 1)
 
     while (true) {
-        const count = counter()
-        const onClick = () => counter(count + 1)
-
         yield (
             <div>
-                <p>You click {count} times</p>
-                <button onClick={onClick}>Click me</button>
+                <p>You click {counter()} times</p>
+                <button onClick={handleClick}>Click me</button>
             </div>
         )
     }
