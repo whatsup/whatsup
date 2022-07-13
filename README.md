@@ -1,5 +1,4 @@
 ![](https://habrastorage.org/webt/ct/sh/nx/ctshnxpthrbxy0o9o1jxgl4zxso.png#gh-dark-mode-only)
-![](https://habrastorage.org/webt/g8/k8/ok/g8k8ok8drcgh_vulavq0iumq2r4.png#gh-light-mode-only)
 
 ## What is it?
 
