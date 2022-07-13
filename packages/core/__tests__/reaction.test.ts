@@ -8,13 +8,13 @@ describe('Reactions', () => {
             const dataMock = jest.fn()
             const errMock = jest.fn()
             const data = observable(1)
-            const target = computed(() => data.get())
+            const target = computed(() => data())
 
-            reaction(() => target.get(), dataMock, errMock)
+            reaction(() => target(), dataMock, errMock)
 
             expect(dataMock).lastCalledWith(1, undefined)
 
-            data.set(2)
+            data(2)
 
             expect(dataMock).lastCalledWith(2, 1)
 
@@ -28,7 +28,7 @@ describe('Reactions', () => {
                 throw 'Error'
             })
 
-            reaction(() => target.get(), dataMock, errMock)
+            reaction(() => target(), dataMock, errMock)
 
             expect(dataMock).not.toBeCalled()
             expect(errMock).lastCalledWith('Error')
@@ -37,13 +37,13 @@ describe('Reactions', () => {
         it(`should not call callbacks when disposed`, () => {
             const mock = jest.fn()
             const data = observable(1)
-            const target = computed(() => data.get())
-            const disposer = reaction(() => target.get(), mock)
+            const target = computed(() => data())
+            const disposer = reaction(() => target(), mock)
 
             expect(mock).lastCalledWith(1, undefined)
 
             disposer()
-            data.set(2)
+            data(2)
 
             expect(mock).toBeCalledTimes(1)
             expect(mock).lastCalledWith(1, undefined)
@@ -55,11 +55,11 @@ describe('Reactions', () => {
             const mock = jest.fn()
             const one = observable(1)
 
-            autorun(() => mock(one.get()))
+            autorun(() => mock(one()))
 
             expect(mock).lastCalledWith(1)
 
-            one.set(2)
+            one(2)
 
             expect(mock).lastCalledWith(2)
         })
@@ -67,12 +67,12 @@ describe('Reactions', () => {
         it(`should not call callback when disposed`, () => {
             const mock = jest.fn()
             const one = observable(1)
-            const disposer = autorun(() => mock(one.get()))
+            const disposer = autorun(() => mock(one()))
 
             expect(mock).lastCalledWith(1)
 
             disposer()
-            one.set(2)
+            one(2)
 
             expect(mock).toBeCalledTimes(1)
             expect(mock).lastCalledWith(1)

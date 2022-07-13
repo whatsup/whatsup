@@ -17,7 +17,7 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = autorun(() => mock(a.get()))
+        const dispose = autorun(() => mock(a()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('A')
@@ -44,7 +44,7 @@ describe('Disposing', () => {
         const b = computed(function* () {
             try {
                 while (true) {
-                    yield `${a.get()}B`
+                    yield `${a()}B`
                 }
             } finally {
                 mockB()
@@ -53,14 +53,14 @@ describe('Disposing', () => {
         const c = computed(function* () {
             try {
                 while (true) {
-                    yield `${a.get()}${b.get()}C`
+                    yield `${a()}${b()}C`
                 }
             } finally {
                 mockC()
             }
         })
 
-        const dispose = autorun(() => mock(c.get()))
+        const dispose = autorun(() => mock(c()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('AABC')
@@ -78,7 +78,7 @@ describe('Disposing', () => {
         const toggle = observable(true)
         const a = computed(function* () {
             while (true) {
-                yield toggle.get() ? b.get() : 'A'
+                yield toggle() ? b() : 'A'
             }
         })
         const b = computed(function* () {
@@ -91,12 +91,12 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = autorun(() => mock(a.get()))
+        const dispose = autorun(() => mock(a()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
 
-        toggle.set(false)
+        toggle(false)
 
         expect(mockB).toBeCalledTimes(1)
 
@@ -109,7 +109,7 @@ describe('Disposing', () => {
         const toggle = observable(true)
         const a = computed<string>(function* () {
             while (true) {
-                yield toggle.get() ? yield delegate(b) : 'A'
+                yield toggle() ? yield delegate(b) : 'A'
             }
         })
         const b = computed(function* () {
@@ -122,12 +122,12 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = autorun(() => mock(a.get()))
+        const dispose = autorun(() => mock(a()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
 
-        toggle.set(false)
+        toggle(false)
 
         expect(mockB).toBeCalledTimes(1)
 
@@ -139,7 +139,7 @@ describe('Disposing', () => {
         const mockB = jest.fn()
         const toggle = observable(true)
         const a = computed(function* () {
-            return toggle.get() ? b.get() : 'A'
+            return toggle() ? b() : 'A'
         })
         const b = computed(function* () {
             try {
@@ -151,12 +151,12 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = autorun(() => mock(a.get()))
+        const dispose = autorun(() => mock(a()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
 
-        toggle.set(false)
+        toggle(false)
 
         expect(mockB).toBeCalledTimes(1)
 
@@ -168,7 +168,7 @@ describe('Disposing', () => {
         const mockB = jest.fn()
         const toggle = observable(true)
         const a = computed<string>(function* () {
-            return toggle.get() ? yield delegate(b) : 'A'
+            return toggle() ? yield delegate(b) : 'A'
         })
         const b = computed(function* () {
             try {
@@ -180,12 +180,12 @@ describe('Disposing', () => {
             }
         })
 
-        const dispose = autorun(() => mock(a.get()))
+        const dispose = autorun(() => mock(a()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('B')
 
-        toggle.set(false)
+        toggle(false)
 
         expect(mockB).toBeCalledTimes(1)
 

@@ -17,7 +17,7 @@ export class ObservableSet<T> {
     }
 
     get size() {
-        return this.length.get()
+        return this.length()
     }
 
     has(item: T) {
@@ -25,9 +25,9 @@ export class ObservableSet<T> {
             const has = this.hasMap.has(item)
 
             if (!has || this.hasMap.get(item) === null) {
-                const trigger = observable<boolean>(has)
+                const accessor = observable<boolean>(has)
 
-                trigger.atom.onDispose((has) => {
+                accessor.atom.onDispose((has) => {
                     if (has) {
                         this.hasMap.set(item, null)
                     } else {
@@ -35,16 +35,16 @@ export class ObservableSet<T> {
                     }
                 })
 
-                this.hasMap.set(item, trigger)
+                this.hasMap.set(item, accessor)
             }
 
-            return this.hasMap.get(item)!.get()
+            return this.hasMap.get(item)!()
         }
 
         if (this.hasMap.has(item)) {
-            const trigger = this.hasMap.get(item)
+            const accessor = this.hasMap.get(item)
 
-            if (trigger === null || trigger!.get()) {
+            if (accessor === null || accessor!()) {
                 return true
             }
         }
@@ -54,13 +54,13 @@ export class ObservableSet<T> {
 
     add(item: T) {
         transaction(() => {
-            let length = this.length.get()
+            let length = this.length()
 
             if (this.hasMap.has(item)) {
-                const trigger = this.hasMap.get(item)
+                const accessor = this.hasMap.get(item)
 
-                if (trigger !== null && trigger?.get() === false) {
-                    trigger.set(true)
+                if (accessor != null && accessor() === false) {
+                    accessor(true)
                     length++
                 }
             } else {
@@ -68,7 +68,7 @@ export class ObservableSet<T> {
                 length++
             }
 
-            this.length.set(length)
+            this.length(length)
         })
         return this
     }
@@ -76,17 +76,17 @@ export class ObservableSet<T> {
     delete(item: T) {
         if (this.hasMap.has(item)) {
             transaction(() => {
-                const trigger = this.hasMap.get(item)
+                const accessor = this.hasMap.get(item)
 
-                if (trigger === null) {
+                if (accessor === null) {
                     this.hasMap.delete(item)
                 } else {
-                    trigger!.set(false)
+                    accessor!(false)
                 }
 
-                const length = this.length.get()
+                const length = this.length()
 
-                this.length.set(length - 1)
+                this.length(length - 1)
             })
 
             return true
@@ -100,12 +100,12 @@ export class ObservableSet<T> {
             for (const item of this.hasMap.keys()) {
                 this.delete(item)
             }
-            this.length.set(0)
+            this.length(0)
         })
     }
 
     *[Symbol.iterator](): IterableIterator<T> {
-        this.length.get()
+        this.length()
 
         for (const [item] of this.hasMap.entries()) {
             if (this.has(item)) {

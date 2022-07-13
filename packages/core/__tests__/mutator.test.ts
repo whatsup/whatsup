@@ -11,15 +11,15 @@ describe('Mutators', () => {
         const output = computed(function* () {
             const trigger = observable(0)
 
-            kickstart = () => trigger.set(Math.random())
+            kickstart = () => trigger(Math.random())
 
             while (true) {
-                trigger.get()
+                trigger()
                 yield increment
             }
         })
 
-        autorun(() => (result = output.get()))
+        autorun(() => (result = output()))
 
         it(`should return 1`, () => {
             expect(result).toBe(1)

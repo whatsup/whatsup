@@ -6,11 +6,11 @@ describe('Observable', () => {
         const mock = jest.fn()
         const num = observable(1)
 
-        autorun(() => mock(num.get()))
+        autorun(() => mock(num()))
 
         expect(mock).lastCalledWith(1)
 
-        num.set(2)
+        num(2)
 
         expect(mock).lastCalledWith(2)
     })
@@ -18,7 +18,7 @@ describe('Observable', () => {
     it(`should return current value`, () => {
         const name = observable('John')
 
-        expect(name.get()).toBe('John')
+        expect(name()).toBe('John')
     })
 
     it(`should decorate`, () => {

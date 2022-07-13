@@ -12,7 +12,7 @@ describe('Delegating', () => {
         const trigger3 = observable(3)
         const one = computed(function* () {
             while (true) {
-                if (mock1(trigger1.get()) > 0) {
+                if (mock1(trigger1()) > 0) {
                     yield delegate(two)
                 } else {
                     yield delegate(trigger3)
@@ -20,13 +20,13 @@ describe('Delegating', () => {
             }
         })
         const two = computed(function* () {
-            while (true) yield trigger2.get()
+            while (true) yield trigger2()
         })
         const app = computed(function* () {
-            return mock2(one.get())
+            return mock2(one())
         })
 
-        autorun(() => app.get())
+        autorun(() => app())
 
         it(`mock1 to be called with "1" mock2 to be called with "2"`, () => {
             expect(mock1).toBeCalledTimes(1)
@@ -36,14 +36,14 @@ describe('Delegating', () => {
         })
 
         it(`change trigger2 - mock1 not to be called, mock2 to be called with "22"`, () => {
-            trigger2.set(22)
+            trigger2(22)
             expect(mock1).toBeCalledTimes(1)
             expect(mock2).toBeCalledTimes(2)
             expect(mock2).lastCalledWith(22)
         })
 
         it(`change trigger1 - mock1 to be called with "11", mock2 not to be called`, () => {
-            trigger1.set(11)
+            trigger1(11)
             expect(mock1).toBeCalledTimes(2)
             expect(mock1).lastCalledWith(11)
             expect(mock2).toBeCalledTimes(2)
@@ -51,7 +51,7 @@ describe('Delegating', () => {
         })
 
         it(`change trigger1 - mock1 to be called with "-11", mock2 to be called with "3"`, () => {
-            trigger1.set(-11)
+            trigger1(-11)
             expect(mock1).toBeCalledTimes(3)
             expect(mock1).lastCalledWith(-11)
             expect(mock2).toBeCalledTimes(3)
@@ -66,7 +66,7 @@ describe('Delegating', () => {
         const trigger2 = observable(2)
         const one = computed(function* () {
             while (true) {
-                if (trigger1.get()) {
+                if (trigger1()) {
                     yield delegate(two as any)
                 } else {
                     yield delegate(trigger2)
@@ -77,10 +77,10 @@ describe('Delegating', () => {
             throw 'TWO_ERROR'
         })
         const app = computed(function* () {
-            return one.get()
+            return one()
         })
 
-        reaction(() => app.get(), mock1, mock2)
+        reaction(() => app(), mock1, mock2)
 
         it(`mock1 to be called with "1"`, () => {
             expect(mock1).toBeCalledTimes(1)
@@ -88,13 +88,13 @@ describe('Delegating', () => {
         })
 
         it(`change trigger2 - mock2 to be called with "22"`, () => {
-            trigger2.set(22)
+            trigger2(22)
             expect(mock1).toBeCalledTimes(2)
             expect(mock1).lastCalledWith(22, 2)
         })
 
         it(`change trigger1 - mock1 not to be called, mock2 to be called 1 time with "TWO_ERROR"`, () => {
-            trigger1.set(true)
+            trigger1(true)
             expect(mock1).toBeCalledTimes(2)
             expect(mock1).lastCalledWith(22, 2)
             expect(mock2).toBeCalledTimes(1)
@@ -102,7 +102,7 @@ describe('Delegating', () => {
         })
 
         it(`change trigger1 - mock1 to be called with "22", mock2 not to be called`, () => {
-            trigger1.set(false)
+            trigger1(false)
             expect(mock1).toBeCalledTimes(3)
             expect(mock1).lastCalledWith(22, 22)
             expect(mock2).toBeCalledTimes(1)
@@ -118,7 +118,7 @@ describe('Delegating', () => {
         const trigger3 = observable(3)
         const one = computed(function* () {
             while (true) {
-                if (trigger1.get()) {
+                if (trigger1()) {
                     throw delegate(two)
                 } else {
                     yield delegate(trigger2)
@@ -126,13 +126,13 @@ describe('Delegating', () => {
             }
         })
         const two = computed(function* () {
-            return trigger3.get()
+            return trigger3()
         })
         const app = computed(function* () {
-            return one.get()
+            return one()
         })
 
-        reaction(() => app.get(), mock1, mock2)
+        reaction(() => app(), mock1, mock2)
 
         it(`mock1 to be called with "2"`, () => {
             expect(mock1).toBeCalledTimes(1)
@@ -140,13 +140,13 @@ describe('Delegating', () => {
         })
 
         it(`change trigger2 - mock2 to be called with "22"`, () => {
-            trigger2.set(22)
+            trigger2(22)
             expect(mock1).toBeCalledTimes(2)
             expect(mock1).lastCalledWith(22, 2)
         })
 
         it(`change trigger1 - mock1 not to be called, mock2 to be called mock2 with Delegation`, () => {
-            trigger1.set(true)
+            trigger1(true)
             expect(mock1).toBeCalledTimes(2)
             expect(mock1).lastCalledWith(22, 2)
             expect(mock2).toBeCalledTimes(1)
@@ -154,7 +154,7 @@ describe('Delegating', () => {
         })
 
         it(`change trigger1 - mock1 to be called with "22", mock2 not to be called`, () => {
-            trigger1.set(false)
+            trigger1(false)
             expect(mock1).toBeCalledTimes(3)
             expect(mock1).lastCalledWith(22, 22)
             expect(mock2).toBeCalledTimes(1)

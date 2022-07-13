@@ -1,6 +1,6 @@
 import { createAtom } from '../src/atom'
-import { computed, Computed } from '../src/computed'
-import { observable, Observable } from '../src/observable'
+import { computed } from '../src/computed'
+import { observable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
 import { action, runInAction } from '../src/action'
 import { rebuild } from '../src/rebuild'
@@ -13,9 +13,7 @@ import { map } from '../src/map'
 import {
     createAtom as _createAtom,
     computed as _computed,
-    Computed as _Computed,
     observable as _observable,
-    Observable as _Observable,
     reaction as _reaction,
     autorun as _autorun,
     action as _action,
@@ -32,9 +30,7 @@ import {
 it('Exports', () => {
     expect(createAtom).toBe(_createAtom)
     expect(computed).toBe(_computed)
-    expect(Computed).toBe(_Computed)
     expect(observable).toBe(_observable)
-    expect(Observable).toBe(_Observable)
     expect(reaction).toBe(_reaction)
     expect(autorun).toBe(_autorun)
     expect(action).toBe(_action)

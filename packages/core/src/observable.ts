@@ -1,22 +1,11 @@
-import { Payload } from './atom'
+import { createAtom, Payload } from './atom'
 import { Computed } from './computed'
 import { transaction } from './scheduler'
 
-export class Observable<T = unknown> extends Computed<T> {
-    private value: Payload<T>
+const SIGN = Symbol('This is observable')
 
-    constructor(value: Payload<T>) {
-        super(() => this.value)
-        this.value = value
-    }
-
-    set(value: Payload<T>) {
-        this.value = value
-
-        if (this.atom.hasObservers()) {
-            transaction((t) => t.addEntry(this.atom))
-        }
-    }
+export interface Observable<T = unknown> extends Computed<T> {
+    (value: Payload<T>): void
 }
 
 interface ObservableFactory {
@@ -26,9 +15,40 @@ interface ObservableFactory {
 
 export const observable: ObservableFactory = <T>(...args: any[]): any => {
     if (args.length <= 1) {
-        const [value] = args as [T]
+        let [value] = args as [T]
 
-        return new Observable<T>(value)
+        const producer = () => value
+        const atom = createAtom(producer)
+        const accessor = (...args: [T]) => {
+            if (args.length === 1) {
+                value = args[0]
+
+                if (atom.hasObservers()) {
+                    transaction((t) => t.addEntry(atom))
+                }
+
+                return
+            } else {
+                return atom.get()
+            }
+        }
+
+        Object.defineProperties(accessor, {
+            atom: {
+                value: atom,
+                writable: false,
+                enumerable: false,
+                configurable: false,
+            },
+            [SIGN]: {
+                value: true,
+                writable: false,
+                enumerable: false,
+                configurable: false,
+            },
+        })
+
+        return accessor as Computed<T>
     }
 
     const [, prop, descriptor] = args as [Object, string, PropertyDescriptor & { initializer: () => T }]
@@ -39,11 +59,15 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
 
     return {
         get() {
-            return field.call(this).get()
+            return field.call(this)()
         },
         set(value: T) {
-            return field.call(this).set(value)
+            return field.call(this)(value)
         },
         configurable: false,
     }
+}
+
+export const isObservable = <T = unknown>(target: any): target is Observable<T> => {
+    return typeof target === 'function' && Reflect.has(target, SIGN)
 }

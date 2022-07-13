@@ -10,17 +10,17 @@ describe('Action', () => {
         const b = observable('b')
         const c = computed(function* () {
             while (true) {
-                yield `${a.get()}${b.get()}c`
+                yield `${a()}${b()}c`
             }
         })
-        autorun(() => mock(c.get()))
+        autorun(() => mock(c()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
 
         runInAction(() => {
-            a.set('A')
-            b.set('B')
+            a('A')
+            b('B')
         })
         expect(mock).toBeCalledTimes(2)
         expect(mock).nthCalledWith(2, 'ABc')

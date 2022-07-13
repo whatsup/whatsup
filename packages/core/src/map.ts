@@ -1,4 +1,4 @@
-import { observable, Observable } from './observable'
+import { observable, Observable, isObservable } from './observable'
 import { transaction, isBuildProcess } from './scheduler'
 
 export class ObservableMap<K, V> {
@@ -21,7 +21,7 @@ export class ObservableMap<K, V> {
     }
 
     get size() {
-        return this.length.get()
+        return this.length()
     }
 
     has(key: K) {
@@ -29,9 +29,9 @@ export class ObservableMap<K, V> {
             const has = this.hasMap.has(key)
 
             if (!has || this.hasMap.get(key) === null) {
-                const trigger = observable<boolean>(has)
+                const accessor = observable<boolean>(has)
 
-                trigger.atom.onDispose((has) => {
+                accessor.atom.onDispose((has) => {
                     if (has) {
                         this.hasMap.set(key, null)
                     } else {
@@ -40,16 +40,16 @@ export class ObservableMap<K, V> {
                     this.dataMap.delete(key)
                 })
 
-                this.hasMap.set(key, trigger)
+                this.hasMap.set(key, accessor)
             }
 
-            return this.hasMap.get(key)!.get()
+            return this.hasMap.get(key)!()
         }
 
         if (this.hasMap.has(key)) {
-            const trigger = this.hasMap.get(key)
+            const accessor = this.hasMap.get(key)
 
-            if (trigger === null || trigger!.get()) {
+            if (accessor === null || accessor!()) {
                 return true
             }
         }
@@ -61,22 +61,22 @@ export class ObservableMap<K, V> {
         if (this.has(key)) {
             const data = this.dataMap.get(key)
 
-            if (data instanceof Observable) {
-                return data.get()
+            if (isObservable<V | undefined>(data)) {
+                return data()
             }
 
             if (isBuildProcess()) {
-                const trigger = observable<V | undefined>(data)
+                const accessor = observable<V | undefined>(data as V | undefined)
 
-                trigger.atom.onDispose((val) => {
+                accessor.atom.onDispose((val) => {
                     if (this.dataMap.has(key)) {
                         this.dataMap.set(key, val as V)
                     }
                 })
 
-                this.dataMap.set(key, trigger)
+                this.dataMap.set(key, accessor)
 
-                return trigger.get()
+                return accessor()
             }
 
             return data
@@ -87,13 +87,13 @@ export class ObservableMap<K, V> {
 
     set(key: K, value: V) {
         transaction(() => {
-            let length = this.length.get()
+            let length = this.length()
 
             if (this.hasMap.has(key)) {
-                const trigger = this.hasMap.get(key)
+                const accessor = this.hasMap.get(key)
 
-                if (trigger !== null && trigger?.get() === false) {
-                    trigger.set(true)
+                if (accessor != null && accessor() === false) {
+                    accessor(true)
                     length++
                 }
             } else {
@@ -104,8 +104,8 @@ export class ObservableMap<K, V> {
             if (this.dataMap.has(key)) {
                 const data = this.dataMap.get(key)!
 
-                if (data instanceof Observable) {
-                    data.set(value)
+                if (isObservable<V | undefined>(data)) {
+                    data(value)
                 } else {
                     this.dataMap.set(key, value)
                 }
@@ -113,7 +113,7 @@ export class ObservableMap<K, V> {
                 this.dataMap.set(key, value)
             }
 
-            this.length.set(length)
+            this.length(length)
         })
 
         return this
@@ -122,24 +122,24 @@ export class ObservableMap<K, V> {
     delete(key: K) {
         if (this.hasMap.has(key)) {
             transaction(() => {
-                const trigger = this.hasMap.get(key)
+                const accessor = this.hasMap.get(key)
                 const data = this.dataMap.get(key)
 
-                if (trigger === null) {
+                if (accessor === null) {
                     this.hasMap.delete(key)
                 } else {
-                    trigger!.set(false)
+                    accessor!(false)
                 }
 
-                if (data instanceof Observable) {
-                    data.set(undefined)
+                if (isObservable<V | undefined>(data)) {
+                    data(undefined)
                 } else {
                     this.dataMap.delete(key)
                 }
 
-                const length = this.length.get()
+                const length = this.length()
 
-                this.length.set(length - 1)
+                this.length(length - 1)
             })
 
             return true
@@ -153,12 +153,12 @@ export class ObservableMap<K, V> {
             for (const key of this.hasMap.keys()) {
                 this.delete(key)
             }
-            this.length.set(0)
+            this.length(0)
         })
     }
 
     *[Symbol.iterator](): IterableIterator<[K, V]> {
-        this.length.get()
+        this.length()
 
         for (const [key] of this.hasMap.entries()) {
             if (this.has(key)) {

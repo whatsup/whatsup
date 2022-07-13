@@ -8,10 +8,10 @@ describe('Situations', () => {
         const name = observable('John')
         const age = observable(33)
         const user = computed(function* () {
-            while (true) yield `user ${name.get()} ${age.get()}`
+            while (true) yield `user ${name()} ${age()}`
         })
 
-        autorun(() => mock(user.get()))
+        autorun(() => mock(user()))
 
         it(`mock called 1 time with "user John 33"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -25,11 +25,11 @@ describe('Situations', () => {
         const name = observable('John')
         const user = computed(function* () {
             while (true) {
-                yield `user ${toggle.get() ? name.get() : 'Default'}`
+                yield `user ${toggle() ? name() : 'Default'}`
             }
         })
 
-        autorun(() => mock(user.get()))
+        autorun(() => mock(user()))
 
         it(`mock called with "user John"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -37,24 +37,24 @@ describe('Situations', () => {
         })
 
         it(`change toggle to "false" and mock to be called with "user Default"`, () => {
-            toggle.set(false)
+            toggle(false)
             expect(mock).toBeCalledTimes(2)
             expect(mock).lastCalledWith('user Default')
         })
 
         it(`change name to "Barry" and mock not to be called`, () => {
-            name.set('Barry')
+            name('Barry')
             expect(mock).toBeCalledTimes(2)
         })
 
         it(`change toggle to "true" and mock to be called with "user Barry"`, () => {
-            toggle.set(true)
+            toggle(true)
             expect(mock).toBeCalledTimes(3)
             expect(mock).lastCalledWith('user Barry')
         })
 
         it(`change name to "Jessy" and mock to be called with "user Jessy"`, () => {
-            name.set('Jessy')
+            name('Jessy')
             expect(mock).toBeCalledTimes(4)
             expect(mock).lastCalledWith('user Jessy')
         })
@@ -64,10 +64,10 @@ describe('Situations', () => {
         const mock = jest.fn()
         const name = observable<string>('John')
         const user = computed(function* () {
-            while (true) yield `user ${name.get()}`
+            while (true) yield `user ${name()}`
         })
 
-        autorun(() => mock(user.get()))
+        autorun(() => mock(user()))
 
         it(`mock to be called 1 time with "user John"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -75,13 +75,13 @@ describe('Situations', () => {
         })
 
         it(`again use "John" as name and mock to not be called`, () => {
-            name.set('John')
+            name('John')
             expect(mock).toBeCalledTimes(1)
             expect(mock).lastCalledWith('user John')
         })
 
         it(`use "Barry" as name and mock to be called 1 time with "user Barry"`, () => {
-            name.set('Barry')
+            name('Barry')
             expect(mock).toBeCalledTimes(2)
             expect(mock).lastCalledWith('user Barry')
         })

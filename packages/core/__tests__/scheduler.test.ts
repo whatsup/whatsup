@@ -9,17 +9,17 @@ describe('Scheduler', () => {
         const b = observable('b')
         const c = computed(function* () {
             while (true) {
-                yield `${a.get()}${b.get()}c`
+                yield `${a()}${b()}c`
             }
         })
 
-        autorun(() => mock(c.get()))
+        autorun(() => mock(c()))
 
         expect(mock).toBeCalledTimes(1)
         expect(mock).lastCalledWith('abc')
 
-        a.set('A')
-        b.set('B')
+        a('A')
+        b('B')
 
         expect(mock).toBeCalledTimes(3)
         expect(mock).nthCalledWith(2, 'Abc')
@@ -32,23 +32,23 @@ describe('Scheduler', () => {
         const a = observable('a')
         const b = computed(function* () {
             while (true) {
-                c.set(`${a.get()}b`)
-                yield `${a.get()}b`
+                c(`${a()}b`)
+                yield `${a()}b`
             }
         })
         const c = observable('c')
 
-        autorun(() => mockC(c.get()))
+        autorun(() => mockC(c()))
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
 
-        autorun(() => mockB(b.get()))
+        autorun(() => mockB(b()))
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')
 
-        a.set('A')
+        a('A')
 
         expect(mockB).toBeCalledTimes(2)
         expect(mockB).lastCalledWith('Ab')
@@ -63,25 +63,25 @@ describe('Scheduler', () => {
         const a = observable('a')
         const b = computed(function* () {
             while (true) {
-                c.set(`${a.get()}c`)
-                d.set(`${a.get()}d`)
-                yield `${a.get()}b`
+                c(`${a()}c`)
+                d(`${a()}d`)
+                yield `${a()}b`
             }
         })
         const c = observable('c')
         const d = observable('d')
 
-        autorun(() => mockC(c.get()))
+        autorun(() => mockC(c()))
 
         expect(mockC).toBeCalledTimes(1)
         expect(mockC).lastCalledWith('c')
 
-        autorun(() => mockD(d.get()))
+        autorun(() => mockD(d()))
 
         expect(mockD).toBeCalledTimes(1)
         expect(mockD).lastCalledWith('d')
 
-        autorun(() => mockB(b.get()))
+        autorun(() => mockB(b()))
 
         expect(mockB).toBeCalledTimes(1)
         expect(mockB).lastCalledWith('ab')
@@ -91,7 +91,7 @@ describe('Scheduler', () => {
         expect(mockD).toBeCalledTimes(2)
         expect(mockD).lastCalledWith('ad')
 
-        a.set('A')
+        a('A')
 
         expect(mockB).toBeCalledTimes(2)
         expect(mockB).lastCalledWith('Ab')
@@ -110,20 +110,20 @@ describe('Scheduler', () => {
         const wallet = computed(function* () {
             while (true) {
                 mockWallet()
-                yield `Wallet ${balance.get()}`
+                yield `Wallet ${balance()}`
             }
         })
         const user = computed(function* () {
             while (true) {
                 mockUser()
-                yield `User ${name.get()}`
+                yield `User ${name()}`
             }
         })
         const app = computed(function* () {
-            while (true) yield `App ${user.get()} ${wallet.get()}`
+            while (true) yield `App ${user()} ${wallet()}`
         })
 
-        autorun(() => mock(app.get()))
+        autorun(() => mock(app()))
 
         it(`mock to be called 1 time with "App User John Wallet 100"`, () => {
             expect(mock).toBeCalledTimes(1)
@@ -133,7 +133,7 @@ describe('Scheduler', () => {
         })
 
         it(`"Barry" as Name and mockWallet to not be called`, () => {
-            name.set('Barry')
+            name('Barry')
             expect(mock).toBeCalledTimes(2)
             expect(mockWallet).toBeCalledTimes(1)
             expect(mockUser).toBeCalledTimes(2)
@@ -141,7 +141,7 @@ describe('Scheduler', () => {
         })
 
         it(`"200" as Balance and mockUser to not be called`, () => {
-            balance.set(200)
+            balance(200)
             expect(mock).toBeCalledTimes(3)
             expect(mockWallet).toBeCalledTimes(2)
             expect(mockUser).toBeCalledTimes(2)

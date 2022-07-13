@@ -6,6 +6,7 @@ export type ErrorHandler = (e: Error) => void
 
 export const reaction = <T>(producer: Producer<T>, onData: DataHandler<T>, onError?: ErrorHandler) => {
     let prev: T | undefined = undefined
+
     const source = createAtom(producer)
     const atom = createAtom(() => {
         try {

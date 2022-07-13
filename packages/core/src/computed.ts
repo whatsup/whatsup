@@ -1,20 +1,13 @@
-import { createAtom, Atom, Producer } from './atom'
+import { createAtom, Producer } from './atom'
 import { Atomic } from './atomic'
 
-export class Computed<T = unknown> implements Atomic<T> {
-    /* @internal */
-    readonly atom: Atom<T>
+const SIGN = Symbol('This is computed')
 
-    constructor(producer: Producer<T>, thisArg?: unknown) {
-        this.atom = createAtom(producer, thisArg)
-    }
-
-    get() {
-        return this.atom.get()
-    }
+export interface Computed<T = unknown> extends Atomic<T> {
+    (): T
 }
 
-interface ComputedFactory {
+export interface ComputedFactory {
     <T>(producer: Producer<T>, thisArg?: unknown): Computed<T>
     (target: Object, prop: string, descriptor: PropertyDescriptor): void
 }
@@ -22,8 +15,25 @@ interface ComputedFactory {
 export const computed: ComputedFactory = <T>(...args: any[]): any => {
     if (typeof args[0] === 'function') {
         const [producer, thisArg] = args as [Producer<T>, unknown]
+        const atom = createAtom(producer, thisArg)
+        const accessor = () => atom.get()
 
-        return new Computed(producer, thisArg)
+        Object.defineProperties(accessor, {
+            atom: {
+                value: atom,
+                writable: false,
+                enumerable: false,
+                configurable: false,
+            },
+            [SIGN]: {
+                value: true,
+                writable: false,
+                enumerable: false,
+                configurable: false,
+            },
+        })
+
+        return accessor as Computed<T>
     }
 
     const [, prop, descriptor] = args as [Object, string, PropertyDescriptor]
@@ -35,8 +45,12 @@ export const computed: ComputedFactory = <T>(...args: any[]): any => {
 
     return {
         get() {
-            return field.call(this).get()
+            return field.call(this)()
         },
         configurable: false,
     }
+}
+
+export const isComputed = <T = unknown>(target: any): target is Computed<T> => {
+    return typeof target === 'function' && Reflect.has(target, SIGN)
 }

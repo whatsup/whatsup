@@ -6,13 +6,13 @@ describe('Computed', () => {
     it(`should react on observable change`, () => {
         const mock = jest.fn()
         const source = observable(1)
-        const cell = computed(() => source.get() + 1)
+        const cell = computed(() => source() + 1)
 
-        autorun(() => mock(cell.get()))
+        autorun(() => mock(cell()))
 
         expect(mock).lastCalledWith(2)
 
-        source.set(2)
+        source(2)
 
         expect(mock).lastCalledWith(3)
     })
@@ -22,20 +22,20 @@ describe('Computed', () => {
         const source = observable(1)
         const cell = computed(() => {
             mock()
-            return source.get() + 1
+            return source() + 1
         })
 
-        const dispose = autorun(() => cell.get())
+        const dispose = autorun(() => cell())
 
         expect(mock).toBeCalledTimes(1)
 
-        source.set(2)
+        source(2)
 
         expect(mock).toBeCalledTimes(2)
 
         dispose()
 
-        source.set(3)
+        source(3)
 
         expect(mock).toBeCalledTimes(2)
     })
@@ -45,20 +45,20 @@ describe('Computed', () => {
         const source = observable(1)
         const cell = computed(() => {
             mock()
-            return source.get() + 1
+            return source() + 1
         })
 
-        const dispose = autorun(() => cell.get())
+        const dispose = autorun(() => cell())
 
         expect(mock).toBeCalledTimes(1)
 
-        cell.get()
+        cell()
 
         expect(mock).toBeCalledTimes(1)
 
         dispose()
 
-        cell.get()
+        cell()
 
         expect(mock).toBeCalledTimes(2)
     })
@@ -68,22 +68,22 @@ describe('Computed', () => {
         const source = observable(1)
         const cell = computed(() => {
             mock()
-            return source.get() + 1
+            return source() + 1
         })
 
-        cell.get()
+        cell()
 
         expect(mock).toBeCalledTimes(1)
 
-        cell.get()
+        cell()
 
         expect(mock).toBeCalledTimes(2)
 
-        autorun(() => cell.get())
+        autorun(() => cell())
 
         expect(mock).toBeCalledTimes(3)
 
-        cell.get()
+        cell()
 
         expect(mock).toBeCalledTimes(3)
     })
@@ -92,17 +92,17 @@ describe('Computed', () => {
         const mock = jest.fn()
         const one = observable(1)
         const two = observable(2)
-        const cell = computed(() => one.get() + two.get())
+        const cell = computed(() => one() + two())
 
-        autorun(() => mock(cell.get()))
+        autorun(() => mock(cell()))
 
         expect(mock).lastCalledWith(3)
 
-        one.set(2)
+        one(2)
 
         expect(mock).lastCalledWith(4)
 
-        two.set(3)
+        two(3)
 
         expect(mock).lastCalledWith(5)
     })
