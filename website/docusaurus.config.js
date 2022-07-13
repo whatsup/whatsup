@@ -7,8 +7,8 @@ const darkCodeTheme = require('./theme/prism')
 /** @type {import('@docusaurus/types').Config} */
 const config = {
     title: 'WhatsUp',
-    tagline: 'Dinosaurs are cool',
-    url: 'https://your-docusaurus-test-site.com',
+    tagline: 'A frontend framework for chillout-mode development 🥤',
+    url: 'https://whatsup.js.org',
     baseUrl: '/',
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
@@ -60,7 +60,7 @@ const config = {
             navbar: {
                 title: 'Whatsup',
                 logo: {
-                    alt: 'My Site Logo',
+                    alt: 'Logo',
                     src: 'img/logo.svg',
                     srcDark: 'img/logo_dark.svg',
                 },
