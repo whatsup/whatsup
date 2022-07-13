@@ -145,8 +145,8 @@ export class Context {
         const result = { done: false } as { done: boolean; value?: T }
 
         if (!this.deferredTrigger) {
-            this.deferredTrigger = observable(false)
-            this.deferredTrigger.get()
+            this.deferredTrigger = observable<boolean>(false)
+            this.deferredTrigger()
         }
 
         promise.then((r) => {
@@ -154,7 +154,7 @@ export class Context {
             result.value = r
 
             if (this.deferred === promise) {
-                this.deferredTrigger!.set(true)
+                this.deferredTrigger!(true)
                 this.deferred = undefined
                 this.deferredTrigger = undefined
             }

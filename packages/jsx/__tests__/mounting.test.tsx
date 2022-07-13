@@ -58,9 +58,9 @@ describe('Mounting', function () {
         function* Root() {
             const trigger = observable(0)
 
-            kickstart = () => trigger.set(Math.random())
+            kickstart = () => trigger(Math.random())
 
-            trigger.get()
+            trigger()
 
             yield <div onUnmount={onUnmount} />
             yield <div />
@@ -90,9 +90,9 @@ describe('Mounting', function () {
         function* Root() {
             const trigger = observable(0)
 
-            kickstart = () => trigger.set(Math.random())
+            kickstart = () => trigger(Math.random())
 
-            trigger.get()
+            trigger()
 
             yield (
                 <div>
@@ -180,9 +180,9 @@ describe('Mounting', function () {
         function* Root() {
             const trigger = observable(0)
 
-            kickstart = () => trigger.set(Math.random())
+            kickstart = () => trigger(Math.random())
 
-            trigger.get()
+            trigger()
 
             yield <Component onUnmount={onUnmount} />
             yield <Component />
@@ -216,9 +216,9 @@ describe('Mounting', function () {
         function* Root() {
             const trigger = observable(0)
 
-            kickstart = () => trigger.set(Math.random())
+            kickstart = () => trigger(Math.random())
 
-            trigger.get()
+            trigger()
 
             yield (
                 <Component>
@@ -262,9 +262,9 @@ describe('Mounting', function () {
         function* Root() {
             const trigger = observable(0)
 
-            kickstart = () => trigger.set(Math.random())
+            kickstart = () => trigger(Math.random())
 
-            trigger.get()
+            trigger()
 
             yield <Component />
             yield <div />

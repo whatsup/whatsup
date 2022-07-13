@@ -25,10 +25,10 @@ describe('Context', () => {
 
         function* Test2(this: Context) {
             context2 = this
-            trigger = observable(false)
+            trigger = observable<boolean>(false)
 
             while (true) {
-                if (trigger.get()) {
+                if (trigger()) {
                     yield (
                         <Test3>
                             <Test4 />
@@ -64,7 +64,7 @@ describe('Context', () => {
         })
 
         it('should create child contexts', () => {
-            trigger.set(true)
+            trigger(true)
             expect(context3).not.toBeUndefined()
             expect(context4).not.toBeUndefined()
             expect(context3.parent === context2).toBeTruthy()

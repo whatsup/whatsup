@@ -53,7 +53,7 @@ describe('render', function () {
 
         console.error = mock
 
-        render(undefined, container)
+        render(undefined as any, container)
 
         console.error = original
 
@@ -79,7 +79,7 @@ describe('render', function () {
         const trigger = observable(0)
         function* Root() {
             while (true) {
-                yield <div>{trigger.get()}</div>
+                yield <div>{trigger()}</div>
             }
         }
 
@@ -87,13 +87,13 @@ describe('render', function () {
 
         expect(container.innerHTML).toBe('<div>0</div>')
 
-        trigger.set(1)
+        trigger(1)
 
         expect(container.innerHTML).toBe('<div>1</div>')
 
         dispose()
 
-        trigger.set(2)
+        trigger(2)
 
         expect(container.innerHTML).toBe('<div>1</div>')
     })
@@ -199,7 +199,7 @@ describe('render', function () {
 
         function* Root() {
             while (true) {
-                const value = trigger.get()
+                const value = trigger()
                 yield <Nest value={value} />
             }
         }
@@ -208,7 +208,7 @@ describe('render', function () {
 
         expect(container.innerHTML).toBe('<div>0</div>')
 
-        trigger.set(1)
+        trigger(1)
 
         expect(container.innerHTML).toBe('<div>1</div>')
     })
@@ -230,7 +230,7 @@ describe('render', function () {
 
         function* Root() {
             while (true) {
-                const value = trigger.get()
+                const value = trigger()
 
                 if (value === 0) {
                     yield <Nest />
@@ -246,7 +246,7 @@ describe('render', function () {
         expect(container.innerHTML).toBe('<div></div>')
         expect(mock).not.toBeCalled()
 
-        trigger.set(1)
+        trigger(1)
 
         expect(container.innerHTML).toBe('')
         expect(mock).toBeCalled()

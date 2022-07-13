@@ -18,7 +18,7 @@ describe('Updates', function () {
 
         function* Root() {
             while (true) {
-                trigger.get()
+                trigger()
 
                 yield <Child val={1} />
             }
@@ -28,7 +28,7 @@ describe('Updates', function () {
 
         expect(mock).toBeCalledTimes(1)
 
-        trigger.set(2)
+        trigger(2)
 
         expect(mock).toBeCalledTimes(1)
     })
@@ -45,7 +45,7 @@ describe('Updates', function () {
 
         function* Root() {
             while (true) {
-                trigger.get()
+                trigger()
 
                 yield <Child>1</Child>
             }
@@ -55,7 +55,7 @@ describe('Updates', function () {
 
         expect(mock).toBeCalledTimes(1)
 
-        trigger.set(2)
+        trigger(2)
 
         expect(mock).toBeCalledTimes(1)
     })
@@ -65,7 +65,7 @@ describe('Updates', function () {
         const trigger = observable(false)
 
         function Child() {
-            if (trigger.get()) {
+            if (trigger()) {
                 return <div>Child</div>
             }
             return null
@@ -79,7 +79,7 @@ describe('Updates', function () {
 
         expect(container.innerHTML).toBe('')
 
-        trigger.set(true)
+        trigger(true)
 
         expect(container.innerHTML).toBe('<div>Child</div>')
     })
