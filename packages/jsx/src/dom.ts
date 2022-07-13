@@ -1,4 +1,4 @@
-import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE } from './constants'
+import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
 
 export const placeNodes = (container: HTMLElement | SVGElement, nodes: (HTMLElement | SVGElement | Text)[]) => {
@@ -47,9 +47,12 @@ const mutateProp = <T extends WhatsJSX.ElementProps, K extends keyof T & string>
 ) => {
     if (isSVG(node)) {
         // Normalize incorrect prop usage for SVG
-        // Thanks prettier team
-        // https://github.com/preactjs/preact/blob/master/src/diff/props.js#L106
+        // Thanks preact team
         prop = (prop as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
+
+        if (SVG_DASHED_PROPS.test(prop)) {
+            prop = prop.replace(/([A-Z0-9])/g, '-$&').toLowerCase() as K
+        }
     }
 
     switch (true) {
