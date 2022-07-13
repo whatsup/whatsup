@@ -6,36 +6,35 @@ sidebar_position: 1
 
 ## What is it?
 
-Whatsup is a modern frontend framework with JSX components based on pure functions and generators. It has its own reactivity system with high performance.
+Whatsup is a modern frontend framework with own reactivity system and JSX components based on pure functions and generators.
 
-## Your first stateless component
+### Features
 
-```tsx
-function App() {
-    return <div>Hello World</div>
-}
-```
+-   🎉 easy to use: simple api, just write code
+-   🚀 own reactivity system with high performance
+-   ⛓ glitch free, autotracking and updating of dependencies
+-   🚦 written in typescript, type support out of the box
+-   🗜 small size: ~6kB gzipped (state management + jsx components)
 
-Yes, we can render without a container, directly to the body
-
-## Your first stateful component
+### Example
 
 ```tsx
+import { observable } from 'whatsup'
+import { render } from 'whatsup/jsx'
+
 function* App() {
     const counter = observable(0)
+    const increment = () => counter(counter() + 1)
 
     while (true) {
-        const count = counter()
-        const onClick = () => counter(count + 1)
-
         yield (
             <div>
-                <p>You click {count} times</p>
-                <button onClick={onClick}>Click me</button>
+                <p>You click {counter()} times</p>
+                <button onClick={increment}>Click me</button>
             </div>
         )
     }
 }
-```
 
-Yes, we use generators to store local state
+render(<App />)
+```
