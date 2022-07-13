@@ -1,4 +1,4 @@
-![](https://habrastorage.org/webt/nq/a0/ad/nqa0ad37k4ftra_f_oypmomzpuy.png)
+![](https://habrastorage.org/webt/ub/kh/aj/ubkhajkzgu7cqpo7qton21vfago.png)
 
 ## What is it?
 
