@@ -12,6 +12,7 @@ type ReconcileNode = Text | HTMLElement | SVGElement
 
 abstract class Component<P extends WhatsJSX.ComponentProps> {
     protected abstract produce(ctx: Context): WhatsJSX.Child
+    protected abstract handleError(e: Error): WhatsJSX.Child
     protected producer: WhatsJSX.ComponentProducer<P>
     protected props: P
 
@@ -46,10 +47,24 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
                 yield mutator((prev?: (HTMLElement | SVGElement | Text)[]) => {
                     addContextToStack(context)
 
-                    const child = this.produce(context)
-                    const next = this.reconcile(child)
+                    let child = this.produce(context)
+                    let next: (HTMLElement | SVGElement | Text)[]
 
-                    popContextFromStack()
+                    try {
+                        while (true) {
+                            try {
+                                next = this.reconcile(child)
+                            } catch (e) {
+                                child = this.handleError(e as Error)
+                                continue
+                            }
+                            break
+                        }
+                    } catch (e) {
+                        throw e
+                    } finally {
+                        popContextFromStack()
+                    }
 
                     if (
                         prev &&
@@ -209,6 +224,10 @@ class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
         const { producer, props } = this
         return producer.call(context, props)
     }
+
+    handleError(e: Error): WhatsJSX.Child {
+        throw e
+    }
 }
 
 class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
@@ -229,6 +248,20 @@ class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
         }
 
         return value as WhatsJSX.Child
+    }
+
+    handleError(e: Error): WhatsJSX.Child {
+        if (this.iterator) {
+            const { done, value } = this.iterator.throw!(e)
+
+            if (done) {
+                this.iterator = undefined
+            }
+
+            return value as WhatsJSX.Child
+        }
+
+        throw e
     }
 
     protected dispose() {
