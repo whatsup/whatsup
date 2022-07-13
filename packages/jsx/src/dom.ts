@@ -87,9 +87,9 @@ const mutateEventListener = <T extends WhatsJSX.ElementProps, K extends keyof T 
     }
 }
 
-const mutateStyle = <T extends CSSStyleDeclaration | WhatsJSX.ElementProps>(
+const mutateStyle = <T extends Partial<WhatsJSX.CSSProperties>>(
     node: HTMLElement | SVGElement,
-    value: T = EMPTY_OBJ as T,
+    value: CSSStyleDeclaration | T = EMPTY_OBJ as T,
     oldValue: T = EMPTY_OBJ as T
 ) => {
     if (value instanceof CSSStyleDeclaration) {
@@ -97,27 +97,31 @@ const mutateStyle = <T extends CSSStyleDeclaration | WhatsJSX.ElementProps>(
     } else {
         for (const prop in oldValue) {
             if (!(prop in value)) {
-                mutateStyleProp(node.style, prop, '')
+                mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
             }
         }
 
         for (const prop in value) {
             if (value[prop] !== oldValue[prop]) {
-                mutateStyleProp(node.style, prop, value[prop])
+                mutateStyleProp<T, keyof T & string>(node.style, prop, value[prop])
             }
         }
     }
 }
 
-const mutateStyleProp = <T extends WhatsJSX.ElementProps, K extends keyof T & string>(
+const mutateStyleProp = <T extends Partial<WhatsJSX.CSSProperties>, K extends keyof T & string>(
     style: CSSStyleDeclaration,
     prop: K,
     value: T[K]
 ) => {
     if (typeof value !== 'number' || NON_DIMENSIONAL_STYLE_PROP.test(prop)) {
-        style.setProperty(prop, value)
+        if (prop.startsWith('--')) {
+            style.setProperty(prop, value as unknown as string)
+        } else {
+            style[prop as any] = value as unknown as string
+        }
     } else {
-        style.setProperty(prop, value + 'px')
+        style[prop as any] = value + 'px'
     }
 }
 
