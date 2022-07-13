@@ -3,11 +3,12 @@
  */
 
 import { observable } from '@whatsup/core'
+import { WhatsJSX } from 'src'
 import { render } from '../src/render'
 
 describe('Error catching', function () {
     it('should catch error', function () {
-        function Err() {
+        function Err(): WhatsJSX.Child {
             throw 'i_am_error'
         }
 
@@ -16,7 +17,7 @@ describe('Error catching', function () {
                 try {
                     yield <Err />
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
@@ -29,7 +30,7 @@ describe('Error catching', function () {
     })
 
     it('should catch deep error', function () {
-        function Err() {
+        function Err(): WhatsJSX.Child {
             throw 'i_am_error'
         }
 
@@ -42,7 +43,7 @@ describe('Error catching', function () {
                 try {
                     yield <Deep />
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
@@ -55,7 +56,7 @@ describe('Error catching', function () {
     })
 
     it('should catch deep error from generator', function () {
-        function Err() {
+        function Err(): WhatsJSX.Child {
             throw 'i_am_error'
         }
 
@@ -70,7 +71,7 @@ describe('Error catching', function () {
                 try {
                     yield <Deep />
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
@@ -83,16 +84,16 @@ describe('Error catching', function () {
     })
 
     it('should catch child error', function () {
-        function Err() {
+        function Err(): WhatsJSX.Child {
             throw 'i_am_error'
         }
 
-        function* Catcher(props) {
+        function* Catcher(props: any) {
             while (true) {
                 try {
                     yield <div>{props.children}</div>
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
@@ -115,7 +116,7 @@ describe('Error catching', function () {
     it('should error must be reactive', function () {
         const trigger = observable(true)
 
-        function Err() {
+        function Err(): WhatsJSX.Child {
             if (trigger()) {
                 throw 'i_am_error'
             } else {
@@ -128,7 +129,7 @@ describe('Error catching', function () {
                 try {
                     yield <Err />
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
@@ -147,7 +148,7 @@ describe('Error catching', function () {
     it('should deep error must be reactive', function () {
         const trigger = observable(true)
 
-        function Err() {
+        function Err(): WhatsJSX.Child {
             if (trigger()) {
                 throw 'i_am_error'
             } else {
@@ -164,7 +165,7 @@ describe('Error catching', function () {
                 try {
                     yield <Deep />
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
@@ -183,7 +184,7 @@ describe('Error catching', function () {
     it('should deep error from generator must be reactive', function () {
         const trigger = observable(true)
 
-        function Err() {
+        function Err(): WhatsJSX.Child {
             if (trigger()) {
                 throw 'i_am_error'
             } else {
@@ -202,7 +203,7 @@ describe('Error catching', function () {
                 try {
                     yield <Deep />
                 } catch (e) {
-                    yield <div>{e}</div>
+                    yield <div>{e as string}</div>
                 }
             }
         }
