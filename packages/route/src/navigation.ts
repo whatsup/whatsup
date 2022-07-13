@@ -37,14 +37,14 @@ export class RootNavigation extends Navigation {
     constructor() {
         super()
         this.browserPathname = computed(function* () {
-            const value = observable(window.location.pathname)
-            const listener = () => value.set(window.location.pathname)
+            const pathname = observable(window.location.pathname)
+            const listener = () => pathname(window.location.pathname)
 
             window.addEventListener('popstate', listener)
 
             try {
                 while (true) {
-                    yield value.get()
+                    yield pathname()
                 }
             } finally {
                 window.removeEventListener('popstate', listener)
@@ -64,7 +64,7 @@ export class RootNavigation extends Navigation {
 
     @computed
     get tail() {
-        return this.browserPathname.get()
+        return this.browserPathname()
     }
 }
 
