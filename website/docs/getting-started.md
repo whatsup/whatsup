@@ -10,4 +10,4 @@ Just one command to create and launch your first Whatsup project
 npx @whatsup/cli create project
 ```
 
-Just try! It's very simple!
+Just try! It's very simple 👍
