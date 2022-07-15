@@ -1,4 +1,4 @@
-![](https://habrastorage.org/webt/ct/sh/nx/ctshnxpthrbxy0o9o1jxgl4zxso.png#gh-dark-mode-only)
+![](https://raw.githubusercontent.com/whatsup/whatsup.github.io/master/assets/images/readme.png)
 
 ## What is it?
 
