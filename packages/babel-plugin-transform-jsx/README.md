@@ -1,4 +1,4 @@
-# Whats Up JSX Babel plugin
+# Whatsup JSX Babel plugin
 
 <div align="center">
 <img src="https://img.shields.io/github/workflow/status/whatsup/babel-plugin-transform-jsx/Node.js%20CI/master" alt="GitHub Workflow Status (branch)" /> 
