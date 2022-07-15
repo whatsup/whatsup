@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "module": "esnext",
+        "target": "esnext",
+        "moduleResolution": "node",
+        "importHelpers": true,
+        "sourceMap": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowSyntheticDefaultImports": true,
+        "lib": ["esnext", "dom"],
+        "jsx": "preserve",
+        "plugins": [{ "name": "@whatsup/typescript-plugin-css-components" }],
+        "rootDir": "./src",
+        "baseUrl": "./",
+        "paths": {
+            "*": ["src/*", "node_modules/*"]
+        }
+    }
+}

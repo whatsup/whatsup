@@ -9,6 +9,10 @@
             "path": "../packages/whatsup"
         },
         {
+            "name": "cli",
+            "path": "../packages/cli"
+        },
+        {
             "name": "core",
             "path": "../packages/core"
         },

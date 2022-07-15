@@ -1,0 +1,5 @@
+.logo {
+    transition: stroke 0.3s ease;
+    fill: #1c1c1c;
+    stroke-width: 20;
+}

@@ -1,0 +1,36 @@
+{
+    "name": "@whatsup/cli",
+    "description": "whatsup cli",
+    "version": "2.2.17",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whatsup/whatsup.git",
+        "directory": "packages/cli"
+    },
+    "bin": {
+        "whatsup": "./bin/whatsup"
+    },
+    "scripts": {
+        "start": "npm run build && node ./bin/whatsup",
+        "build": "rollup -c"
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "commander": "^9.3.0",
+        "cross-spawn": "^7.0.3",
+        "inquirer": "^7.3.3",
+        "npm-check-updates": "^15.3.2"
+    },
+    "devDependencies": {
+        "@types/cross-spawn": "^6.0.2",
+        "@types/inquirer": "^8.2.1"
+    }
+}
