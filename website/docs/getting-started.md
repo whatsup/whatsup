@@ -4,17 +4,8 @@ sidebar_position: 2
 
 # Getting Started
 
-Whatsup application is very easy to create using the CLI
-
-### Generate a project
+Just one command to create and launch your first Whatsup project
 
 ```bash
-npx whatsup create project
-```
-
-### Start your project
-
-```bash
-cd ./project
-npm start
+npx @whatsup/cli create project
 ```
