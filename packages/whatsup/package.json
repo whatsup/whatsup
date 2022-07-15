@@ -20,17 +20,19 @@
         "access": "public"
     },
     "exports": {
-        ".": {
-            "types": "./dist/core.d.ts",
-            "default": "./dist/core.js"
-        },
-        "./jsx": {
-            "types": "./dist/jsx.d.ts",
-            "default": "./dist/jsx.js"
-        },
-        "./route": {
-            "types": "./dist/route.d.ts",
-            "default": "./dist/route.js"
+        ".": "./dist/core.js",
+        "./jsx": "./dist/jsx.js",
+        "./route": "./dist/route.js"
+    },
+    "typings": "dist/core.d.ts",
+    "typesVersions": {
+        "*": {
+            "jsx": [
+                "./dist/jsx.d.ts"
+            ],
+            "route": [
+                "./dist/route.d.ts"
+            ]
         }
     },
     "dependencies": {

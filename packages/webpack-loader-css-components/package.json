@@ -10,13 +10,15 @@
         "directory": "packages/webpack-loader-css-components"
     },
     "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "default": "./dist/index.js"
-        },
-        "./factory": {
-            "types": "./dist/factory.d.ts",
-            "default": "./dist/factory.js"
+        ".": "./dist/index.js",
+        "./factory": "./dist/factory.js"
+    },
+    "typings": "dist/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "factory": [
+                "./dist/factory.d.ts"
+            ]
         }
     },
     "scripts": {
