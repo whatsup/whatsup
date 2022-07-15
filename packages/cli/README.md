@@ -3,5 +3,5 @@
 Run the command to create and run a new project
 
 ```bash
-npx whatsup create projectName
+npx @whatsup/cli create projectName
 ```
