@@ -3,7 +3,6 @@ import fs from 'fs'
 import path from 'path'
 import ncu from 'npm-check-updates'
 import { logger } from './logger'
-import inquirer from 'inquirer'
 
 export interface Options {
     projectName: string
@@ -17,36 +16,62 @@ export const generator = async (options: Options) => {
 
     logger.blue(`Creating project "${projectName}"`)
 
-    logger.start('Scaffolding...')
+    try {
+        logger.info('Scaffolding...')
 
-    copyTemplate(src, dest)
+        copyTemplate(src, dest)
 
-    injectProjectName(projectName, path.join(dest, 'package.json'))
-    injectProjectName(projectName, path.join(dest, 'webpack.config.js'))
-    injectProjectName(projectName, path.join(dest, 'readme.md'))
+        injectProjectName(projectName, path.join(dest, 'package.json'))
+        injectProjectName(projectName, path.join(dest, 'webpack.config.js'))
+        injectProjectName(projectName, path.join(dest, 'readme.md'))
 
-    logger.end('Scaffolding')
-    logger.start('Upgrade packages versions...')
+        logger.success('Scaffolding')
 
-    await upgradePackageVersions(dest)
+        try {
+            logger.info('Upgrade packages versions...')
 
-    logger.end('Upgrade packages versions')
-    logger.start('Initialize git repository...')
+            await upgradePackageVersions(dest)
 
-    initGitRepository(dest)
+            logger.success('Upgrade packages versions')
+        } catch (e) {
+            logger.failure('Upgrade packages versions')
+        }
 
-    logger.end('Initialize git repository')
-    logger.start('Install dependencies...')
+        try {
+            logger.info('Initialize git repository...')
 
-    installDependencies(dest)
+            initGitRepository(dest)
 
-    logger.end('Install dependencies')
+            logger.success('Initialize git repository')
+        } catch (e) {
+            logger.failure('Initialize git repository')
+        }
 
-    logger.green(`Project "${projectName}" created!`)
+        try {
+            logger.info('Install dependencies...')
 
-    logger.blue(`Starting project "${projectName}"`)
+            installDependencies(dest)
 
-    start(dest)
+            logger.success('Install dependencies')
+        } catch (e) {
+            logger.failure('Install dependencies')
+        }
+
+        logger.green(`Project "${projectName}" created!`)
+
+        try {
+            logger.blue(`Starting project "${projectName}"`)
+
+            start(dest)
+        } catch (e) {
+            logger.red(`Error starting project`)
+            logger.log(`Please run it manually:`)
+            logger.log(`cd ./${projectName}`)
+            logger.log(`npm start`)
+        }
+    } catch (e) {
+        logger.failure('Scaffolding')
+    }
 }
 
 const injectProjectName = (projectName: string, filePath: string) => {

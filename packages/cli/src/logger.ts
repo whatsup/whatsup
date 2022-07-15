@@ -14,6 +14,10 @@ const makeBlue = (text: string) => {
     return `${Color.Blue}${text}${Color.Reset}`
 }
 
+const makeRed = (text: string) => {
+    return `${Color.Red}${text}${Color.Reset}`
+}
+
 const log = (text: string) => {
     process.stdout.write(`${text}\n`)
 }
@@ -22,17 +26,26 @@ const green = (text: string) => {
     log(makeGreen(text))
 }
 
+const red = (text: string) => {
+    log(makeRed(text))
+}
+
 const blue = (text: string) => {
     log(makeBlue(text))
 }
 
-const start = (text: string) => {
+const info = (text: string) => {
     log(`${makeBlue('ℹ')} ${text}`)
 }
 
-const end = (text: string) => {
+const success = (text: string) => {
     clear()
-    log(`${makeGreen('✓')} ${text}`)
+    log(`${makeGreen('✔')} ${text}`)
+}
+
+const failure = (text: string) => {
+    clear()
+    log(`${makeRed('✘')} ${text}`)
 }
 
 const clear = () => {
@@ -51,9 +64,10 @@ const title = () => {
 export const logger = {
     log,
     green,
+    red,
     blue,
-    start,
-    end,
-    clear,
+    info,
+    success,
+    failure,
     title,
 }
