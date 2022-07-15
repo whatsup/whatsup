@@ -1,7 +1,7 @@
 {
     "name": "whatsup",
     "description": "A frontend framework for chillout-mode development 🥤",
-    "version": "2.2.19",
+    "version": "2.2.20",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
