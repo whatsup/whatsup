@@ -13,7 +13,7 @@
         "cli": "./bin/cli"
     },
     "scripts": {
-        "start": "npm run build && node ./bin/whatsup",
+        "start": "npm run build && node ./bin/cli",
         "build": "rollup -c"
     },
     "files": [
