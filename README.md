@@ -37,17 +37,17 @@ render(<App />)
 
 ### Documentation
 
-You can find the Whatsup documentation on the [website](https://whatsup.github.io).
+You can find the Whatsup documentation on the [website](https://whatsup.js.org).
 
-Check out the [Intro page](https://whatsup.github.io/docs/intro/) for a quick overview.
+Check out the [Intro page](https://whatsup.js.org/docs/intro/) for a quick overview.
 
 The documentation is divided into several sections:
 
--   [Introduction](https://whatsup.github.io/docs/intro/)
--   [Getting Started](https://whatsup.github.io/docs/getting-started)
--   [Componetns](https://whatsup.github.io/docs/components/)
--   [State management](https://whatsup.github.io/docs/state-management/)
--   [Styling](https://whatsup.github.io/docs/styling/)
+-   [Introduction](https://whatsup.js.org/docs/intro/)
+-   [Getting Started](https://whatsup.js.org/docs/getting-started)
+-   [Componetns](https://whatsup.js.org/docs/components/)
+-   [State management](https://whatsup.js.org/docs/state-management/)
+-   [Styling](https://whatsup.js.org/docs/styling/)
 
 ### License
 
