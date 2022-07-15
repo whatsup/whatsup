@@ -9,3 +9,5 @@ Just one command to create and launch your first Whatsup project
 ```bash
 npx @whatsup/cli create project
 ```
+
+Just try! It's very simple!
