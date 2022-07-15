@@ -10,7 +10,7 @@
         "directory": "packages/cli"
     },
     "bin": {
-        "whatsup": "./bin/whatsup"
+        "cli": "./bin/cli"
     },
     "scripts": {
         "start": "npm run build && node ./bin/whatsup",
