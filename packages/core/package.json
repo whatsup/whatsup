@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/core",
     "description": "whatsup reactive system",
-    "version": "2.2.16",
+    "version": "2.2.19",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
