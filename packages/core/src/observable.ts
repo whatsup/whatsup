@@ -54,7 +54,7 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
     const [, prop, descriptor] = args as [Object, string, PropertyDescriptor & { initializer: () => T }]
     const key = Symbol(`Observable ${prop}`)
     const field = function (this: any) {
-        return key in this ? this[key] : (this[key] = observable(descriptor.initializer.call(this)))
+        return key in this ? this[key] : (this[key] = observable(descriptor.initializer?.call(this) || undefined))
     }
 
     return {
