@@ -114,6 +114,8 @@ const initGitRepository = (projectDir: string) => {
 
     process.chdir(projectDir)
 
+    fs.writeFileSync(path.join(projectDir, '.gitignore'), 'node_modules\ndist')
+
     spawnSync('git', ['init'], { stdio: 'ignore' })
     spawnSync('git', ['add', '*'], { stdio: 'ignore' })
     spawnSync('git', ['commit', '-m', 'initial'], { stdio: 'ignore' })

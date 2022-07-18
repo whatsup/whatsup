@@ -17,6 +17,7 @@
         "build": "rollup -c"
     },
     "files": [
+        "bin",
         "dist",
         "src"
     ],
