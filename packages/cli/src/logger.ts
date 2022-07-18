@@ -1,3 +1,5 @@
+import readline from 'readline'
+
 enum Color {
     Reset = '\x1b[0m',
     Green = '\x1b[32m',
@@ -49,8 +51,8 @@ const failure = (text: string) => {
 }
 
 const clear = () => {
-    process.stdout.moveCursor(0, -1)
-    process.stdout.clearLine(1)
+    readline.moveCursor(process.stdout, 0, -1)
+    readline.clearLine(process.stdout, 1)
 }
 
 const title = () => {
