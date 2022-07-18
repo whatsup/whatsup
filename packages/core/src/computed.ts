@@ -1,3 +1,4 @@
+import { runInAction } from './action'
 import { createAtom, Producer } from './atom'
 import { Atomic } from './atomic'
 
@@ -38,6 +39,7 @@ export const computed: ComputedFactory = <T>(...args: any[]): any => {
 
     const [, prop, descriptor] = args as [Object, string, PropertyDescriptor]
     const producer = descriptor.get as Producer<T>
+    const setter = descriptor.set
     const key = Symbol(`Computed ${prop}`)
     const field = function (this: any) {
         return key in this ? this[key] : (this[key] = computed(producer, this))
@@ -46,6 +48,13 @@ export const computed: ComputedFactory = <T>(...args: any[]): any => {
     return {
         get() {
             return field.call(this)()
+        },
+        set(v: T) {
+            if (!setter) {
+                throw Error(`Setter of prop "${prop}" is not defined`)
+            }
+
+            runInAction(() => setter.call(this, v))
         },
         configurable: false,
     }
