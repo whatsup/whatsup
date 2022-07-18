@@ -5,7 +5,6 @@
         "target": "esnext",
         "moduleResolution": "node",
         "importHelpers": true,
-        "sourceMap": true,
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
