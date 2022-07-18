@@ -42,16 +42,6 @@ export const generator = async (options: Options) => {
     }
 
     try {
-        logger.info('Initialize git repository...')
-
-        initGitRepository(dest)
-
-        logger.success('Initialize git repository')
-    } catch (e) {
-        logger.failure('Initialize git repository')
-    }
-
-    try {
         logger.info('Install dependencies...')
 
         installDependencies(dest)
@@ -59,6 +49,16 @@ export const generator = async (options: Options) => {
         logger.success('Install dependencies')
     } catch (e) {
         logger.failure('Install dependencies')
+    }
+
+    try {
+        logger.info('Initialize git repository...')
+
+        initGitRepository(dest)
+
+        logger.success('Initialize git repository')
+    } catch (e) {
+        logger.failure('Initialize git repository')
     }
 
     logger.green(`Project "${projectName}" created!`)
