@@ -26,51 +26,52 @@ export const generator = async (options: Options) => {
         injectProjectName(projectName, path.join(dest, 'readme.md'))
 
         logger.success('Scaffolding')
-
-        try {
-            logger.info('Upgrade packages versions...')
-
-            await upgradePackageVersions(dest)
-
-            logger.success('Upgrade packages versions')
-        } catch (e) {
-            logger.failure('Upgrade packages versions')
-        }
-
-        try {
-            logger.info('Initialize git repository...')
-
-            initGitRepository(dest)
-
-            logger.success('Initialize git repository')
-        } catch (e) {
-            logger.failure('Initialize git repository')
-        }
-
-        try {
-            logger.info('Install dependencies...')
-
-            installDependencies(dest)
-
-            logger.success('Install dependencies')
-        } catch (e) {
-            logger.failure('Install dependencies')
-        }
-
-        logger.green(`Project "${projectName}" created!`)
-
-        try {
-            logger.blue(`Starting project "${projectName}"`)
-
-            start(dest)
-        } catch (e) {
-            logger.red(`Error starting project`)
-            logger.log(`Please run it manually:`)
-            logger.log(`cd ./${projectName}`)
-            logger.log(`npm start`)
-        }
     } catch (e) {
         logger.failure('Scaffolding')
+        return
+    }
+
+    try {
+        logger.info('Upgrade packages versions...')
+
+        await upgradePackageVersions(dest)
+
+        logger.success('Upgrade packages versions')
+    } catch (e) {
+        logger.failure('Upgrade packages versions')
+    }
+
+    try {
+        logger.info('Initialize git repository...')
+
+        initGitRepository(dest)
+
+        logger.success('Initialize git repository')
+    } catch (e) {
+        logger.failure('Initialize git repository')
+    }
+
+    try {
+        logger.info('Install dependencies...')
+
+        installDependencies(dest)
+
+        logger.success('Install dependencies')
+    } catch (e) {
+        logger.failure('Install dependencies')
+    }
+
+    logger.green(`Project "${projectName}" created!`)
+
+    try {
+        logger.blue(`Starting project "${projectName}"`)
+
+        start(dest)
+    } catch (e) {
+        logger.red(`Error starting project`)
+        logger.log(`Please run it manually:`)
+        logger.log(`cd ./${projectName}`)
+        logger.log(`npm start`)
     }
 }
 
@@ -125,7 +126,7 @@ const installDependencies = (projectDir: string) => {
 
     process.chdir(projectDir)
 
-    spawnSync('npm', ['install'], { stdio: 'ignore' })
+    spawnSync('npm', ['install'], { stdio: 'inherit' })
 
     process.chdir(origin)
 }
