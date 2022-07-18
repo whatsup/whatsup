@@ -1,4 +1,4 @@
-import { spawnSync } from 'child_process'
+import { sync as spawnSync } from 'cross-spawn'
 import fs from 'fs'
 import path from 'path'
 import ncu from 'npm-check-updates'
