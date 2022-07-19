@@ -21,12 +21,20 @@
             "path": "../packages/jsx"
         },
         {
-            "name": "route",
-            "path": "../packages/route"
+            "name": "cssx",
+            "path": "../packages/cssx"
         },
         {
             "name": "babel-plugin-transform-jsx",
             "path": "../packages/babel-plugin-transform-jsx"
+        },
+        {
+            "name": "babel-plugin-transform-cssx",
+            "path": "../packages/babel-plugin-transform-cssx"
+        },
+        {
+            "name": "route",
+            "path": "../packages/route"
         },
         {
             "name": "webpack-loader-css-components",
