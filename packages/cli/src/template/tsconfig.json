@@ -13,7 +13,7 @@
         "allowSyntheticDefaultImports": true,
         "lib": ["esnext", "dom"],
         "jsx": "preserve",
-        "plugins": [{ "name": "@whatsup/typescript-plugin-css-components" }],
+        "plugins": [{ "name": "@whatsup/typescript-plugin-cssx" }],
         "rootDir": "./src",
         "baseUrl": "./",
         "paths": {
