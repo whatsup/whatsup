@@ -2,7 +2,6 @@ import { babel } from '@rollup/plugin-babel'
 import resolve from '@rollup/plugin-node-resolve'
 import autoExternal from 'rollup-plugin-auto-external'
 import clear from 'rollup-plugin-delete'
-import pkg from './package.json'
 
 const extensions = ['.ts', '.tsx']
 
@@ -11,13 +10,8 @@ export default [
         input: 'src/index.ts',
         output: [
             {
-                file: pkg.main,
+                file: 'dist/index.js',
                 format: 'cjs',
-                sourcemap: true,
-            },
-            {
-                file: pkg.module,
-                format: 'esm',
                 sourcemap: true,
             },
         ],
@@ -34,6 +28,27 @@ export default [
             clear({
                 targets: 'dist/*',
                 runOnce: true,
+            }),
+        ],
+    },
+    {
+        input: 'src/compat.ts',
+        output: [
+            {
+                file: 'dist/compat.js',
+                format: 'cjs',
+                sourcemap: true,
+            },
+        ],
+        plugins: [
+            autoExternal(),
+            resolve({
+                extensions,
+                modulesOnly: true,
+            }),
+            babel({
+                extensions,
+                babelHelpers: 'bundled',
             }),
         ],
     },

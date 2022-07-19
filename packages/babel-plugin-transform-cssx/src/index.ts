@@ -20,14 +20,10 @@ import {
 import { compile } from 'sass'
 import postcss from 'postcss'
 import postcssIcssSelectors from 'postcss-icss-selectors'
-import genericNames from 'generic-names'
+import { generateScopedName } from './utils'
 import { IS_TESTING } from './constants'
 
-const processor = postcss(
-    postcssIcssSelectors({
-        generateScopedName: genericNames('[name]__[local]-[hash:base64:5]'),
-    })
-)
+const processor = postcss(postcssIcssSelectors({ generateScopedName }))
 
 export default function () {
     return {
