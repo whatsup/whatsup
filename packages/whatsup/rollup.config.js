@@ -4,7 +4,7 @@ import autoExternal from 'rollup-plugin-auto-external'
 
 const extensions = ['.ts', '.tsx']
 
-export default ['core', 'jsx', 'route'].map((pkg) => ({
+export default ['core', 'jsx', 'cssx', 'route'].map((pkg) => ({
     input: `src/${pkg}.ts`,
     output: {
         file: `dist/${pkg}.js`,

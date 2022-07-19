@@ -1,6 +1,6 @@
 {
     "extends": "./tsconfig.json",
-    "include": ["./src/core.ts", "./src/jsx.ts", "./src/route.ts"],
+    "include": ["./src/core.ts", "./src/jsx.ts", "./src/cssx.ts", "./src/route.ts"],
     "compilerOptions": {
         "declaration": true,
         "emitDeclarationOnly": true,

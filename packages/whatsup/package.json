@@ -22,6 +22,7 @@
     "exports": {
         ".": "./dist/core.js",
         "./jsx": "./dist/jsx.js",
+        "./cssx": "./dist/cssx.js",
         "./route": "./dist/route.js"
     },
     "typings": "dist/core.d.ts",
@@ -29,6 +30,9 @@
         "*": {
             "jsx": [
                 "./dist/jsx.d.ts"
+            ],
+            "cssx": [
+                "./dist/cssx.d.ts"
             ],
             "route": [
                 "./dist/route.d.ts"
@@ -38,6 +42,7 @@
     "dependencies": {
         "@whatsup/core": "^2.2.25",
         "@whatsup/jsx": "^2.2.25",
+        "@whatsup/cssx": "^2.2.25",
         "@whatsup/route": "^2.2.25"
     }
 }
