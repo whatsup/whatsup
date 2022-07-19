@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/cli",
     "description": "whatsup cli",
-    "version": "2.2.25",
+    "version": "2.2.29",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
