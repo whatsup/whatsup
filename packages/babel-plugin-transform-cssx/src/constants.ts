@@ -1,7 +1,2 @@
-export const IS_TESTING = (() => {
-    try {
-        return process.env.PLUGIN_TESTING === 'on'
-    } catch (e) {
-        return false
-    }
-})()
+export const IS_PRODUCTION = process.env.ENV === 'production'
+export const IS_TESTING = process.env.PLUGIN_TESTING === 'on'
