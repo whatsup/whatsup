@@ -83,7 +83,7 @@ export default function () {
                         }
                     }
 
-                    path.replaceWithMultiple(replacers)
+                    path.replaceWithMultiple(replacers as any)
                 }
             },
         },
