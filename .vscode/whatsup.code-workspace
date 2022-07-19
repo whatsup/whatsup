@@ -39,10 +39,6 @@
         {
             "name": "route",
             "path": "../packages/route"
-        },
-        {
-            "name": "webpack-loader-css-components",
-            "path": "../packages/webpack-loader-css-components"
         }
     ],
     "settings": {
