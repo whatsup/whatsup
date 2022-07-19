@@ -13,11 +13,11 @@ require(\\"./component.scss\\");
 var _cssx = require(\\"@whatsup/cssx\\");
 
 const styles_UniqueId = {
-  \\"col_2_1\\": \\"component__col_2_1-HwdLD\\",
-  \\"col_1_3\\": \\"component__col_1_3-32aDq\\",
-  \\"button\\": \\"component__button-IICp7\\",
-  \\"active\\": \\"component__active-2vXAv\\",
-  \\"red\\": \\"component__red-yqInI\\"
+  \\"col_2_1\\": \\"component__col_2_1--HwdLD\\",
+  \\"col_1_3\\": \\"component__col_1_3--32aDq\\",
+  \\"button\\": \\"component__button--IICp7\\",
+  \\"active\\": \\"component__active--2vXAv\\",
+  \\"red\\": \\"component__red--yqInI\\"
 };
 const styles = styles_UniqueId;
 
@@ -41,11 +41,11 @@ require(\\"./component.scss\\");
 var _cssx = require(\\"@whatsup/cssx\\");
 
 const styles_UniqueId = {
-  \\"col_2_1\\": \\"component__col_2_1-HwdLD\\",
-  \\"col_1_3\\": \\"component__col_1_3-32aDq\\",
-  \\"button\\": \\"component__button-IICp7\\",
-  \\"active\\": \\"component__active-2vXAv\\",
-  \\"red\\": \\"component__red-yqInI\\"
+  \\"col_2_1\\": \\"component__col_2_1--HwdLD\\",
+  \\"col_1_3\\": \\"component__col_1_3--32aDq\\",
+  \\"button\\": \\"component__button--IICp7\\",
+  \\"active\\": \\"component__active--2vXAv\\",
+  \\"red\\": \\"component__red--yqInI\\"
 };
 const Div = (0, _cssx.createComponent)(\\"div\\", styles_UniqueId);
 const Span = (0, _cssx.createComponent)(\\"span\\", styles_UniqueId);
@@ -71,11 +71,11 @@ require(\\"./component.scss\\");
 var _cssx = require(\\"@whatsup/cssx\\");
 
 const styles_UniqueId = {
-  \\"col_2_1\\": \\"component__col_2_1-HwdLD\\",
-  \\"col_1_3\\": \\"component__col_1_3-32aDq\\",
-  \\"button\\": \\"component__button-IICp7\\",
-  \\"active\\": \\"component__active-2vXAv\\",
-  \\"red\\": \\"component__red-yqInI\\"
+  \\"col_2_1\\": \\"component__col_2_1--HwdLD\\",
+  \\"col_1_3\\": \\"component__col_1_3--32aDq\\",
+  \\"button\\": \\"component__button--IICp7\\",
+  \\"active\\": \\"component__active--2vXAv\\",
+  \\"red\\": \\"component__red--yqInI\\"
 };
 const styles = styles_UniqueId;
 const Div = (0, _cssx.createComponent)(\\"div\\", styles_UniqueId);
@@ -103,9 +103,9 @@ require(\\"./component.css\\");
 var _cssx = require(\\"@whatsup/cssx\\");
 
 const styles_UniqueId = {
-  \\"button\\": \\"component__button-2ho2o\\",
-  \\"active\\": \\"component__active-2gcOb\\",
-  \\"red\\": \\"component__red-G7ajg\\"
+  \\"button\\": \\"component__button--2ho2o\\",
+  \\"active\\": \\"component__active--2gcOb\\",
+  \\"red\\": \\"component__red--G7ajg\\"
 };
 const styles = styles_UniqueId;
 const Div = (0, _cssx.createComponent)(\\"div\\", styles_UniqueId);
