@@ -1,11 +1,11 @@
 # Typescript Plugin Css Compoentns
 
-A TypeScript language service plugin providing support for [Whatsup CSS Componetns](https://github.com/whatsup/whatsup/tree/master/packages/webpack-loader-css-components)
+A TypeScript language service plugin providing support for Whatsup CSSX
 
 ## Install
 
 ```bash
-npm i -D typescript-plugin-candy
+npm i -D @whatsup/typescript-plugin-cssx
 ```
 
 Once installed, add this plugin to your `tsconfig.json`:
@@ -13,7 +13,7 @@ Once installed, add this plugin to your `tsconfig.json`:
 ```json
 {
     "compilerOptions": {
-        "plugins": [{ "name": "@whatsup/typescript-plugin-css-components" }]
+        "plugins": [{ "name": "@whatsup/typescript-plugin-cssx" }]
     }
 }
 ```

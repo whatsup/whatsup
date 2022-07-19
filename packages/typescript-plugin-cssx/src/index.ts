@@ -1,22 +1,27 @@
 import tss from 'typescript/lib/tsserverlibrary'
 import path from 'path'
 import postcss from 'postcss'
-import postcssImportSync from 'postcss-import-sync2'
 import postcssIcssSelectors from 'postcss-icss-selectors'
-import { getDtsSnapshot, isStyle, isRelative } from './utils'
+import { htmlTags, htmlComponents } from './tags'
+import sass from 'sass'
+
+const SIGN = '// cssx'
+
+const processor = postcss(postcssIcssSelectors())
+
+const isStyle = (fileName: string) => /\.(css|scss|sass)$/.test(fileName)
+
+const isRelative = (fileName: string) => /^\.\.?($|[\\/])/.test(fileName)
 
 function init({ typescript: ts }: { typescript: typeof tss }): ts.server.PluginModule {
     const create = (info: ts.server.PluginCreateInfo) => {
         // prettier-ignore
-        const processor = postcss()
-            .use(postcssImportSync())
-            .use(postcssIcssSelectors())
 
         const { createLanguageServiceSourceFile } = ts
 
         ts.createLanguageServiceSourceFile = (fileName, scriptSnapshot, ...rest): ts.SourceFile => {
             if (isStyle(fileName)) {
-                scriptSnapshot = getDtsSnapshot(ts, scriptSnapshot, fileName, processor)
+                scriptSnapshot = createDtsSnapshot(ts, scriptSnapshot, fileName)
             }
 
             const sourceFile = createLanguageServiceSourceFile(fileName, scriptSnapshot, ...rest)
@@ -34,7 +39,7 @@ function init({ typescript: ts }: { typescript: typeof tss }): ts.server.PluginM
             const { fileName } = sourceFile
 
             if (isStyle(fileName)) {
-                scriptSnapshot = getDtsSnapshot(ts, scriptSnapshot, fileName, processor)
+                scriptSnapshot = createDtsSnapshot(ts, scriptSnapshot, fileName)
             }
 
             sourceFile = updateLanguageServiceSourceFile(sourceFile, scriptSnapshot, ...rest)
@@ -81,6 +86,70 @@ function init({ typescript: ts }: { typescript: typeof tss }): ts.server.PluginM
     }
 
     return { create, getExternalFiles }
+}
+
+const createDtsSnapshot = (ts: typeof tss, scriptSnapshot: ts.IScriptSnapshot, fileName: string) => {
+    const source = scriptSnapshot.getText(0, scriptSnapshot.getLength())
+
+    if (source.startsWith(SIGN)) {
+        return scriptSnapshot
+    }
+
+    const classnames = getClassnames(fileName)
+    const dts = [] as string[]
+
+    dts.push(SIGN)
+    dts.push(`type Props = {`)
+    dts.push('[k: `__${string}`]: string | number')
+
+    if (classnames.length) {
+        for (const classname of classnames) {
+            dts.push(`${classname}?: boolean`)
+        }
+    } else {
+        dts.push(`[k: string]?: any`)
+    }
+
+    dts.push(`}`)
+    dts.push(
+        `type Component<T extends keyof JSX.IntrinsicElements> = (props: JSX.IntrinsicElements[T] & Props) => JSX.Element`
+    )
+
+    for (let i = 0; i < htmlTags.length; i++) {
+        const tag = htmlTags[i]
+        const component = htmlComponents[i]
+
+        dts.push(`export const ${component}: Component<'${tag}'>`)
+    }
+
+    dts.push(`declare const styles: {`)
+
+    for (const classname of classnames) {
+        dts.push(`${classname}: string`)
+    }
+
+    dts.push(`}`)
+
+    dts.push(`export default styles`)
+
+    return ts.ScriptSnapshot.fromString(dts.join(`\n`))
+}
+
+const getClassnames = (from: string) => {
+    const classnames = [] as string[]
+
+    try {
+        const { css } = sass.compile(from)
+        const compiled = processor.process(css, { from })
+
+        for (const { name, value } of compiled.messages) {
+            classnames.push(name)
+        }
+    } catch (e) {
+        console.log(e)
+    }
+
+    return classnames
 }
 
 export = init

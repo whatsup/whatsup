@@ -33,16 +33,16 @@
             "path": "../packages/babel-plugin-transform-cssx"
         },
         {
+            "name": "typescript-plugin-cssx",
+            "path": "../packages/typescript-plugin-cssx"
+        },
+        {
             "name": "route",
             "path": "../packages/route"
         },
         {
             "name": "webpack-loader-css-components",
             "path": "../packages/webpack-loader-css-components"
-        },
-        {
-            "name": "typescript-plugin-css-components",
-            "path": "../packages/typescript-plugin-css-components"
         }
     ],
     "settings": {
