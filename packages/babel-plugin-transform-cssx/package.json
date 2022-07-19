@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/babel-plugin-transform-cssx",
     "description": "Babel plugin for transform css imports to whatsup css components",
-    "version": "2.2.25",
+    "version": "2.2.26",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
