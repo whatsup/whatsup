@@ -1,0 +1,35 @@
+{
+    "name": "@whatsup/cssx",
+    "description": "whatsup cssx components factory",
+    "version": "2.2.21",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whatsup/whatsup.git",
+        "directory": "packages/cssx"
+    },
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "typings": "dist/index.d.ts",
+    "scripts": {
+        "start": "rollup -c -w",
+        "build": "rollup -c && tsc -p ./tsconfig.build.json",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "test:uncache": "jest --clearCache"
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@whatsup/jsx": "^2.2.21"
+    },
+    "devDependencies": {
+        "@whatsup/babel-plugin-transform-jsx": "^2.2.19"
+    }
+}

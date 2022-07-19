@@ -1,0 +1,11 @@
+.button {
+    font-size: 10px;
+}
+
+.button .active {
+    background-color: var(--active-color);
+}
+
+.red {
+    --active-color: red;
+}

@@ -1,0 +1,13 @@
+@use './grid';
+
+.button {
+    font-size: 10px;
+
+    .active {
+        background-color: var(--active-color);
+    }
+}
+
+.red {
+    --active-color: red;
+}
