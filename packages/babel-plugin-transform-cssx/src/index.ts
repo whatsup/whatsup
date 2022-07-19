@@ -90,7 +90,7 @@ const getClassnamesMap = (from: string): { [k: string]: string } => {
     const map = {} as { [k: string]: string }
 
     try {
-        const { css } = compile(from, {})
+        const { css } = compile(from)
         const compiled = processor.process(css, { from })
 
         for (const { name, value } of compiled.messages) {
