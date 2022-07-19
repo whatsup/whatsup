@@ -25,6 +25,7 @@ export default [
             autoExternal(),
             resolve({
                 extensions,
+                modulesOnly: true,
             }),
             babel({
                 extensions,
