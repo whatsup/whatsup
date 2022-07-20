@@ -1551,8 +1551,8 @@ export namespace WhatsJSX {
         key?: Key
         ref?: Ref
         children?: Child
-        onMount?: (node: Element) => void
-        onUnmount?: (node: Element) => void
+        onMount?: (node: Element | Text | (Element | Text)[]) => void
+        onUnmount?: (node: Element | Text | (Element | Text)[]) => void
     }
 
     export interface ElementProps extends Attributes {

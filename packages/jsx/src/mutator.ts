@@ -29,8 +29,8 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     readonly type: T
     readonly ref: WhatsJSX.Ref | undefined
     readonly props: WhatsJSX.ElementProps
-    readonly onMount: ((el: Element) => void) | undefined
-    readonly onUnmount: ((el: Element) => void) | undefined
+    readonly onMount: ((el: Element | Text | (Element | Text)[]) => void) | undefined
+    readonly onUnmount: ((el: Element | Text | (Element | Text)[]) => void) | undefined
 
     constructor(
         type: T,
@@ -83,20 +83,18 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
         Reflect.set(target, JSX_MUTATOR_ATTACH_KEY, this)
     }
 
-    private attachMountingCallbacks(target: R) {
-        const node: Element | null = !Array.isArray(target)
-            ? (target as Element)
-            : target.length === 1
-            ? (target[0] as Element)
-            : null
+    private attachMountingCallbacks(result: R) {
+        const node: Element | Text = Array.isArray(result) ? result[0] : result
 
         if (node) {
+            const target = Array.isArray(result) && result.length === 1 ? result[0] : result
+
             if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createMountObserver(node, this.onMount)
+                const observer = createMountObserver(node, () => this.onMount!(target))
                 Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
             }
             if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createUnmountObserver(node, this.onUnmount)
+                const observer = createUnmountObserver(node, () => this.onUnmount!(target))
                 Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
             }
         }

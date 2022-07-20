@@ -25,6 +25,101 @@ describe('Mounting', function () {
         expect(onMount).lastCalledWith(document.body.children[0])
     })
 
+    it('should call onMount with many children from fragment', async function () {
+        document.body.innerHTML = ''
+
+        const onMount = jest.fn()
+
+        function Comp() {
+            return (
+                <>
+                    <div />
+                    <div />
+                </>
+            )
+        }
+
+        function* Root() {
+            while (true) {
+                yield <Comp onMount={onMount} />
+            }
+        }
+
+        render(<Root />)
+
+        await new Promise((r) => setTimeout(r, 100))
+
+        expect(onMount).lastCalledWith(expect.arrayContaining([document.body.children[0], document.body.children[1]]))
+    })
+
+    it('should call onMount with many children from array', async function () {
+        document.body.innerHTML = ''
+
+        const onMount = jest.fn()
+
+        function Comp() {
+            return [<div />, <div />]
+        }
+
+        function* Root() {
+            while (true) {
+                yield <Comp onMount={onMount} />
+            }
+        }
+
+        render(<Root />)
+
+        await new Promise((r) => setTimeout(r, 100))
+
+        expect(onMount).lastCalledWith(expect.arrayContaining([document.body.children[0], document.body.children[1]]))
+    })
+
+    it('should call onMount with text node', async function () {
+        document.body.innerHTML = ''
+
+        const onMount = jest.fn()
+
+        function Comp() {
+            return 'Hello'
+        }
+
+        function* Root() {
+            while (true) {
+                yield <Comp onMount={onMount} />
+            }
+        }
+
+        render(<Root />)
+
+        await new Promise((r) => setTimeout(r, 100))
+
+        expect(onMount).lastCalledWith(document.body.childNodes[0])
+    })
+
+    it('should call onMount with many text nodes', async function () {
+        document.body.innerHTML = ''
+
+        const onMount = jest.fn()
+
+        function Comp() {
+            return ['Hello', 'World']
+        }
+
+        function* Root() {
+            while (true) {
+                yield <Comp onMount={onMount} />
+            }
+        }
+
+        render(<Root />)
+
+        await new Promise((r) => setTimeout(r, 100))
+
+        expect(onMount).lastCalledWith(
+            expect.arrayContaining([document.body.childNodes[0], document.body.childNodes[1]])
+        )
+    })
+
     it('should call child onMount when element mounted', async function () {
         document.body.innerHTML = ''
 
