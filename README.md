@@ -49,6 +49,12 @@ The documentation is divided into several sections:
 -   [State management](https://whatsup.js.org/docs/state-management/)
 -   [Styling](https://whatsup.js.org/docs/styling/)
 
+### Examples
+
+-   [Todos MVC](http://examples.whatsup.js.org/todos)
+-   [Async loaders](http://examples.whatsup.js.org/loadable)
+-   [Sierpinski triangle](http://examples.whatsup.js.org/sierpinski)
+
 ### License
 
 [MIT](https://opensource.org/licenses/MIT) (c) 2020-present, [@iminside](https://github.com/iminside)
