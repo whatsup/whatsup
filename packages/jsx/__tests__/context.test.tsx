@@ -8,6 +8,62 @@ import { render } from '../src/render'
 import { observable, Observable } from '@whatsup/core'
 
 describe('Context', () => {
+    it('should pass context to fn producer as this arg', () => {
+        const mock = jest.fn()
+        const container = document.createElement('div')
+
+        function App(this: Context) {
+            mock(this instanceof Context)
+            return null
+        }
+
+        render(<App />, container)
+
+        expect(mock).toBeCalledWith(true)
+    })
+
+    it('should pass context to gn producer as this arg', () => {
+        const mock = jest.fn()
+        const container = document.createElement('div')
+
+        function* App(this: Context) {
+            mock(this instanceof Context)
+            return null
+        }
+
+        render(<App />, container)
+
+        expect(mock).toBeCalledWith(true)
+    })
+
+    it('should pass context to fn producer as second arg', () => {
+        const mock = jest.fn()
+        const container = document.createElement('div')
+
+        function App(this: Context, _: any, ctx: Context) {
+            mock(this === ctx)
+            return null
+        }
+
+        render(<App />, container)
+
+        expect(mock).toBeCalledWith(true)
+    })
+
+    it('should pass context to gn producer as second arg', () => {
+        const mock = jest.fn()
+        const container = document.createElement('div')
+
+        function* App(this: Context, _: any, ctx: Context) {
+            mock(this === ctx)
+            return null
+        }
+
+        render(<App />, container)
+
+        expect(mock).toBeCalledWith(true)
+    })
+
     describe('should create new rich context when chil render new element', () => {
         let context1: Context
         let context2: Context

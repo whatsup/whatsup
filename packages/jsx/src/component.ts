@@ -222,7 +222,7 @@ class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
 
     produce(context: Context) {
         const { producer, props } = this
-        return producer.call(context, props)
+        return producer.call(context, props, context)
     }
 
     handleError(e: Error): WhatsJSX.Child {
@@ -238,7 +238,7 @@ class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
         const { producer, props } = this
 
         if (!this.iterator) {
-            this.iterator = producer.call(context, props)
+            this.iterator = producer.call(context, props, context)
         }
 
         const { done, value } = this.iterator.next(props)
