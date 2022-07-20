@@ -47,7 +47,7 @@
             "packages": true
         },
         "jest.jestCommandLine": "npm test --",
-        "jest.disabledWorkspaceFolders": ["@whatsup", "whatsup"],
+        "jest.disabledWorkspaceFolders": ["@whatsup", "whatsup", "cli", "typescript-plugin-cssx"],
         "typescript.tsdk": "@whatsup\\node_modules\\typescript\\lib"
     }
 }
