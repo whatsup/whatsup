@@ -18,6 +18,12 @@ declare module '@babel/helper-module-imports' {
         opts: ImportOptions
     ): Identifier
 
+    export function addSideEffect<T extends Node>(
+        path: NodePath<T>,
+        importedSource: string,
+        opts: ImportOptions
+    ): Identifier
+
     const defaultExport: any
     export default defaultExport
 }
