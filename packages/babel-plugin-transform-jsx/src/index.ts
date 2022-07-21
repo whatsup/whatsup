@@ -60,13 +60,15 @@ export default function () {
                     throw new Error('OpeningElement name as member expression is not supported')
                 }
 
-                replaceJSXAstToMutatorFactoryCallExpression(path, name.name, attributes, children)
+                // Node from @babel/core & from @babel/types incompatible
+                replaceJSXAstToMutatorFactoryCallExpression(path as any, name.name, attributes, children)
             },
             JSXFragment(path: NodePath<JSXFragment>) {
                 const { node } = path
                 const { children } = node
 
-                replaceJSXAstToMutatorFactoryCallExpression(path, FRAGMENT_COMPONENT_NAME, [], children)
+                // Node from @babel/core & from @babel/types incompatible
+                replaceJSXAstToMutatorFactoryCallExpression(path as any, FRAGMENT_COMPONENT_NAME, [], children)
             },
         },
     }
@@ -85,7 +87,8 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
 
     const expression = callExpression(factory, args)
 
-    path.replaceWith(expression)
+    // Node from @babel/core & from @babel/types incompatible
+    path.replaceWith(expression as any)
 }
 
 function createCalleeArgs(
