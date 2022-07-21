@@ -1,23 +1,17 @@
-import { jsx, Context, WhatsJSX } from '@whatsup/jsx'
+import { jsx, WhatsJSX } from '@whatsup/jsx'
 
 type ClassnamesMap = { [k: string]: string }
-type FnComponentProducer<P> = (props: P, ctx?: Context) => WhatsJSX.Child
-type GnComponentProducer<P> = (props: P, ctx?: Context) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, P>
-type ComponentProducer<P> = FnComponentProducer<P> | GnComponentProducer<P>
 
-type Props<T extends WhatsJSX.TagName | ComponentProducer<any>, S extends ClassnamesMap> = (T extends ComponentProducer<
-    infer R
->
-    ? R
-    : T extends WhatsJSX.TagName
-    ? JSX.IntrinsicElements[T]
-    : {}) & {
+type Props<
+    T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any>,
+    S extends ClassnamesMap
+> = (T extends WhatsJSX.ComponentProducer<infer R> ? R : T extends WhatsJSX.TagName ? JSX.IntrinsicElements[T] : {}) & {
     [k in keyof S]?: boolean
 } & {
     [k: `__${string}`]: string | number
 }
 
-export const cssx = <T extends WhatsJSX.TagName | ComponentProducer<any>, S extends ClassnamesMap>(
+export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any>, S extends ClassnamesMap>(
     tag: T,
     styles: S
 ) => {
