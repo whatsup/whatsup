@@ -1,31 +1,34 @@
-import { html } from '@whatsup/jsx'
+import { jsx, Context, WhatsJSX } from '@whatsup/jsx'
 
 type ClassnamesMap = { [k: string]: string }
-type Props<T extends keyof JSX.IntrinsicElements, S extends ClassnamesMap> = JSX.IntrinsicElements[T] & {
+type FnComponentProducer<P> = (props: P, ctx?: Context) => WhatsJSX.Child
+type GnComponentProducer<P> = (props: P, ctx?: Context) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, P>
+type ComponentProducer<P> = FnComponentProducer<P> | GnComponentProducer<P>
+
+type Props<T extends WhatsJSX.TagName | ComponentProducer<any>, S extends ClassnamesMap> = (T extends ComponentProducer<
+    infer R
+>
+    ? R
+    : T extends WhatsJSX.TagName
+    ? JSX.IntrinsicElements[T]
+    : {}) & {
     [k in keyof S]?: boolean
 } & {
     [k: `__${string}`]: string | number
 }
 
-export const createComponent = <T extends keyof JSX.IntrinsicElements, S extends ClassnamesMap>(tag: T, styles: S) => {
+export const cssx = <T extends WhatsJSX.TagName | ComponentProducer<any>, S extends ClassnamesMap>(
+    tag: T,
+    styles: S
+) => {
     const uid = generateUid()
 
     return (rawProps: Props<T, S>) => {
         const props = {} as { [k: string]: any }
         const style = {} as { [k: string]: any }
         const classnames = []
-        const children =
-            rawProps.children !== undefined
-                ? Array.isArray(rawProps.children)
-                    ? rawProps.children
-                    : [rawProps.children]
-                : undefined
 
         for (const [key, val] of Object.entries(rawProps)) {
-            if (key === 'children') {
-                continue
-            }
-
             if (key.startsWith('__')) {
                 const property = '--' + key.slice(2)
 
@@ -55,7 +58,7 @@ export const createComponent = <T extends keyof JSX.IntrinsicElements, S extends
                 continue
             }
 
-            props[key as string] = val
+            props[key] = val
         }
 
         if (!!Object.keys(style).length) {
@@ -66,10 +69,10 @@ export const createComponent = <T extends keyof JSX.IntrinsicElements, S extends
             props.className = classnames.join(' ')
         }
 
-        return html(tag as any, uid, undefined, undefined, props, children)
+        return jsx(tag, uid, props)
     }
 }
 
 function generateUid() {
-    return (~~(Math.random() * 1e8)).toString(16)
+    return Math.random().toString(36).slice(-5)
 }
