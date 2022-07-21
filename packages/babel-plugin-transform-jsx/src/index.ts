@@ -40,7 +40,7 @@ import {
     ObjectExpression,
     isSpreadElement,
 } from '@babel/types'
-import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME } from './constants'
+import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, JSX_FACTORY_NAME } from './constants'
 
 const VOID = identifier('undefined')
 
@@ -120,7 +120,7 @@ function createFragmentImport<T extends Node>(path: NodePath<T>) {
 }
 
 function createFactoryImport<T extends Node>(path: NodePath<T>) {
-    return createImport(path, JSX_LIBRARY_NAME, 'jsx')
+    return createImport(path, JSX_LIBRARY_NAME, JSX_FACTORY_NAME)
 }
 
 function createImport<T extends Node>(path: NodePath<T>, importSource: string, method: string) {

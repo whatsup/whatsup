@@ -21,7 +21,7 @@ import { compile } from 'sass'
 import postcss from 'postcss'
 import postcssIcssSelectors from 'postcss-icss-selectors'
 import { generateScopedName } from './utils'
-import { IS_TESTING } from './constants'
+import { IS_TESTING, JSX_FACTORY_NAME, JSX_LIBRARY_NAME } from './constants'
 
 const processor = postcss(postcssIcssSelectors({ generateScopedName }))
 
@@ -38,8 +38,8 @@ export default function () {
                     const replacers = [
                         importDeclaration([], source),
                         importDeclaration(
-                            [importSpecifier(identifier('createComponent'), identifier('createComponent'))],
-                            stringLiteral('@whatsup/cssx')
+                            [importSpecifier(identifier(JSX_FACTORY_NAME), identifier(JSX_FACTORY_NAME))],
+                            stringLiteral(JSX_LIBRARY_NAME)
                         ),
                         variableDeclaration('const', [
                             variableDeclarator(
@@ -69,7 +69,7 @@ export default function () {
                                 variableDeclaration('const', [
                                     variableDeclarator(
                                         identifier(specifier.local.name),
-                                        callExpression(identifier('createComponent'), [
+                                        callExpression(identifier(JSX_FACTORY_NAME), [
                                             stringLiteral(specifier.local.name.toLowerCase()),
                                             identifier(classnamesMapName),
                                         ])
