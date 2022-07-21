@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/cssx",
     "description": "whatsup cssx components factory",
-    "version": "2.2.30",
+    "version": "2.2.31",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -27,9 +27,9 @@
         "access": "public"
     },
     "dependencies": {
-        "@whatsup/jsx": "^2.2.30"
+        "@whatsup/jsx": "^2.2.31"
     },
     "devDependencies": {
-        "@whatsup/babel-plugin-transform-jsx": "^2.2.19"
+        "@whatsup/babel-plugin-transform-jsx": "^2.2.31"
     }
 }
