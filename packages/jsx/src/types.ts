@@ -2,7 +2,6 @@
 // Thanks react team
 
 import * as CSS from 'csstype'
-import { Context } from './context'
 import { JsxMutator } from './mutator'
 
 type Booleanish = boolean | 'true' | 'false'
