@@ -8,13 +8,27 @@ import { isGenerator } from './utils'
 
 const TEXT_NODE_RECONCILE_ID = '__TEXT_NODE_RECONCILE_ID__'
 
+export interface Props {
+    children?: WhatsJSX.Child
+    [k: string]: any
+}
+
+export type FnComponentProducer = (props: Props, ctx?: Context) => WhatsJSX.Child
+
+export type GnComponentProducer = (
+    props: Props,
+    ctx?: Context
+) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, Props>
+
+export type ComponentProducer = FnComponentProducer | GnComponentProducer
+
 type ReconcileNode = Text | HTMLElement | SVGElement
 
-abstract class Component<P extends WhatsJSX.ComponentProps> {
+export abstract class Component {
     protected abstract produce(ctx: Context): WhatsJSX.Child
     protected abstract handleError(e: Error): WhatsJSX.Child
-    protected producer: WhatsJSX.ComponentProducer<P>
-    protected props: P
+    protected producer: ComponentProducer
+    protected props: Props
 
     private readonly nodes: Atom<(HTMLElement | SVGElement | Text)[]>
     private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
@@ -22,13 +36,13 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
     private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
 
-    constructor(producer: WhatsJSX.ComponentProducer<P>, props: P) {
+    constructor(producer: ComponentProducer, props: Props) {
         this.producer = producer
         this.nodes = createAtom(this.whatsup, this)
         this.props = props
     }
 
-    setProps(props: P) {
+    setProps(props: Props) {
         if (!isEqualProps(this.props, props)) {
             this.props = props
             rebuild(this.nodes)
@@ -131,10 +145,10 @@ abstract class Component<P extends WhatsJSX.ComponentProps> {
         }
 
         if (child instanceof JsxMutator) {
-            const candidate = this.getReconcileNode(child.id)
+            const candidate = this.getReconcileNode(child.key)
             const result = child.mutate(candidate) as HTMLElement | SVGElement | (HTMLElement | SVGElement | Text)[]
 
-            this.addReconcileNode(child.id, result)
+            this.addReconcileNode(child.key, result)
 
             if (Array.isArray(result)) {
                 nodes.push(...result)
@@ -217,8 +231,8 @@ class InvalidJSXChildError extends Error {
     }
 }
 
-class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
-    protected producer!: WhatsJSX.FnComponentProducer<P>
+class FnComponent extends Component {
+    protected producer!: FnComponentProducer
 
     produce(context: Context) {
         const { producer, props } = this
@@ -230,8 +244,8 @@ class FnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
     }
 }
 
-class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
-    protected producer!: WhatsJSX.GnComponentProducer<P>
+class GnComponent extends Component {
+    protected producer!: GnComponentProducer
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
 
     produce(context: Context) {
@@ -274,10 +288,7 @@ class GnComponent<P extends WhatsJSX.ComponentProps> extends Component<P> {
     }
 }
 
-export const createComponent = (
-    producer: WhatsJSX.ComponentProducer,
-    props: WhatsJSX.ComponentProps = EMPTY_OBJ
-): WhatsJSX.Component => {
+export const createComponent = (producer: ComponentProducer, props: Props = EMPTY_OBJ): Component => {
     if (isGenerator(producer)) {
         return new GnComponent(producer, props)
     }
@@ -301,7 +312,7 @@ class ReconcileQueue<T> {
     }
 }
 
-const isEqualProps = <P extends WhatsJSX.ComponentProps>(prev: P, next: P) => {
+const isEqualProps = <P extends Props>(prev: P, next: P) => {
     if (prev === next) {
         return true
     }
@@ -329,6 +340,10 @@ const isEqualProps = <P extends WhatsJSX.ComponentProps>(prev: P, next: P) => {
                 return false
             }
         }
+    }
+
+    if (prev.children !== next.children) {
+        return false
     }
 
     return true

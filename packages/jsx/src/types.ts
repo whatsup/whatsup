@@ -2,7 +2,6 @@
 // Thanks react team
 
 import * as CSS from 'csstype'
-import { Context } from './context'
 import { JsxMutator } from './mutator'
 
 type Booleanish = boolean | 'true' | 'false'
@@ -1515,9 +1514,7 @@ export namespace WhatsJSX {
 
     export type TagName = keyof Elements
 
-    export type Type = TagName | ComponentProducer
     export type Uid = string
-    export type Prop = keyof ComponentProps & string
     export type Key = string | number
     export type Child =
         | JsxMutator<any, any>
@@ -1531,18 +1528,6 @@ export namespace WhatsJSX {
         | Child[]
         | Iterator<Child | never, Child | unknown, any>
 
-    export type FnComponentProducer<P extends ComponentProps = {}> = (props: P, ctx?: Context) => Child
-    export type GnComponentProducer<P extends ComponentProps = {}> = (
-        props: P,
-        ctx?: Context
-    ) => Iterator<Child | never, Child | unknown, P>
-    export type ComponentProducer<P extends ComponentProps = {}> = FnComponentProducer<P> | GnComponentProducer<P>
-
-    export interface Component {
-        setProps(nextProps: WhatsJSX.ComponentProps): void
-        getNodes(): (HTMLElement | SVGElement | Text)[]
-    }
-
     export interface Ref {
         current?: any
     }
@@ -1553,26 +1538,6 @@ export namespace WhatsJSX {
         children?: Child
         onMount?: (node: Element | Text | (Element | Text)[]) => void
         onUnmount?: (node: Element | Text | (Element | Text)[]) => void
-    }
-
-    export interface ElementProps extends Attributes {
-        [k: string]: any
-    }
-
-    export interface ComponentProps extends Attributes {
-        [k: string]: any
-    }
-
-    export interface JsxMutatorLike {}
-
-    export interface ElementMutatorLike extends JsxMutatorLike {
-        props: ElementProps
-        children: ComponentMutatorLike
-        node?: HTMLElement | SVGElement
-    }
-
-    export interface ComponentMutatorLike extends JsxMutatorLike {
-        component?: Component
     }
 }
 

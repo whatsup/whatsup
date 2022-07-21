@@ -1,6 +1,10 @@
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
 
+export interface Props {
+    [k: string]: any
+}
+
 export const placeNodes = (container: HTMLElement | SVGElement, nodes: (HTMLElement | SVGElement | Text)[]) => {
     const { childNodes } = container
     const { length } = nodes
@@ -25,7 +29,7 @@ export const removeNodes = (nodes: Iterable<Text | Element>) => {
     }
 }
 
-export const mutateProps = <T extends WhatsJSX.ElementProps>(node: HTMLElement | SVGElement, props: T, oldProps: T) => {
+export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T) => {
     for (const prop in oldProps) {
         if (!(prop in props)) {
             mutateProp(node, prop, undefined, oldProps[prop])
@@ -39,7 +43,7 @@ export const mutateProps = <T extends WhatsJSX.ElementProps>(node: HTMLElement |
     }
 }
 
-const mutateProp = <T extends WhatsJSX.ElementProps, K extends keyof T & string>(
+const mutateProp = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     value: T[K] | undefined,
@@ -73,7 +77,7 @@ const mutateProp = <T extends WhatsJSX.ElementProps, K extends keyof T & string>
     }
 }
 
-const mutateEventListener = <T extends WhatsJSX.ElementProps, K extends keyof T & string>(
+const mutateEventListener = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     listener: T[K] | undefined,
@@ -130,8 +134,8 @@ const mutateStyleProp = <T extends Partial<WhatsJSX.CSSProperties>, K extends ke
 
 const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
     node: T,
-    prop: keyof WhatsJSX.ElementProps & string,
-    value: WhatsJSX.ElementProps[keyof WhatsJSX.ElementProps]
+    prop: keyof Props & string,
+    value: Props[keyof Props]
 ) => {
     if (value == null) {
         node.removeAttribute(prop)
@@ -142,8 +146,8 @@ const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
 
 const mutatePropThroughUsualWay = <T extends HTMLElement | SVGElement>(
     node: T,
-    prop: keyof WhatsJSX.ElementProps,
-    value: WhatsJSX.ElementProps[keyof WhatsJSX.ElementProps]
+    prop: keyof Props,
+    value: Props[keyof Props]
 ) => {
     node[prop as keyof T] = value == null ? '' : value
 }

@@ -1,8 +1,9 @@
 /**
  * @jest-environment jsdom
  */
-import { html, svg, component } from '../src/factories'
-import { ElementMutator } from '../src/mutator'
+
+import { SVG_NAMESPACE } from '../src/constants'
+import { jsx, ElementMutator } from '../src/mutator'
 
 describe('reconcilation', function () {
     it('expect HTMLElementMutator.mutate return div element', function () {
@@ -84,24 +85,24 @@ describe('reconcilation', function () {
     })
 
     it('should remove unreconciled elements', function () {
-        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [html('div', 'child1', '', undefined)])
-        const mutatorTwo = html('div', 'uid1', '', undefined)
-        const element = mutatorOne.mutate()
+        const mutatorOne = jsx('div', 'uid1', { children: jsx('div', 'child1') })
+        const mutatorTwo = jsx('div', 'uid1')
+        const element = mutatorOne.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(1)
 
-        mutatorTwo.mutate(element)
+        mutatorTwo.mutate(element as any)
 
         expect(element.childNodes.length).toBe(0)
     })
 
     it('should replace elements with different reconcileId', function () {
-        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [html('div', 'child1', '', undefined)])
-        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, [html('div', 'child2', '', undefined)])
-        const element = mutatorOne.mutate()
+        const mutatorOne = jsx('div', 'uid1', { children: jsx('div', 'child1') })
+        const mutatorTwo = jsx('div', 'uid1', { children: jsx('div', 'child2') })
+        const element = mutatorOne.mutate() as HTMLElement
         const childOne = element.childNodes[0]
 
-        mutatorTwo.mutate(element)
+        mutatorTwo.mutate(element as any)
 
         const childTwo = element.childNodes[0]
 
@@ -110,22 +111,18 @@ describe('reconcilation', function () {
     })
 
     it('should reverse elements when mutators reversed', function () {
-        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [
-            html('div', 'child1', '', undefined),
-            html('div', 'child2', '', undefined),
-        ])
-        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, [
-            html('div', 'child2', '', undefined),
-            html('div', 'child1', '', undefined),
-        ])
-        const element = mutatorOne.mutate()
+        const mutatorOne = jsx('div', 'uid1', { children: [jsx('div', 'child1'), jsx('div', 'child2')] })
+        const mutatorTwo = jsx('div', 'uid1', {
+            children: [jsx('div', 'child2'), jsx('div', 'child1')],
+        })
+        const element = mutatorOne.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(2)
 
         const childOne = element.childNodes[0]
         const childTwo = element.childNodes[1]
 
-        mutatorTwo.mutate(element)
+        mutatorTwo.mutate(element as any)
 
         expect(element.childNodes.length).toBe(2)
         expect(element.childNodes[0]).toBe(childTwo)
@@ -133,14 +130,14 @@ describe('reconcilation', function () {
     })
 
     it('should save rendered elements', function () {
-        const htmlRendered = html('div', '', '', undefined).mutate()
-        const svgRendered = svg('svg', '', '', undefined).mutate()
+        const htmlRendered = jsx('div', '').mutate() as HTMLElement
+        const svgRendered = jsx('svg', '').mutate() as SVGElement
         const textRendered = document.createTextNode('')
-        const mutatorOne = html('div', 'uid1', '', undefined, undefined, [htmlRendered, svgRendered, textRendered])
-        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, [htmlRendered, svgRendered, textRendered])
-        const element = mutatorOne.mutate()
+        const mutatorOne = jsx('div', 'uid1', { children: [htmlRendered, svgRendered, textRendered] })
+        const mutatorTwo = jsx('div', 'uid1', { children: [htmlRendered, svgRendered, textRendered] })
+        const element = mutatorOne.mutate() as HTMLElement
 
-        mutatorTwo.mutate(element)
+        mutatorTwo.mutate(element as any)
 
         expect(element.childNodes.length).toBe(3)
         expect(element.childNodes[0]).toBe(htmlRendered)
@@ -149,8 +146,8 @@ describe('reconcilation', function () {
     })
 
     it('should render string | number to TextNode', function () {
-        const mutator = html('div', 'uid1', '', undefined, undefined, ['hello', 1612])
-        const element = mutator.mutate()
+        const mutator = jsx('div', 'uid1', { children: ['hello', 1612] })
+        const element = mutator.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(2)
         expect(element.childNodes[0]).toBeInstanceOf(Text)
@@ -160,9 +157,9 @@ describe('reconcilation', function () {
     })
 
     it('should reuse TextNode', function () {
-        const mutatorOne = html('div', 'uid1', '', undefined, undefined, ['hello', 1612])
-        const mutatorTwo = html('div', 'uid1', '', undefined, undefined, ['hello', 'world'])
-        const element = mutatorOne.mutate()
+        const mutatorOne = jsx('div', 'uid1', { children: ['hello', 1612] })
+        const mutatorTwo = jsx('div', 'uid1', { children: ['hello', 'world'] })
+        const element = mutatorOne.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(2)
         expect(element.childNodes[0].nodeValue).toBe('hello')
@@ -171,7 +168,7 @@ describe('reconcilation', function () {
         const childOne = element.childNodes[0]
         const childTwo = element.childNodes[1]
 
-        mutatorTwo.mutate(element)
+        mutatorTwo.mutate(element as any)
 
         expect(element.childNodes.length).toBe(2)
         expect(element.childNodes[0]).toBe(childOne)
@@ -181,14 +178,13 @@ describe('reconcilation', function () {
     })
 
     it('should render nested array', function () {
-        const mutator = html('div', '1', '', undefined, undefined, [
-            html('div', '2', '', undefined, undefined, ['foo']),
-            [
-                html('div', '3', '1', undefined, undefined, ['baz']),
-                html('div', '3', '1', undefined, undefined, ['bar']),
+        const mutator = jsx('div', '1', {
+            children: [
+                jsx('div', '2', { children: ['foo'] }),
+                [jsx('div', '3', { children: ['baz'] }), jsx('div', '3', { children: ['bar'] })],
             ],
-        ])
-        const element = mutator.mutate()
+        })
+        const element = mutator.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(3)
         expect(element.textContent).toBe('foobazbar')
@@ -196,18 +192,19 @@ describe('reconcilation', function () {
 
     it('should be prepared for the child to return an array', function () {
         function Comp() {
-            return [
-                html('div', '3', '1', undefined, undefined, ['baz']),
-                html('div', '3', '1', undefined, undefined, ['bar']),
-            ]
+            return [jsx('div', '3', { children: ['baz'] }), jsx('div', '3', { children: ['bar'] })]
         }
-        const mutator = html('div', '1', '', undefined, undefined, [
-            html('div', '2', '', undefined, undefined, ['foo']),
-            component(Comp, '1', '', undefined),
-        ])
-        const element = mutator.mutate()
+        const mutator = jsx('div', '1', { children: [jsx('div', '2', { children: ['foo'] }), jsx(Comp, '1')] })
+        const element = mutator.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(3)
         expect(element.textContent).toBe('foobazbar')
+    })
+
+    it('should svg children have rich namespace', function () {
+        const mutator = jsx('svg', '', { children: jsx('circle', '') })
+        const element = mutator.mutate() as SVGElement
+
+        expect(element.children[0].namespaceURI).toBe(SVG_NAMESPACE)
     })
 })

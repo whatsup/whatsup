@@ -1,52 +1,89 @@
 import { Mutator } from '@whatsup/core'
-import { createComponent } from './component'
+import { createComponent, Component, ComponentProducer } from './component'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX } from './types'
 
-export const Fragment = (props: WhatsJSX.ComponentProps) => {
+export type Type = WhatsJSX.TagName | ComponentProducer
+
+export interface JsxMutatorLike {}
+
+export interface ElementMutatorLike extends JsxMutatorLike {
+    children: ComponentMutatorLike
+    node?: HTMLElement | SVGElement
+    props?: Props
+}
+
+export interface ComponentMutatorLike extends JsxMutatorLike {
+    component?: Component
+}
+
+export const Fragment = (props: Props) => {
     return props.children!
+}
+
+export const Children = (props: Props) => {
+    return props.children ?? null
 }
 
 const JSX_MUTATOR_ATTACH_KEY = Symbol('Jsx mutator attach key')
 const JSX_MOUNT_OBSERVER = Symbol('Jsx onMount observer')
 const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
 
-const FAKE_JSX_COMPONENT_MUTATOR: WhatsJSX.ComponentMutatorLike = {}
+const FAKE_JSX_COMPONENT_MUTATOR: ComponentMutatorLike = {}
 
-const FAKE_JSX_ELEMENT_MUTATOR: WhatsJSX.ElementMutatorLike = {
-    props: {} as WhatsJSX.ElementProps,
+const FAKE_JSX_ELEMENT_MUTATOR: ElementMutatorLike = {
     children: FAKE_JSX_COMPONENT_MUTATOR,
 }
 
-export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | Text) | (Element | Text)[]>
-    extends Mutator<R>
-    implements WhatsJSX.JsxMutatorLike
-{
-    abstract doMutation(oldMutator: WhatsJSX.JsxMutatorLike | void): R
+const NS = {
+    isSvg: false,
+    toggle(type: WhatsJSX.TagName) {
+        if (type === 'svg') {
+            this.isSvg = true
+        } else if (this.isSvg && type === 'foreignObject') {
+            this.isSvg = false
+        }
+    },
+    untoggle(type: WhatsJSX.TagName) {
+        if (type === 'svg') {
+            this.isSvg = false
+        } else if (!this.isSvg && type === 'foreignObject') {
+            this.isSvg = true
+        }
+    },
+}
 
-    readonly id: string
+export abstract class JsxMutator<
+        T extends Type,
+        R extends HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]
+    >
+    extends Mutator<R>
+    implements JsxMutatorLike
+{
+    abstract doMutation(oldMutator: JsxMutatorLike | void): R
+
+    readonly key: string
     readonly type: T
+    readonly props: Props | undefined
     readonly ref: WhatsJSX.Ref | undefined
-    readonly props: WhatsJSX.ElementProps
-    readonly onMount: ((el: Element | Text | (Element | Text)[]) => void) | undefined
-    readonly onUnmount: ((el: Element | Text | (Element | Text)[]) => void) | undefined
+    readonly onMount: ((el: R) => void) | undefined
+    readonly onUnmount: ((el: R) => void) | undefined
 
     constructor(
         type: T,
-        uid: WhatsJSX.Uid,
-        key: WhatsJSX.Key | undefined,
-        ref: WhatsJSX.Ref | undefined,
-        props: WhatsJSX.ElementProps
+        key: string,
+        props?: Props,
+        ref?: WhatsJSX.Ref,
+        onMount?: (el: R) => void,
+        onUnmount?: (el: R) => void
     ) {
         super()
 
-        const { onMount, onUnmount, ...other } = props
-
-        this.id = key ? `${uid}|${key}` : uid
+        this.key = key
         this.type = type
+        this.props = props
         this.ref = ref
-        this.props = other
         this.onMount = onMount
         this.onUnmount = onUnmount
     }
@@ -71,9 +108,9 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     private extractFrom(target: any): JsxMutator<T, R> | void {
         if (target != null && typeof target === 'object' && Reflect.has(target, JSX_MUTATOR_ATTACH_KEY)) {
             const mutator = Reflect.get(target, JSX_MUTATOR_ATTACH_KEY) as JsxMutator<T, R>
-            const { type, id } = this
+            const { type, key: id } = this
 
-            if (mutator.id === id && mutator.type === type) {
+            if (mutator.key === id && mutator.type === type) {
                 return mutator
             }
         }
@@ -84,85 +121,85 @@ export abstract class JsxMutator<T extends WhatsJSX.Type, R extends (Element | T
     }
 
     private attachMountingCallbacks(result: R) {
-        const node: Element | Text = Array.isArray(result) ? result[0] : result
+        const node: HTMLElement | SVGElement | Text = Array.isArray(result) ? result[0] : result
 
         if (node) {
             const target = Array.isArray(result) && result.length === 1 ? result[0] : result
 
             if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createMountObserver(node, () => this.onMount!(target))
+                const observer = createMountObserver(node, () => this.onMount!(target as R))
                 Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
             }
             if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createUnmountObserver(node, () => this.onUnmount!(target))
+                const observer = createUnmountObserver(node, () => this.onUnmount!(target as R))
                 Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
             }
         }
     }
 }
 
-export abstract class ElementMutator
+export class ElementMutator
     extends JsxMutator<WhatsJSX.TagName, HTMLElement | SVGElement>
-    implements WhatsJSX.ElementMutatorLike
+    implements ElementMutatorLike
 {
-    protected abstract createElement(): HTMLElement | SVGElement
+    readonly children: ComponentMutator
 
-    readonly children: ComponentMutator<WhatsJSX.ComponentProducer>
     node?: HTMLElement | SVGElement
 
     constructor(
         type: WhatsJSX.TagName,
-        uid: WhatsJSX.Uid,
-        key: WhatsJSX.Key | undefined,
-        ref: WhatsJSX.Ref | undefined,
-        props: WhatsJSX.ElementProps,
-        children: WhatsJSX.Child[]
+        key: string,
+        props?: Props,
+        ref?: WhatsJSX.Ref,
+        onMount?: (el: HTMLElement | SVGElement) => void,
+        onUnmount?: (el: HTMLElement | SVGElement) => void
     ) {
-        super(type, uid, key, ref, props)
+        super(type, key, props, ref, onMount, onUnmount)
 
-        this.children = new ComponentMutator(Fragment, uid, undefined, undefined, EMPTY_OBJ, children)
+        this.children = new ComponentMutator(Children, key, props && { children: props.children })
     }
 
     doMutation({ props: oldProps, children: oldChildren, node } = FAKE_JSX_ELEMENT_MUTATOR) {
         const { props, children } = this
-        const childNodes = children.doMutation(oldChildren)
+
+        NS.toggle(this.type)
 
         this.node = node || this.createElement()
 
-        mutateProps(this.node!, props, oldProps)
+        const childNodes = children.doMutation(oldChildren)
+
+        NS.untoggle(this.type)
+
+        mutateProps(this.node!, props || EMPTY_OBJ, oldProps || EMPTY_OBJ)
         placeNodes(this.node!, childNodes)
 
         return this.node!
     }
-}
 
-export class SVGElementMutator extends ElementMutator {
-    protected createElement(): SVGElement {
-        return document.createElementNS(SVG_NAMESPACE, this.type)
-    }
-}
+    createElement(): HTMLElement | SVGElement {
+        if (NS.isSvg) {
+            return document.createElementNS(SVG_NAMESPACE, this.type)
+        }
 
-export class HTMLElementMutator extends ElementMutator {
-    protected createElement(): HTMLElement {
         return document.createElement(this.type)
     }
 }
 
-export class ComponentMutator<T extends WhatsJSX.ComponentProducer>
-    extends JsxMutator<T, (HTMLElement | SVGElement | Text)[]>
-    implements WhatsJSX.ComponentMutatorLike
+export class ComponentMutator
+    extends JsxMutator<ComponentProducer, (HTMLElement | SVGElement | Text)[]>
+    implements ComponentMutatorLike
 {
-    component?: WhatsJSX.Component
+    component?: Component
 
     constructor(
-        type: T,
-        uid: WhatsJSX.Uid,
-        key: WhatsJSX.Key | undefined,
-        ref: WhatsJSX.Ref | undefined,
-        props: WhatsJSX.ComponentProps,
-        children: WhatsJSX.Child[]
+        type: ComponentProducer,
+        key: string,
+        props?: Props,
+        ref?: WhatsJSX.Ref,
+        onMount?: (el: (HTMLElement | SVGElement | Text)[]) => void,
+        onUnmount?: (el: (HTMLElement | SVGElement | Text)[]) => void
     ) {
-        super(type, uid, key, ref, { ...props, children })
+        super(type, key, props, ref, onMount, onUnmount)
     }
 
     doMutation(oldMutator = FAKE_JSX_COMPONENT_MUTATOR) {
@@ -170,8 +207,27 @@ export class ComponentMutator<T extends WhatsJSX.ComponentProducer>
         const { type, props } = this
 
         this.component = component || createComponent(type, props)
-        this.component!.setProps(props)
+        this.component!.setProps(props || EMPTY_OBJ)
 
         return this.component!.getNodes()
     }
+}
+
+interface Props {
+    children?: WhatsJSX.Child
+    [k: string]: any
+}
+
+export const jsx = <P extends Props>(
+    type: Type,
+    key: string,
+    props?: P,
+    ref?: WhatsJSX.Ref,
+    onMount?: (el: HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]) => void,
+    onUnmount?: (el: HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]) => void
+) => {
+    if (typeof type === 'string') {
+        return new ElementMutator(type, key, props, ref, onMount, onUnmount)
+    }
+    return new ComponentMutator(type, key, props, ref, onMount, onUnmount)
 }
