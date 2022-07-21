@@ -1,4 +1,4 @@
-/// <reference path="./@types/postcss-icss-selectors.d.ts" />
+/// <reference path="./@types/index.d.ts" />
 
 import { resolve, dirname } from 'path'
 import { NodePath, PluginPass } from '@babel/core'
