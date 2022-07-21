@@ -1540,20 +1540,6 @@ export namespace WhatsJSX {
         onMount?: (node: Element | Text | (Element | Text)[]) => void
         onUnmount?: (node: Element | Text | (Element | Text)[]) => void
     }
-
-    export interface MutatorProps {
-        children?: WhatsJSX.Child
-        [k: string]: any
-    }
-
-    export type FnComponentProducer = (props: MutatorProps, ctx?: Context) => WhatsJSX.Child
-
-    export type GnComponentProducer = (
-        props: MutatorProps,
-        ctx?: Context
-    ) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, MutatorProps>
-
-    export type ComponentProducer = FnComponentProducer | GnComponentProducer
 }
 
 declare global {

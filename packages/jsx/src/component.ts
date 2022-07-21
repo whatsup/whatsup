@@ -2,9 +2,18 @@ import { createAtom, mutator, Atom, rebuild } from '@whatsup/core'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
 import { removeNodes } from './dom'
-import { JsxMutator } from './mutator'
+import { JsxMutator, Props } from './mutator'
 import { WhatsJSX } from './types'
 import { isGenerator } from './utils'
+
+export type FnComponentProducer = (props: Props, ctx?: Context) => WhatsJSX.Child
+
+export type GnComponentProducer = (
+    props: Props,
+    ctx?: Context
+) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, Props>
+
+export type ComponentProducer = FnComponentProducer | GnComponentProducer
 
 const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_ID__'
 
@@ -13,8 +22,8 @@ type ReconcileNode = Text | HTMLElement | SVGElement
 export abstract class Component {
     protected abstract produce(ctx: Context): WhatsJSX.Child
     protected abstract handleError(e: Error): WhatsJSX.Child
-    protected producer: WhatsJSX.ComponentProducer
-    protected props: WhatsJSX.MutatorProps
+    protected producer: ComponentProducer
+    protected props: Props
 
     private readonly nodes: Atom<(HTMLElement | SVGElement | Text)[]>
     private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
@@ -22,13 +31,13 @@ export abstract class Component {
     private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
 
-    constructor(producer: WhatsJSX.ComponentProducer, props: WhatsJSX.MutatorProps) {
+    constructor(producer: ComponentProducer, props: Props) {
         this.producer = producer
         this.nodes = createAtom(this.whatsup, this)
         this.props = props
     }
 
-    setProps(props: WhatsJSX.MutatorProps) {
+    setProps(props: Props) {
         if (!isEqualProps(this.props, props)) {
             this.props = props
             rebuild(this.nodes)
@@ -218,7 +227,7 @@ class InvalidJSXChildError extends Error {
 }
 
 class FnComponent extends Component {
-    protected producer!: WhatsJSX.FnComponentProducer
+    protected producer!: FnComponentProducer
 
     produce(context: Context) {
         const { producer, props } = this
@@ -231,7 +240,7 @@ class FnComponent extends Component {
 }
 
 class GnComponent extends Component {
-    protected producer!: WhatsJSX.GnComponentProducer
+    protected producer!: GnComponentProducer
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
 
     produce(context: Context) {
@@ -274,10 +283,7 @@ class GnComponent extends Component {
     }
 }
 
-export const createComponent = (
-    producer: WhatsJSX.ComponentProducer,
-    props: WhatsJSX.MutatorProps = EMPTY_OBJ
-): Component => {
+export const createComponent = (producer: ComponentProducer, props: Props = EMPTY_OBJ): Component => {
     if (isGenerator(producer)) {
         return new GnComponent(producer, props)
     }
@@ -301,7 +307,7 @@ class ReconcileQueue<T> {
     }
 }
 
-const isEqualProps = <P extends WhatsJSX.MutatorProps>(prev: P, next: P) => {
+const isEqualProps = <P extends Props>(prev: P, next: P) => {
     if (prev === next) {
         return true
     }

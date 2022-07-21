@@ -1,28 +1,33 @@
 import { Mutator } from '@whatsup/core'
-import { createComponent, Component } from './component'
+import { createComponent, Component, ComponentProducer } from './component'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX } from './types'
 
-export type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
+export interface Props {
+    children?: WhatsJSX.Child
+    [k: string]: any
+}
+
+export type Type = WhatsJSX.TagName | ComponentProducer
 
 export interface JsxMutatorLike {}
 
 export interface ElementMutatorLike extends JsxMutatorLike {
     children: ComponentMutatorLike
     node?: HTMLElement | SVGElement
-    props?: WhatsJSX.MutatorProps
+    props?: Props
 }
 
 export interface ComponentMutatorLike extends JsxMutatorLike {
     component?: Component
 }
 
-export const Fragment = (props: WhatsJSX.MutatorProps) => {
+export const Fragment = (props: Props) => {
     return props.children!
 }
 
-export const Children = (props: WhatsJSX.MutatorProps) => {
+export const Children = (props: Props) => {
     return props.children ?? null
 }
 
@@ -65,7 +70,7 @@ export abstract class JsxMutator<
 
     readonly key: string
     readonly type: T
-    readonly props: WhatsJSX.MutatorProps | undefined
+    readonly props: Props | undefined
     readonly ref: WhatsJSX.Ref | undefined
     readonly onMount: ((el: R) => void) | undefined
     readonly onUnmount: ((el: R) => void) | undefined
@@ -73,7 +78,7 @@ export abstract class JsxMutator<
     constructor(
         type: T,
         key: string,
-        props?: WhatsJSX.MutatorProps,
+        props?: Props,
         ref?: WhatsJSX.Ref,
         onMount?: (el: R) => void,
         onUnmount?: (el: R) => void
@@ -149,7 +154,7 @@ export class ElementMutator
     constructor(
         type: WhatsJSX.TagName,
         key: string,
-        props?: WhatsJSX.MutatorProps,
+        props?: Props,
         ref?: WhatsJSX.Ref,
         onMount?: (el: HTMLElement | SVGElement) => void,
         onUnmount?: (el: HTMLElement | SVGElement) => void
@@ -186,15 +191,15 @@ export class ElementMutator
 }
 
 export class ComponentMutator
-    extends JsxMutator<WhatsJSX.ComponentProducer, (HTMLElement | SVGElement | Text)[]>
+    extends JsxMutator<ComponentProducer, (HTMLElement | SVGElement | Text)[]>
     implements ComponentMutatorLike
 {
     component?: Component
 
     constructor(
-        type: WhatsJSX.ComponentProducer,
+        type: ComponentProducer,
         key: string,
-        props?: WhatsJSX.MutatorProps,
+        props?: Props,
         ref?: WhatsJSX.Ref,
         onMount?: (el: (HTMLElement | SVGElement | Text)[]) => void,
         onUnmount?: (el: (HTMLElement | SVGElement | Text)[]) => void
@@ -213,7 +218,7 @@ export class ComponentMutator
     }
 }
 
-export const jsx = <P extends WhatsJSX.MutatorProps>(
+export const jsx = <P extends Props>(
     type: Type,
     key: string,
     props?: P,
