@@ -1541,11 +1541,16 @@ export namespace WhatsJSX {
         onUnmount?: (node: Element | Text | (Element | Text)[]) => void
     }
 
-    export type FnComponentProducer<P = any> = (props: P, ctx?: Context) => WhatsJSX.Child
-    export type GnComponentProducer<P = any> = (
-        props: P,
-        ctx?: Context
-    ) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, P>
+    export interface FnComponentProducer<P = any> {
+        (props: P): WhatsJSX.Child
+        (props: P, ctx: Context): WhatsJSX.Child
+    }
+
+    export interface GnComponentProducer<P = any> {
+        (props: P): Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, any>
+        (props: P, ctx: Context): Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, any>
+    }
+
     export type ComponentProducer<P = any> = FnComponentProducer<P> | GnComponentProducer<P>
 }
 
