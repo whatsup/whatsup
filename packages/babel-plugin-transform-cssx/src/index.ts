@@ -1,13 +1,11 @@
 /// <reference path="./@types/index.d.ts" />
 
 import { resolve, dirname } from 'path'
-import { NodePath, PluginPass } from '@babel/core'
+import { Node, NodePath, PluginPass } from '@babel/core'
 import {
-    Node,
     isImportSpecifier,
     isImportDefaultSpecifier,
     variableDeclaration,
-    importDeclaration,
     callExpression,
     identifier,
     variableDeclarator,
@@ -15,11 +13,11 @@ import {
     objectExpression,
     objectProperty,
     stringLiteral,
-    importSpecifier,
 } from '@babel/types'
 import { compile } from 'sass'
 import postcss from 'postcss'
 import postcssIcssSelectors from 'postcss-icss-selectors'
+import { addNamed, addSideEffect } from '@babel/helper-module-imports'
 import { generateScopedName } from './utils'
 import { IS_TESTING, JSX_FACTORY_NAME, JSX_LIBRARY_NAME } from './constants'
 
@@ -32,15 +30,15 @@ export default function () {
                 const { source, specifiers } = path.node
 
                 if (/\.(css|scss|sass)$/.test(source.value) && specifiers.length) {
+                    // Node from @babel/core & from @babel/types incompatible
+                    createStyleImport(path as any, source.value)
+
+                    // Node from @babel/core & from @babel/types incompatible
+                    const factory = createFactoryImport(path as any)
                     const from = resolve(dirname(pass.file.opts.filename!), source.value)
                     const classnamesMap = getClassnamesMap(from)
                     const classnamesMapName = `styles_${generateUid()}`
                     const replacers = [
-                        importDeclaration([], source),
-                        importDeclaration(
-                            [importSpecifier(identifier(JSX_FACTORY_NAME), identifier(JSX_FACTORY_NAME))],
-                            stringLiteral(JSX_LIBRARY_NAME)
-                        ),
                         variableDeclaration('const', [
                             variableDeclarator(
                                 identifier(classnamesMapName),
@@ -54,7 +52,7 @@ export default function () {
                                 )
                             ),
                         ]),
-                    ] as Node[]
+                    ] //as any as Node[]
 
                     for (const specifier of specifiers) {
                         if (isImportDefaultSpecifier(specifier)) {
@@ -69,7 +67,7 @@ export default function () {
                                 variableDeclaration('const', [
                                     variableDeclarator(
                                         identifier(specifier.local.name),
-                                        callExpression(identifier(JSX_FACTORY_NAME), [
+                                        callExpression(factory, [
                                             stringLiteral(specifier.local.name.toLowerCase()),
                                             identifier(classnamesMapName),
                                         ])
@@ -79,11 +77,20 @@ export default function () {
                         }
                     }
 
+                    // Node from @babel/core & from @babel/types incompatible
                     path.replaceWithMultiple(replacers as any)
                 }
             },
         },
     }
+}
+
+const createStyleImport = <T extends Node>(path: NodePath<T>, importSource: string) => {
+    return addSideEffect(path, importSource, { importedType: 'es6' })
+}
+
+const createFactoryImport = <T extends Node>(path: NodePath<T>) => {
+    return addNamed(path, JSX_FACTORY_NAME, JSX_LIBRARY_NAME, { importedType: 'es6' })
 }
 
 const getClassnamesMap = (from: string): { [k: string]: string } => {

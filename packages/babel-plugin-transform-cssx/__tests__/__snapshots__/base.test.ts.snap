@@ -8,9 +8,9 @@ Object.defineProperty(exports, \\"__esModule\\", {
 });
 exports.default = void 0;
 
-require(\\"./component.scss\\");
+var _cssx2 = require(\\"@whatsup/cssx\\");
 
-var _cssx = require(\\"@whatsup/cssx\\");
+require(\\"./component.scss\\");
 
 const styles_UniqueId = {
   \\"col_2_1\\": \\"component__col_2_1\\",
@@ -36,9 +36,9 @@ Object.defineProperty(exports, \\"__esModule\\", {
 });
 exports.default = void 0;
 
-require(\\"./component.scss\\");
+var _cssx2 = require(\\"@whatsup/cssx\\");
 
-var _cssx = require(\\"@whatsup/cssx\\");
+require(\\"./component.scss\\");
 
 const styles_UniqueId = {
   \\"col_2_1\\": \\"component__col_2_1\\",
@@ -47,8 +47,9 @@ const styles_UniqueId = {
   \\"active\\": \\"component__active\\",
   \\"red\\": \\"component__red\\"
 };
-const Div = (0, _cssx.cssx)(\\"div\\", styles_UniqueId);
-const Span = (0, _cssx.cssx)(\\"span\\", styles_UniqueId);
+const Div = (0, _cssx2.cssx)(\\"div\\", styles_UniqueId);
+
+const Span = _cssx(\\"span\\", styles_UniqueId);
 
 var _default = () => {
   Div;
@@ -66,9 +67,9 @@ Object.defineProperty(exports, \\"__esModule\\", {
 });
 exports.default = void 0;
 
-require(\\"./component.scss\\");
+var _cssx2 = require(\\"@whatsup/cssx\\");
 
-var _cssx = require(\\"@whatsup/cssx\\");
+require(\\"./component.scss\\");
 
 const styles_UniqueId = {
   \\"col_2_1\\": \\"component__col_2_1\\",
@@ -78,8 +79,9 @@ const styles_UniqueId = {
   \\"red\\": \\"component__red\\"
 };
 const styles = styles_UniqueId;
-const Div = (0, _cssx.cssx)(\\"div\\", styles_UniqueId);
-const Span = (0, _cssx.cssx)(\\"span\\", styles_UniqueId);
+const Div = (0, _cssx2.cssx)(\\"div\\", styles_UniqueId);
+
+const Span = _cssx(\\"span\\", styles_UniqueId);
 
 var _default = () => {
   styles;
@@ -98,9 +100,9 @@ Object.defineProperty(exports, \\"__esModule\\", {
 });
 exports.default = void 0;
 
-require(\\"./component.css\\");
+var _cssx2 = require(\\"@whatsup/cssx\\");
 
-var _cssx = require(\\"@whatsup/cssx\\");
+require(\\"./component.css\\");
 
 const styles_UniqueId = {
   \\"button\\": \\"component__button\\",
@@ -108,8 +110,9 @@ const styles_UniqueId = {
   \\"red\\": \\"component__red\\"
 };
 const styles = styles_UniqueId;
-const Div = (0, _cssx.cssx)(\\"div\\", styles_UniqueId);
-const Span = (0, _cssx.cssx)(\\"span\\", styles_UniqueId);
+const Div = (0, _cssx2.cssx)(\\"div\\", styles_UniqueId);
+
+const Span = _cssx(\\"span\\", styles_UniqueId);
 
 var _default = () => {
   styles;
