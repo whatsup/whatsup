@@ -1,5 +1,5 @@
 import { Mutator } from '@whatsup/core'
-import { createComponent, Component, ComponentProducer } from './component'
+import { createComponent, Component } from './component'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX } from './types'
@@ -9,7 +9,7 @@ export interface Props {
     [k: string]: any
 }
 
-export type Type = WhatsJSX.TagName | ComponentProducer
+export type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 
 export interface JsxMutatorLike {}
 
@@ -191,13 +191,13 @@ export class ElementMutator
 }
 
 export class ComponentMutator
-    extends JsxMutator<ComponentProducer, (HTMLElement | SVGElement | Text)[]>
+    extends JsxMutator<WhatsJSX.ComponentProducer, (HTMLElement | SVGElement | Text)[]>
     implements ComponentMutatorLike
 {
     component?: Component
 
     constructor(
-        type: ComponentProducer,
+        type: WhatsJSX.ComponentProducer,
         key: string,
         props?: Props,
         ref?: WhatsJSX.Ref,

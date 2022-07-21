@@ -6,15 +6,6 @@ import { JsxMutator, Props } from './mutator'
 import { WhatsJSX } from './types'
 import { isGenerator } from './utils'
 
-export type FnComponentProducer = (props: Props, ctx?: Context) => WhatsJSX.Child
-
-export type GnComponentProducer = (
-    props: Props,
-    ctx?: Context
-) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, Props>
-
-export type ComponentProducer = FnComponentProducer | GnComponentProducer
-
 const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_ID__'
 
 type ReconcileNode = Text | HTMLElement | SVGElement
@@ -22,7 +13,7 @@ type ReconcileNode = Text | HTMLElement | SVGElement
 export abstract class Component {
     protected abstract produce(ctx: Context): WhatsJSX.Child
     protected abstract handleError(e: Error): WhatsJSX.Child
-    protected producer: ComponentProducer
+    protected producer: WhatsJSX.ComponentProducer
     protected props: Props
 
     private readonly nodes: Atom<(HTMLElement | SVGElement | Text)[]>
@@ -31,7 +22,7 @@ export abstract class Component {
     private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
 
-    constructor(producer: ComponentProducer, props: Props) {
+    constructor(producer: WhatsJSX.ComponentProducer, props: Props) {
         this.producer = producer
         this.nodes = createAtom(this.whatsup, this)
         this.props = props
@@ -227,7 +218,7 @@ class InvalidJSXChildError extends Error {
 }
 
 class FnComponent extends Component {
-    protected producer!: FnComponentProducer
+    protected producer!: WhatsJSX.FnComponentProducer
 
     produce(context: Context) {
         const { producer, props } = this
@@ -240,7 +231,7 @@ class FnComponent extends Component {
 }
 
 class GnComponent extends Component {
-    protected producer!: GnComponentProducer
+    protected producer!: WhatsJSX.GnComponentProducer
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
 
     produce(context: Context) {
@@ -283,7 +274,7 @@ class GnComponent extends Component {
     }
 }
 
-export const createComponent = (producer: ComponentProducer, props: Props = EMPTY_OBJ): Component => {
+export const createComponent = (producer: WhatsJSX.ComponentProducer, props: Props = EMPTY_OBJ): Component => {
     if (isGenerator(producer)) {
         return new GnComponent(producer, props)
     }

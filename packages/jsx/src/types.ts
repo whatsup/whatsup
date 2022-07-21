@@ -2,6 +2,7 @@
 // Thanks react team
 
 import * as CSS from 'csstype'
+import { Context } from './context'
 import { JsxMutator } from './mutator'
 
 type Booleanish = boolean | 'true' | 'false'
@@ -1539,6 +1540,13 @@ export namespace WhatsJSX {
         onMount?: (node: Element | Text | (Element | Text)[]) => void
         onUnmount?: (node: Element | Text | (Element | Text)[]) => void
     }
+
+    export type FnComponentProducer<P = any> = (props: P, ctx?: Context) => WhatsJSX.Child
+    export type GnComponentProducer<P = any> = (
+        props: P,
+        ctx?: Context
+    ) => Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, P>
+    export type ComponentProducer<P = any> = FnComponentProducer<P> | GnComponentProducer<P>
 }
 
 declare global {
