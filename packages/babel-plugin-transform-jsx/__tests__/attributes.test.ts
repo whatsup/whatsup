@@ -29,6 +29,14 @@ describe('transform attributes', function () {
         expect(transform('<div ref={myRef} key="Key" prop1="value1" prop2={2 + 2} {...props} />')).toMatchSnapshot()
     })
 
+    it('Should transform different props with ref onMount onUnmount', function () {
+        expect(
+            transform(
+                '<div ref={myRef} onMount={onMount} onUnmount={onUnmount} key="Key" prop1="value1" prop2={2 + 2} {...props} />'
+            )
+        ).toMatchSnapshot()
+    })
+
     it('Should throw error on namespaced attribute name', function () {
         expect(() => transform('<div ns:attr="val" />')).toThrowError('Namespaced attribute name is not supported')
     })

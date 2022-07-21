@@ -13,6 +13,10 @@ describe('transform children', function () {
         expect(transform('<ul><li /><li /></ul>')).toMatchSnapshot()
     })
 
+    it('Should transform children & props', function () {
+        expect(transform('<ul prop="1" prop2={3}><li /><li /></ul>')).toMatchSnapshot()
+    })
+
     it('Should transform children with primitives', function () {
         expect(transform('<div><span>foo</span>bar<i>baz</i></div>')).toMatchSnapshot()
     })

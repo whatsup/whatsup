@@ -31,18 +31,16 @@ import {
     JSXAttribute,
     JSXSpreadAttribute,
     Expression,
-    NullLiteral,
     StringLiteral,
     SpreadElement,
     ObjectProperty,
+    ArrayExpression,
+    binaryExpression,
+    Identifier,
+    ObjectExpression,
+    isSpreadElement,
 } from '@babel/types'
-import {
-    SVG_TAG_REGEX,
-    JSX_LIBRARY_NAME,
-    JSX_LIBRARY_FACTORIES,
-    IS_TESTING,
-    FRAGMENT_COMPONENT_NAME,
-} from './constants'
+import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME } from './constants'
 
 const VOID = identifier('undefined')
 
@@ -81,28 +79,48 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     attributes: (JSXAttribute | JSXSpreadAttribute)[],
     children: (JSXElement | JSXText | JSXExpressionContainer | JSXSpreadChild | JSXFragment)[]
 ) {
-    const factory = getFactory(name)
-    const callee = createCalleeImport(path, factory)
+    const factory = createFactoryImport(path)
     const type = createType(path, name)
-    const uid = createUid()
-    const { key, ref, props } = parseAttributes(attributes)
-    const childs = parseChildren(children)
-    const expression = callExpression(callee, [type, uid, key, ref, props, childs])
+    const { key, props, ref, onMount, onUnmount } = parseAttributes(attributes, parseChildren(children))
+    const args = createCalleeArgs(type, key, props, ref, onMount, onUnmount)
+
+    const expression = callExpression(factory, args)
 
     path.replaceWith(expression)
 }
 
-function getFactory(name: string) {
-    const { HTML, SVG, Component } = JSX_LIBRARY_FACTORIES
-    return isComponent(name) ? Component : isSVG(name) ? SVG : HTML
+function createCalleeArgs(
+    type: Identifier | StringLiteral,
+    key: Expression | undefined,
+    props: ObjectExpression | undefined,
+    ref: Expression | undefined,
+    onMount: Expression | undefined,
+    onUnmount: Expression | undefined
+): Expression[] {
+    const salt = createSalt()
+    const args = [type, key ? binaryExpression('+', salt, key) : salt, props, ref, onMount, onUnmount]
+
+    let popping = true
+
+    for (let i = args.length; i > 0; i--) {
+        if (args[i - 1]) {
+            popping = false
+        } else if (popping) {
+            args.pop()
+        } else {
+            args[i - 1] = VOID
+        }
+    }
+
+    return args as Expression[]
 }
 
 function createFragmentImport<T extends Node>(path: NodePath<T>) {
-    return createImport(path, JSX_LIBRARY_NAME, 'Fragment')
+    return createImport(path, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME)
 }
 
-function createCalleeImport<T extends Node>(path: NodePath<T>, factory: string) {
-    return createImport(path, JSX_LIBRARY_NAME, factory)
+function createFactoryImport<T extends Node>(path: NodePath<T>) {
+    return createImport(path, JSX_LIBRARY_NAME, 'jsx')
 }
 
 function createImport<T extends Node>(path: NodePath<T>, importSource: string, method: string) {
@@ -120,14 +138,26 @@ function createType<T extends Node>(path: NodePath<T>, name: string) {
     return stringLiteral(name)
 }
 
-function createUid() {
-    return stringLiteral(generateUid())
+function createSalt() {
+    return stringLiteral(generateUid() + '_')
 }
 
-function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
-    let key: Expression = VOID
-    let ref: Expression = VOID
+function parseAttributes(
+    attributes: (JSXAttribute | JSXSpreadAttribute)[],
+    children?: Expression | ArrayExpression | undefined
+) {
+    let key: Expression | undefined = undefined
+    let ref: Expression | undefined = undefined
+    let onMount: Expression | undefined = undefined
+    let onUnmount: Expression | undefined = undefined
+
     const members = [] as (SpreadElement | ObjectProperty)[]
+
+    if (children) {
+        const member = objectProperty(identifier('children'), children)
+
+        members.push(member)
+    }
 
     for (const attr of attributes) {
         if (isJSXSpreadAttribute(attr)) {
@@ -148,17 +178,22 @@ function parseAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[]) {
                 key = value
             } else if (name === 'ref') {
                 ref = value
+            } else if (name === 'onMount') {
+                onMount = value
+            } else if (name === 'onUnmount') {
+                onUnmount = value
             } else {
                 const prop = identifier(name)
                 const member = objectProperty(prop, value)
+
                 members.push(member)
             }
         }
     }
 
-    const props = members.length ? objectExpression(members) : VOID
+    const props = members.length ? objectExpression(members) : undefined
 
-    return { key, ref, props }
+    return { key, props, ref, onMount, onUnmount }
 }
 
 function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExpressionContainer | null | undefined) {
@@ -175,8 +210,10 @@ function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExp
     return value
 }
 
-function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpressionContainer | JSXSpreadChild)[]) {
-    const members = [] as (NullLiteral | Expression | SpreadElement)[]
+function parseChildren(
+    children: (JSXText | JSXElement | JSXFragment | JSXExpressionContainer | JSXSpreadChild)[]
+): Expression | ArrayExpression | undefined {
+    const members = [] as (Expression | SpreadElement)[]
     const { length } = children
 
     for (let i = 0; i < length; i++) {
@@ -214,11 +251,18 @@ function parseChildren(children: (JSXText | JSXElement | JSXFragment | JSXExpres
         }
     }
 
-    return members.length ? arrayExpression(members) : VOID
+    if (!members.length) {
+        return undefined
+    }
+    if (members.length === 1 && !isSpreadElement(members[0])) {
+        return members[0]
+    }
+
+    return arrayExpression(members)
 }
 
 function generateUid() {
-    return IS_TESTING ? 'UniqueId' : (~~(Math.random() * 1e8)).toString(16)
+    return IS_TESTING ? 'UniqueId' : Math.random().toString(36).slice(-5)
 }
 
 function isComponent(name: string) {
@@ -228,8 +272,4 @@ function isComponent(name: string) {
 
 function isFragment(name: string) {
     return name === FRAGMENT_COMPONENT_NAME
-}
-
-function isSVG(name: string) {
-    return SVG_TAG_REGEX.test(name)
 }
