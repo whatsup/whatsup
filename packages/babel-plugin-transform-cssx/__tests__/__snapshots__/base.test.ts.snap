@@ -47,8 +47,8 @@ const styles_UniqueId = {
   \\"active\\": \\"component__active\\",
   \\"red\\": \\"component__red\\"
 };
-const Div = (0, _cssx.createComponent)(\\"div\\", styles_UniqueId);
-const Span = (0, _cssx.createComponent)(\\"span\\", styles_UniqueId);
+const Div = (0, _cssx.cssx)(\\"div\\", styles_UniqueId);
+const Span = (0, _cssx.cssx)(\\"span\\", styles_UniqueId);
 
 var _default = () => {
   Div;
@@ -78,8 +78,8 @@ const styles_UniqueId = {
   \\"red\\": \\"component__red\\"
 };
 const styles = styles_UniqueId;
-const Div = (0, _cssx.createComponent)(\\"div\\", styles_UniqueId);
-const Span = (0, _cssx.createComponent)(\\"span\\", styles_UniqueId);
+const Div = (0, _cssx.cssx)(\\"div\\", styles_UniqueId);
+const Span = (0, _cssx.cssx)(\\"span\\", styles_UniqueId);
 
 var _default = () => {
   styles;
@@ -108,8 +108,8 @@ const styles_UniqueId = {
   \\"red\\": \\"component__red\\"
 };
 const styles = styles_UniqueId;
-const Div = (0, _cssx.createComponent)(\\"div\\", styles_UniqueId);
-const Span = (0, _cssx.createComponent)(\\"span\\", styles_UniqueId);
+const Div = (0, _cssx.cssx)(\\"div\\", styles_UniqueId);
+const Span = (0, _cssx.cssx)(\\"span\\", styles_UniqueId);
 
 var _default = () => {
   styles;
