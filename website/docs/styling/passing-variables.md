@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Passing CSS-variables
 
-Any property that starts with a double underscore will be converted to a css variable
+Any cssx namespaced property that starts with a $ char will be converted to a css variable
 
 ```css
 /* styles.css */
@@ -25,7 +25,7 @@ interface BoxProps {
 function Box(props: BoxProps) {
     const { size } = props
 
-    return <Div box __size={size + 'px'} />
+    return <Div css:box css:$size={size + 'px'} />
 }
 ```
 

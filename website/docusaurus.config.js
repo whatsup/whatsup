@@ -6,7 +6,7 @@ const darkCodeTheme = require('./theme/prism')
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-    title: 'WhatsUp',
+    title: 'Whatsup',
     tagline: 'A frontend framework for chillout-mode development 🥤',
     url: 'https://whatsup.js.org',
     baseUrl: '/',

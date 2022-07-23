@@ -18,7 +18,13 @@ In this example, we are importing a grid and we are immediately able to use its 
 function Badge(props: BadgeProps) {
     // ...
     return (
-        <Div badge red={isRed} green={isGreen} col_xs_12 col_sm_8>
+        <Div
+            css:badge
+            css:red={isRed}
+            css:green={isGreen}
+            css:col_xs_12
+            css:col_sm_8
+        >
             {text}
         </Div>
     )
