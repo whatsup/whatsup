@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/route",
     "description": "whatsup route component",
-    "version": "2.2.33",
+    "version": "2.2.34",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -28,9 +28,9 @@
     },
     "dependencies": {
         "@whatsup/core": "^2.2.25",
-        "@whatsup/jsx": "^2.2.33"
+        "@whatsup/jsx": "^2.2.34"
     },
     "devDependencies": {
-        "@whatsup/babel-plugin-transform-jsx": "^2.2.33"
+        "@whatsup/babel-plugin-transform-jsx": "^2.2.34"
     }
 }
