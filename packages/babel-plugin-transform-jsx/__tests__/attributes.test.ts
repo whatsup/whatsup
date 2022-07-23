@@ -37,7 +37,11 @@ describe('transform attributes', function () {
         ).toMatchSnapshot()
     })
 
-    it('Should throw error on namespaced attribute name', function () {
-        expect(() => transform('<div ns:attr="val" />')).toThrowError('Namespaced attribute name is not supported')
+    it('Should transform namespaced name', function () {
+        expect(transform('<div css:blue />')).toMatchSnapshot()
+    })
+
+    it('Should transform cssx var', function () {
+        expect(transform('<div css:$var />')).toMatchSnapshot()
     })
 })

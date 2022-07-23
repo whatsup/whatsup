@@ -38,6 +38,8 @@ import {
     Identifier,
     ObjectExpression,
     isSpreadElement,
+    JSXIdentifier,
+    JSXNamespacedName,
 } from '@babel/types'
 import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, JSX_FACTORY_NAME } from './constants'
 
@@ -168,11 +170,7 @@ function parseAttributes(
             continue
         }
 
-        if (isJSXNamespacedName(attr.name)) {
-            throw new Error('Namespaced attribute name is not supported')
-        }
-
-        const { name } = attr.name
+        const name = parseAttrName(attr.name)
         const value = parseAttrValue(attr.value)
 
         if (value !== undefined) {
@@ -185,7 +183,7 @@ function parseAttributes(
             } else if (name === 'onUnmount') {
                 onUnmount = value
             } else {
-                const prop = identifier(name)
+                const prop = isJSXNamespacedName(attr.name) ? stringLiteral(name) : identifier(name)
                 const member = objectProperty(prop, value)
 
                 members.push(member)
@@ -196,6 +194,13 @@ function parseAttributes(
     const props = members.length ? objectExpression(members) : undefined
 
     return { key, props, ref, onMount, onUnmount }
+}
+
+function parseAttrName(name: JSXIdentifier | JSXNamespacedName) {
+    if (isJSXNamespacedName(name)) {
+        return name.namespace.name + ':' + name.name.name
+    }
+    return name.name
 }
 
 function parseAttrValue(value: JSXElement | StringLiteral | JSXFragment | JSXExpressionContainer | null | undefined) {

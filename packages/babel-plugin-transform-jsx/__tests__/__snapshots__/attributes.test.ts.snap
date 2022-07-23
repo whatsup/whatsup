@@ -8,6 +8,14 @@ _jsx(\\"div\\", \\"UniqueId_\\", {
 });"
 `;
 
+exports[`transform attributes Should transform cssx var 1`] = `
+"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+
+_jsx(\\"div\\", \\"UniqueId_\\", {
+  \\"css:$var\\": true
+});"
+`;
+
 exports[`transform attributes Should transform different props variations 1`] = `
 "import { jsx as _jsx } from \\"@whatsup/jsx\\";
 
@@ -42,6 +50,14 @@ exports[`transform attributes Should transform key prop 1`] = `
 "import { jsx as _jsx } from \\"@whatsup/jsx\\";
 
 _jsx(\\"div\\", \\"UniqueId_\\" + \\"Key\\");"
+`;
+
+exports[`transform attributes Should transform namespaced name 1`] = `
+"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+
+_jsx(\\"div\\", \\"UniqueId_\\", {
+  \\"css:blue\\": true
+});"
 `;
 
 exports[`transform attributes Should transform props spread 1`] = `

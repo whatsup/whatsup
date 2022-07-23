@@ -2,7 +2,11 @@ import { jsx, WhatsJSX } from '@whatsup/jsx'
 
 type ClassnamesMap = { [k: string]: string }
 
-type Props<P, S extends ClassnamesMap> = P & { [k in keyof S]?: boolean } & { [k: `__${string}`]: string | number }
+type Props<P, S extends ClassnamesMap> = P & {
+    [k in `css:${keyof S & string}`]?: boolean
+} & {
+    [k: `css:$${string}`]: string | number
+}
 
 export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any>, S extends ClassnamesMap>(
     type: T,
@@ -22,12 +26,26 @@ export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any
         const classnames = []
 
         for (const [key, val] of Object.entries(props)) {
-            if (key.startsWith('__')) {
-                const property = '--' + key.slice(2)
+            if (key.startsWith('css:$')) {
+                const property = '--' + key.slice(5)
 
                 newStyle[property] = val
 
                 continue
+            }
+
+            if (key.startsWith('css:')) {
+                const classname = key.slice(4)
+
+                if (classname in styles) {
+                    if (val) {
+                        classnames.push(styles[classname])
+                    }
+
+                    continue
+                }
+
+                throw Error(`Unknown classname "${classname}"`)
             }
 
             if (key === 'style') {
@@ -40,13 +58,6 @@ export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any
             if (key === 'className') {
                 if (!!val) {
                     classnames.push(val)
-                }
-                continue
-            }
-
-            if (key in styles) {
-                if (val) {
-                    classnames.push(styles[key])
                 }
                 continue
             }

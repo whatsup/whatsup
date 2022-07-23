@@ -100,11 +100,11 @@ const createDtsSnapshot = (ts: typeof tss, scriptSnapshot: ts.IScriptSnapshot, f
 
     dts.push(SIGN)
     dts.push(`type Props = {`)
-    dts.push('[k: `__${string}`]: string | number')
+    dts.push('[k: `css:$${string}`]: string | number')
 
     if (classnames.length) {
         for (const classname of classnames) {
-            dts.push(`${classname}?: boolean`)
+            dts.push(`"css:${classname}"?: boolean`)
         }
     } else {
         dts.push(`[k: string]?: any`)

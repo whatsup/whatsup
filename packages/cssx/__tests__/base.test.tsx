@@ -18,7 +18,7 @@ describe('Base test', () => {
 
         function App(this: Context) {
             return (
-                <Div one two>
+                <Div css:one css:two>
                     test
                 </Div>
             )
@@ -47,7 +47,7 @@ describe('Base test', () => {
 
         function App(this: Context) {
             return (
-                <CSSXComp one two>
+                <CSSXComp css:one css:two>
                     test
                 </CSSXComp>
             )
@@ -79,7 +79,7 @@ describe('Base test', () => {
         const CSSXComp = cssx(Comp, classnamesMap)
 
         function App(this: Context) {
-            return <CSSXComp one two value="test" />
+            return <CSSXComp css:one css:two value="test" />
         }
 
         render(<App />, container)
@@ -99,7 +99,7 @@ describe('Base test', () => {
 
         function App(this: Context) {
             return (
-                <Div one two style={{ backgroundColor: 'red' }}>
+                <Div css:one css:two style={{ backgroundColor: 'red' }}>
                     test
                 </Div>
             )
@@ -122,7 +122,7 @@ describe('Base test', () => {
 
         function App(this: Context) {
             return (
-                <Div one two className="own_cls">
+                <Div css:one css:two className="own_cls">
                     test
                 </Div>
             )
@@ -145,7 +145,7 @@ describe('Base test', () => {
 
         function App(this: Context) {
             return (
-                <Div one two __var="10px">
+                <Div css:one css:two css:$var="10px">
                     test
                 </Div>
             )
@@ -183,5 +183,32 @@ describe('Base test', () => {
         ref.current.click()
 
         expect(onClick).toBeCalled()
+    })
+
+    it('should pass css:$variable', () => {
+        const mock = jest.fn()
+        const origin = console.error
+        const container = document.createElement('div')
+        const classnamesMap = {
+            one: 'one',
+        }
+
+        console.error = mock
+
+        const Div = cssx('div', classnamesMap) as any
+
+        function App(this: Context) {
+            return (
+                <Div css:one css:two css:$var="10px">
+                    test
+                </Div>
+            )
+        }
+
+        render(<App />, container)
+
+        console.error = origin
+
+        expect(mock.mock.calls[0][0].message).toBe('Unknown classname "two"')
     })
 })
