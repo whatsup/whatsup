@@ -11,25 +11,23 @@ Allows you to create new data based on previous.
 ```tsx
 import { observable, computed, mutator, autorun } from 'whatsup'
 
-const concat = (letter: string) => {
-    return mutator((prev = '') => prev + letter)
-}
+const increment = mutator((prev = 0) => prev + 1)
 
-const output = computed(function* () {
-    const input = observable('')
+const timer = computed(function*(){
+    const counter = observable(0)
 
-    window.addEventListener('keypress', (e) => input(e.key))
+    setInterval(()=> counter(increment), 1000)
 
-    while (true) {
-        yield concat(input())
+    while(true){
+        yiled counter()
     }
 })
 
 autorun(() => console.log(output()))
 
-// bress 'a' > 'a'
-// press 'b' > 'ab'
-// press 'c' > 'abc'
+// 0
+// 1
+// 2
 ```
 
 ### Mutators as filters
