@@ -2,7 +2,7 @@ import tss from 'typescript/lib/tsserverlibrary'
 import path from 'path'
 import postcss from 'postcss'
 import postcssIcssSelectors from 'postcss-icss-selectors'
-import { htmlTags, htmlComponents } from './tags'
+import { tags, components } from './tags'
 import sass from 'sass'
 
 const SIGN = '// cssx'
@@ -115,9 +115,9 @@ const createDtsSnapshot = (ts: typeof tss, scriptSnapshot: ts.IScriptSnapshot, f
         `type Component<T extends keyof JSX.IntrinsicElements> = (props: JSX.IntrinsicElements[T] & Props) => JSX.Element`
     )
 
-    for (let i = 0; i < htmlTags.length; i++) {
-        const tag = htmlTags[i]
-        const component = htmlComponents[i]
+    for (let i = 0; i < tags.length; i++) {
+        const tag = tags[i]
+        const component = components[i]
 
         dts.push(`export const ${component}: Component<'${tag}'>`)
     }
