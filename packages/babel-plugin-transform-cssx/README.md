@@ -6,8 +6,6 @@ Babel plugin for transform css imports to whatsup css components
 
 ```bash
 npm i -D @whatsup/babel-plugin-transform-cssx
-# or
-yarn add -D @whatsup/babel-plugin-transform-cssx
 ```
 
 ## Usage
