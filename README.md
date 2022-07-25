@@ -8,6 +8,7 @@ Whatsup is a modern frontend framework with own reactivity system and JSX compon
 
 -   🎉 easy to use: simple api, just write code
 -   🚀 own reactivity system with high performance
+-   🌈 cool styling system based on css modules
 -   ⛓ glitch free, autotracking and updating of dependencies
 -   🚦 written in typescript, type support out of the box
 -   🗜 small size: ~6kB gzipped (state management + jsx components)
@@ -45,7 +46,7 @@ The documentation is divided into several sections:
 
 -   [Introduction](https://whatsup.js.org/docs/intro/)
 -   [Getting Started](https://whatsup.js.org/docs/getting-started)
--   [Componetns](https://whatsup.js.org/docs/components/)
+-   [Components](https://whatsup.js.org/docs/components/)
 -   [State management](https://whatsup.js.org/docs/state-management/)
 -   [Styling](https://whatsup.js.org/docs/styling/)
 
