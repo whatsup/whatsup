@@ -45,7 +45,7 @@ export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any
                     continue
                 }
 
-                throw Error(`Unknown classname "${classname}"`)
+                console.warn(`Unknown classname "${classname}"`)
             }
 
             if (key === 'style') {

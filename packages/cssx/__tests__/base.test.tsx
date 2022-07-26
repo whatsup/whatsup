@@ -185,21 +185,21 @@ describe('Base test', () => {
         expect(onClick).toBeCalled()
     })
 
-    it('should pass css:$variable', () => {
+    it('should show warning', () => {
         const mock = jest.fn()
-        const origin = console.error
+        const origin = console.warn
         const container = document.createElement('div')
         const classnamesMap = {
             one: 'one',
         }
 
-        console.error = mock
+        console.warn = mock
 
         const Div = cssx('div', classnamesMap) as any
 
         function App(this: Context) {
             return (
-                <Div css:one css:two css:$var="10px">
+                <Div css:one css:two>
                     test
                 </Div>
             )
@@ -207,8 +207,8 @@ describe('Base test', () => {
 
         render(<App />, container)
 
-        console.error = origin
+        console.warn = origin
 
-        expect(mock.mock.calls[0][0].message).toBe('Unknown classname "two"')
+        expect(mock.mock.calls[0][0]).toBe('Unknown classname "two"')
     })
 })
