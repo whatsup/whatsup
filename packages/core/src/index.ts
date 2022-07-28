@@ -8,7 +8,7 @@ export { reaction, autorun } from './reactions'
 export { action, runInAction } from './action'
 export { rebuild } from './rebuild'
 export { delegate } from './delegation'
-export { mutator, Mutator } from './mutator'
+export { mutator, Mutator, comparer, filter } from './mutator'
 
 export type { Atom, Producer } from './atom'
 export type { Delegation } from './delegation'

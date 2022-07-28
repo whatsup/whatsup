@@ -5,7 +5,7 @@ import { reaction, autorun } from '../src/reactions'
 import { action, runInAction } from '../src/action'
 import { rebuild } from '../src/rebuild'
 import { delegate } from '../src/delegation'
-import { mutator, Mutator } from '../src/mutator'
+import { mutator, Mutator, comparer, filter } from '../src/mutator'
 import { array } from '../src/array'
 import { set } from '../src/set'
 import { map } from '../src/map'
@@ -22,6 +22,8 @@ import {
     delegate as _delegate,
     mutator as _mutator,
     Mutator as _Mutator,
+    comparer as _comparer,
+    filter as _filter,
     array as _array,
     set as _set,
     map as _map,
@@ -39,6 +41,8 @@ it('Exports', () => {
     expect(delegate).toBe(_delegate)
     expect(mutator).toBe(_mutator)
     expect(Mutator).toBe(_Mutator)
+    expect(comparer).toBe(_comparer)
+    expect(filter).toBe(_filter)
     expect(array).toBe(_array)
     expect(set).toBe(_set)
     expect(map).toBe(_map)
