@@ -1,0 +1,32 @@
+{
+    "name": "@whatsup/equals",
+    "description": "whatsup equal comparers set",
+    "version": "2.2.36",
+    "author": "Denis Churbanov",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/whatsup/whatsup.git",
+        "directory": "packages/equals"
+    },
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "typings": "dist/index.d.ts",
+    "scripts": {
+        "start": "rollup -c -w",
+        "build": "rollup -c && tsc -p ./tsconfig.build.json",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "test:uncache": "jest --clearCache"
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@whatsup/core": "^2.2.25"
+    }
+}

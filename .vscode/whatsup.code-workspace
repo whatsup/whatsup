@@ -37,6 +37,10 @@
             "path": "../packages/typescript-plugin-cssx"
         },
         {
+            "name": "equals",
+            "path": "../packages/equals"
+        },
+        {
             "name": "route",
             "path": "../packages/route"
         }
