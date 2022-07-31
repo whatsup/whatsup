@@ -1,4 +1,4 @@
-import { createAtom, mutator, Atom, rebuild } from '@whatsup/core'
+import { createAtom, Atom, rebuild, Mutator } from '@whatsup/core'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
 import { removeNodes } from './dom'
@@ -11,20 +11,18 @@ const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_ID__'
 type ReconcileNode = Text | HTMLElement | SVGElement
 
 export abstract class Component {
-    protected abstract produce(ctx: Context): WhatsJSX.Child
-    protected abstract handleError(e: Error): WhatsJSX.Child
+    abstract produce(ctx: Context): WhatsJSX.Child
+    abstract handleError(e: Error): WhatsJSX.Child
+    abstract dispose(): void
+
     protected producer: WhatsJSX.ComponentProducer
     protected props: Props
 
     private readonly nodes: Atom<(HTMLElement | SVGElement | Text)[]>
-    private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
-    private reconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
-    private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
-    private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
 
     constructor(producer: WhatsJSX.ComponentProducer, props: Props) {
         this.producer = producer
-        this.nodes = createAtom(this.whatsup, this)
+        this.nodes = createAtom(nodesProducer, this)
         this.props = props
     }
 
@@ -38,55 +36,80 @@ export abstract class Component {
     getNodes() {
         return this.nodes.get()
     }
+}
 
-    private *whatsup() {
-        const context: Context = createContext(this.producer.name)
+function* nodesProducer(this: Component) {
+    const context = createContext(this.producer.name)
+    const mutator = new NodesMutator(this, context)
+
+    try {
+        while (true) {
+            yield mutator
+        }
+    } finally {
+        this.dispose()
+    }
+}
+
+class NodesMutator extends Mutator<(HTMLElement | SVGElement | Text)[]> {
+    private readonly component: Component
+    private readonly context: Context
+    private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
+    private reconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
+    private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
+    private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
+
+    constructor(component: Component, context: Context) {
+        super()
+        this.component = component
+        this.context = context
+    }
+
+    mutate(prev?: (HTMLElement | SVGElement | Text)[]): (HTMLElement | SVGElement | Text)[] {
+        const { context } = this
+
+        addContextToStack(context)
+
+        let child = this.component.produce(context)
+        let next: (HTMLElement | SVGElement | Text)[]
 
         try {
             while (true) {
-                yield mutator((prev?: (HTMLElement | SVGElement | Text)[]) => {
-                    addContextToStack(context)
-
-                    let child = this.produce(context)
-                    let next: (HTMLElement | SVGElement | Text)[]
-
-                    try {
-                        while (true) {
-                            try {
-                                next = this.reconcile(child)
-                            } catch (e) {
-                                child = this.handleError(e as Error)
-                                continue
-                            }
-                            break
-                        }
-                    } catch (e) {
-                        throw e
-                    } finally {
-                        popContextFromStack()
-                    }
-
-                    if (
-                        prev &&
-                        prev.length === next.length &&
-                        prev.every((item, i) => item === (next as (HTMLElement | SVGElement | Text)[])[i])
-                    ) {
-                        /*
-                            reuse old elements container
-                            to prevent recalculation of top-level atom
-                        */
-                        return prev
-                    }
-
-                    return next
-                })
+                try {
+                    next = this.reconcile(child)
+                } catch (e) {
+                    child = this.component.handleError(e as Error)
+                    continue
+                }
+                break
             }
+        } catch (e) {
+            throw e
         } finally {
-            this.dispose()
+            popContextFromStack()
         }
-    }
 
-    protected dispose() {}
+        /*
+            reuse old elements container
+            to prevent recalculation of top-level atom
+        */
+
+        if (!prev) {
+            return next
+        }
+
+        if (prev.length !== next.length) {
+            return next
+        }
+
+        for (let i = 0; i < prev.length; i++) {
+            if (prev[i] !== next[i]) {
+                return next
+            }
+        }
+
+        return next
+    }
 
     private reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
         const nodes: (HTMLElement | SVGElement | Text)[] = []
@@ -104,21 +127,11 @@ export abstract class Component {
         return nodes
     }
 
-    private doReconcile(child: WhatsJSX.Child | WhatsJSX.Child[], nodes: (HTMLElement | SVGElement | Text)[] = []) {
+    private doReconcile(child: WhatsJSX.Child, nodes: (HTMLElement | SVGElement | Text)[]) {
         if (Array.isArray(child)) {
             for (let i = 0; i < child.length; i++) {
-                this.reconcileChild(child[i], nodes)
+                this.doReconcile(child[i], nodes)
             }
-        } else {
-            this.reconcileChild(child, nodes)
-        }
-
-        return nodes
-    }
-
-    private reconcileChild(child: WhatsJSX.Child, nodes: (HTMLElement | SVGElement | Text)[]) {
-        if (Array.isArray(child)) {
-            this.doReconcile(child, nodes)
             return
         }
 
@@ -228,6 +241,8 @@ class FnComponent extends Component {
     handleError(e: Error): WhatsJSX.Child {
         throw e
     }
+
+    dispose() {}
 }
 
 class GnComponent extends Component {
@@ -264,9 +279,7 @@ class GnComponent extends Component {
         throw e
     }
 
-    protected dispose() {
-        super.dispose()
-
+    dispose() {
         if (this.iterator) {
             this.iterator.return!()
             this.iterator = undefined
