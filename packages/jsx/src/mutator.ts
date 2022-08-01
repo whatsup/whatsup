@@ -1,5 +1,6 @@
 import { Mutator } from '@whatsup/core'
 import { createComponent, Component } from './component'
+import { Reconciler } from './reconciler'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX } from './types'
@@ -16,8 +17,8 @@ type Node = HTMLElement | SVGElement | Text
 interface JsxMutatorLike {}
 
 interface ElementMutatorLike extends JsxMutatorLike {
-    children: ComponentMutatorLike
     node?: Exclude<Node, Text>
+    reconciler?: Reconciler
     props?: Props
 }
 
@@ -26,10 +27,6 @@ interface ComponentMutatorLike extends JsxMutatorLike {
 }
 
 export const Fragment = (props: Props) => {
-    return props.children!
-}
-
-export const Children = (props: Props) => {
     return props.children ?? null
 }
 
@@ -37,10 +34,7 @@ const JSX_MOUNT_OBSERVER = Symbol('Jsx onMount observer')
 const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
 
 const FAKE_JSX_COMPONENT_MUTATOR: ComponentMutatorLike = {}
-
-const FAKE_JSX_ELEMENT_MUTATOR: ElementMutatorLike = {
-    children: FAKE_JSX_COMPONENT_MUTATOR,
-}
+const FAKE_JSX_ELEMENT_MUTATOR: ElementMutatorLike = {}
 
 const NS = {
     isSvg: false,
@@ -135,36 +129,27 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
 }
 
 export class ElementMutator extends JsxMutator<WhatsJSX.TagName, Exclude<Node, Text>> implements ElementMutatorLike {
-    readonly children: ComponentMutator
-
     node?: Exclude<Node, Text>
+    reconciler?: Reconciler
 
-    constructor(
-        type: WhatsJSX.TagName,
-        key: string,
-        props?: Props,
-        ref?: WhatsJSX.Ref,
-        onMount?: (el: Exclude<Node, Text>) => void,
-        onUnmount?: (el: Exclude<Node, Text>) => void
-    ) {
-        super(type, key, props, ref, onMount, onUnmount)
-
-        this.children = new ComponentMutator(Children, key, props && { children: props.children })
-    }
-
-    doMutation({ props: oldProps, children: oldChildren, node } = FAKE_JSX_ELEMENT_MUTATOR) {
-        const { props, children } = this
+    doMutation({ props: oldProps, node, reconciler } = FAKE_JSX_ELEMENT_MUTATOR) {
+        const { props } = this
 
         NS.toggle(this.type)
 
         this.node = node || this.createElement()
 
-        const childNodes = children.doMutation(oldChildren)
+        mutateProps(this.node!, props || EMPTY_OBJ, oldProps || EMPTY_OBJ)
+
+        if (props?.children !== undefined || reconciler) {
+            this.reconciler = reconciler || new Reconciler()
+
+            const childNodes = this.reconciler.reconcile(props?.children ?? null)
+
+            placeNodes(this.node!, childNodes)
+        }
 
         NS.untoggle(this.type)
-
-        mutateProps(this.node!, props || EMPTY_OBJ, oldProps || EMPTY_OBJ)
-        placeNodes(this.node!, childNodes)
 
         return this.node!
     }
@@ -184,19 +169,7 @@ export class ComponentMutator
 {
     component?: Component
 
-    constructor(
-        type: WhatsJSX.ComponentProducer,
-        key: string,
-        props?: Props,
-        ref?: WhatsJSX.Ref,
-        onMount?: (el: Node | Node[]) => void,
-        onUnmount?: (el: Node | Node[]) => void
-    ) {
-        super(type, key, props, ref, onMount, onUnmount)
-    }
-
-    doMutation(oldMutator = FAKE_JSX_COMPONENT_MUTATOR) {
-        const { component } = oldMutator
+    doMutation({ component } = FAKE_JSX_COMPONENT_MUTATOR) {
         const { type, props } = this
 
         if (!component) {
