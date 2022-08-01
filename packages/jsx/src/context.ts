@@ -196,6 +196,12 @@ export const addContextToStack = (ctx: Context) => {
     CTX_STACK.push(ctx)
 }
 
-export const popContextFromStack = () => {
+export const popContextFromStack = (/* ctx: Context */) => {
     CTX_STACK.pop()
+
+    /* TODO: 
+    if (CTX_STACK.pop() !== ctx) {
+        throw Error('Whats? This is not the right context!')
+    }
+    */
 }

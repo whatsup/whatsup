@@ -11,9 +11,11 @@ const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_ID__'
 type ReconcileNode = Text | HTMLElement | SVGElement
 
 export abstract class Component {
-    abstract produce(ctx: Context): WhatsJSX.Child
+    abstract produce(): WhatsJSX.Child
     abstract handleError(e: Error): WhatsJSX.Child
     abstract dispose(): void
+
+    readonly context: Context
 
     protected producer: WhatsJSX.ComponentProducer
     protected props: Props
@@ -22,6 +24,7 @@ export abstract class Component {
 
     constructor(producer: WhatsJSX.ComponentProducer, props: Props) {
         this.producer = producer
+        this.context = createContext(producer.name)
         this.nodes = createAtom(nodesProducer, this)
         this.props = props
     }
@@ -39,10 +42,9 @@ export abstract class Component {
 }
 
 function* nodesProducer(this: Component) {
-    const context = createContext(this.producer.name)
-    const mutator = new NodesMutator(this, context)
-
     try {
+        const mutator = new NodesMutator(this)
+
         while (true) {
             yield mutator
         }
@@ -53,27 +55,24 @@ function* nodesProducer(this: Component) {
 
 class NodesMutator extends Mutator<(HTMLElement | SVGElement | Text)[]> {
     private readonly component: Component
-    private readonly context: Context
     private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private reconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
     private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
     private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
 
-    constructor(component: Component, context: Context) {
+    constructor(component: Component) {
         super()
         this.component = component
-        this.context = context
     }
 
     mutate(prev?: (HTMLElement | SVGElement | Text)[]): (HTMLElement | SVGElement | Text)[] {
-        const { context } = this
-
-        addContextToStack(context)
-
-        let child = this.component.produce(context)
         let next: (HTMLElement | SVGElement | Text)[]
 
         try {
+            addContextToStack(this.component.context)
+
+            let child = this.component.produce()
+
             while (true) {
                 try {
                     next = this.reconcile(child)
@@ -233,8 +232,9 @@ class InvalidJSXChildError extends Error {
 class FnComponent extends Component {
     protected producer!: WhatsJSX.FnComponentProducer
 
-    produce(context: Context) {
-        const { producer, props } = this
+    produce() {
+        const { producer, context, props } = this
+
         return producer.call(context, props, context)
     }
 
@@ -249,8 +249,8 @@ class GnComponent extends Component {
     protected producer!: WhatsJSX.GnComponentProducer
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
 
-    produce(context: Context) {
-        const { producer, props } = this
+    produce() {
+        const { producer, context, props } = this
 
         if (!this.iterator) {
             this.iterator = producer.call(context, props, context)
