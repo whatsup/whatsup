@@ -83,4 +83,48 @@ describe('Updates', function () {
 
         expect(container.innerHTML).toBe('<div>Child</div>')
     })
+
+    it('should proceed render iterator if results is primitive', function () {
+        const container = document.createElement('div')
+        const trigger = observable<number>(0)
+
+        function* Root() {
+            trigger()
+            yield null
+            trigger()
+            yield 1
+            trigger()
+            yield false
+            trigger()
+            yield 'str'
+            trigger()
+            yield true
+            trigger()
+            yield <div />
+        }
+
+        render(<Root />, container)
+
+        expect(container.innerHTML).toBe('')
+
+        trigger(1)
+
+        expect(container.innerHTML).toBe('1')
+
+        trigger(2)
+
+        expect(container.innerHTML).toBe('')
+
+        trigger(3)
+
+        expect(container.innerHTML).toBe('str')
+
+        trigger(4)
+
+        expect(container.innerHTML).toBe('')
+
+        trigger(5)
+
+        expect(container.innerHTML).toBe('<div></div>')
+    })
 })

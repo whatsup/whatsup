@@ -8,7 +8,7 @@ import { isGenerator } from './utils'
 
 const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_ID__'
 
-type ReconcileNode = Text | HTMLElement | SVGElement
+type Node = HTMLElement | SVGElement | Text
 
 export abstract class Component {
     abstract produce(): WhatsJSX.Child
@@ -20,7 +20,7 @@ export abstract class Component {
     protected producer: WhatsJSX.ComponentProducer
     protected props: Props
 
-    private readonly nodes: Atom<(HTMLElement | SVGElement | Text)[]>
+    private readonly nodes: Atom<Node | Node[]>
 
     constructor(producer: WhatsJSX.ComponentProducer, props: Props) {
         this.producer = producer
@@ -53,20 +53,20 @@ function* nodesProducer(this: Component) {
     }
 }
 
-class NodesMutator extends Mutator<(HTMLElement | SVGElement | Text)[]> {
+class NodesMutator extends Mutator<Node | Node[]> {
     private readonly component: Component
-    private reconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
-    private reconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
-    private oldReconsileTracker = new Set<ReconcileNode | ReconcileNode[]>()
-    private oldReconsileQueueMap = new Map<string, ReconcileQueue<ReconcileNode | ReconcileNode[]>>()
+    private reconsileTracker = new Set<Node | Node[]>()
+    private reconsileQueueMap = new Map<string, ReconcileQueue<Node | Node[]>>()
+    private oldReconsileTracker = new Set<Node | Node[]>()
+    private oldReconsileQueueMap = new Map<string, ReconcileQueue<Node | Node[]>>()
 
     constructor(component: Component) {
         super()
         this.component = component
     }
 
-    mutate(prev?: (HTMLElement | SVGElement | Text)[]): (HTMLElement | SVGElement | Text)[] {
-        let next: (HTMLElement | SVGElement | Text)[]
+    mutate(prev?: Node | Node[]): Node | Node[] {
+        let next: Node | Node[]
 
         try {
             addContextToStack(this.component.context)
@@ -97,64 +97,87 @@ class NodesMutator extends Mutator<(HTMLElement | SVGElement | Text)[]> {
             return next
         }
 
-        if (prev.length !== next.length) {
-            return next
+        if (prev === next) {
+            return prev
         }
 
-        for (let i = 0; i < prev.length; i++) {
-            if (prev[i] !== next[i]) {
+        if (Array.isArray(prev) && Array.isArray(next)) {
+            if (prev.length !== next.length) {
                 return next
             }
+
+            for (let i = 0; i < prev.length; i++) {
+                if (prev[i] !== next[i]) {
+                    return next
+                }
+            }
+
+            return prev
         }
 
         return next
     }
 
     private reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
-        const nodes: (HTMLElement | SVGElement | Text)[] = []
         const { reconsileTracker, oldReconsileTracker, reconsileQueueMap, oldReconsileQueueMap } = this
 
         this.reconsileTracker = oldReconsileTracker
         this.reconsileQueueMap = oldReconsileQueueMap
         this.oldReconsileTracker = reconsileTracker
         this.oldReconsileQueueMap = reconsileQueueMap
-        this.doReconcile(child, nodes)
+
+        const result = this.doReconcile(child)
+
         this.removeOldElements()
         this.oldReconsileTracker.clear()
         this.oldReconsileQueueMap.clear()
 
-        return nodes
+        return result
     }
 
-    private doReconcile(child: WhatsJSX.Child, nodes: (HTMLElement | SVGElement | Text)[]) {
+    private doReconcile(child: WhatsJSX.Child, nodes?: Node[]) {
         if (Array.isArray(child)) {
+            if (!nodes) {
+                nodes = []
+            }
+
             for (let i = 0; i < child.length; i++) {
                 this.doReconcile(child[i], nodes)
             }
-            return
+
+            return nodes
         }
 
         if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
             this.oldReconsileTracker.delete(child)
             this.reconsileTracker.add(child)
-            nodes.push(child)
 
-            return
+            if (nodes) {
+                nodes.push(child)
+
+                return nodes
+            }
+
+            return child
         }
 
         if (child instanceof JsxMutator) {
             const candidate = this.getReconcileNode(child.key)
-            const result = child.mutate(candidate) as HTMLElement | SVGElement | (HTMLElement | SVGElement | Text)[]
+            const result = child.mutate(candidate) as Exclude<Node, Text> | Node[]
 
             this.addReconcileNode(child.key, result)
 
-            if (Array.isArray(result)) {
-                nodes.push(...result)
-            } else {
-                nodes.push(result)
+            if (nodes) {
+                if (Array.isArray(result)) {
+                    nodes.push(...result)
+                } else {
+                    nodes.push(result)
+                }
+
+                return nodes
             }
 
-            return
+            return result
         }
 
         if (typeof child === 'string' || typeof child === 'number') {
@@ -170,20 +193,28 @@ class NodesMutator extends Mutator<(HTMLElement | SVGElement | Text)[]> {
 
             this.addReconcileNode(TEXT_NODE_RECONCILE_KEY, candidate)
 
-            nodes.push(candidate)
+            if (nodes) {
+                nodes.push(candidate)
 
-            return
+                return nodes
+            }
+
+            return candidate
         }
 
         if (child === null || child === true || child === false) {
             // Ignore null & booleans
-            return
+            if (nodes) {
+                return nodes
+            }
+
+            return []
         }
 
         throw new InvalidJSXChildError(child)
     }
 
-    private addReconcileNode(reconcileKey: string, node: ReconcileNode | ReconcileNode[]) {
+    private addReconcileNode(reconcileKey: string, node: Node | Node[]) {
         if (!this.reconsileQueueMap.has(reconcileKey)) {
             this.reconsileQueueMap.set(reconcileKey, new ReconcileQueue())
         }
@@ -195,7 +226,7 @@ class NodesMutator extends Mutator<(HTMLElement | SVGElement | Text)[]> {
         this.reconsileTracker.add(node)
     }
 
-    private getReconcileNode(reconcileKey: string): ReconcileNode | ReconcileNode[] | void {
+    private getReconcileNode(reconcileKey: string): Node | Node[] | void {
         if (this.oldReconsileQueueMap.has(reconcileKey)) {
             const queue = this.oldReconsileQueueMap.get(reconcileKey)!
             const node = queue.dequeue()

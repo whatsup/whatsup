@@ -5,21 +5,27 @@ export interface Props {
     [k: string]: any
 }
 
-export const placeNodes = (container: HTMLElement | SVGElement, nodes: (HTMLElement | SVGElement | Text)[]) => {
+export const placeNodes = (
+    container: HTMLElement | SVGElement,
+    nodes: HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]
+) => {
     const { childNodes } = container
-    const { length } = nodes
 
-    for (let i = 0; i < length; i++) {
-        const node = nodes[i]
+    if (Array.isArray(nodes)) {
+        for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i]
 
-        if (childNodes[i] !== node) {
-            if (node.parentNode === container) {
-                // swap nodes
-                container.insertBefore(childNodes[i], node)
+            if (childNodes[i] !== node) {
+                if (node.parentNode === container) {
+                    // swap nodes
+                    container.insertBefore(childNodes[i], node)
+                }
+
+                container.insertBefore(node, childNodes[i])
             }
-
-            container.insertBefore(node, childNodes[i])
         }
+    } else {
+        container.insertBefore(nodes, childNodes[0])
     }
 }
 

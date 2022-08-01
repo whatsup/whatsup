@@ -74,6 +74,36 @@ describe('render', function () {
         expect(container.innerHTML).toBe('<div></div>')
     })
 
+    it('should render fragment', function () {
+        const container = document.createElement('div')
+        function* Root() {
+            while (true) {
+                yield (
+                    <>
+                        <div></div>
+                    </>
+                )
+            }
+        }
+
+        render(<Root />, container)
+
+        expect(container.innerHTML).toBe('<div></div>')
+    })
+
+    it('should render empty fragment', function () {
+        const container = document.createElement('div')
+        function* Root() {
+            while (true) {
+                yield <></>
+            }
+        }
+
+        render(<Root />, container)
+
+        expect(container.innerHTML).toBe('')
+    })
+
     it('should prevent recalc when disposed', function () {
         const container = document.createElement('div')
         const trigger = observable(0)
