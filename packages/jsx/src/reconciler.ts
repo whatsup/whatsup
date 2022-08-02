@@ -1,3 +1,4 @@
+import { EMPTY_ARR } from './constants'
 import { removeNodes } from './dom'
 import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
@@ -10,12 +11,12 @@ const RENDERED_NODE_RECONCILE_KEY = '__RENDERED_NODE_RECONCILE_KEY__'
 export class Reconciler {
     private tracker = new Map<Node | Node[], string>()
     private oldTracker = new Map<Node | Node[], string>()
-    private index = new Map<string, Node | Node[]>()
+    private index?: Map<string, Node | Node[]>
     private trackerator?: IterableIterator<[Node | Node[], string]>
     private isTrackeratorDone?: true
 
     find(key: string) {
-        if (this.index.has(key)) {
+        if (this.index && this.index.has(key)) {
             const item = this.index.get(key)!
 
             this.index.delete(key)
@@ -39,6 +40,10 @@ export class Reconciler {
                 return item
             }
 
+            if (!this.index) {
+                this.index = new Map()
+            }
+
             this.index.set(itemKey, item)
         }
 
@@ -57,7 +62,7 @@ export class Reconciler {
 
         this.removeOldElements()
         this.oldTracker.clear()
-        this.index.clear()
+        this.index?.clear()
         this.trackerator = undefined
         this.isTrackeratorDone = undefined
 
@@ -137,7 +142,7 @@ export class Reconciler {
                 return nodes
             }
 
-            return []
+            return EMPTY_ARR
         }
 
         throw new InvalidJSXChildError(child)
