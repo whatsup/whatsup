@@ -5,31 +5,26 @@ export interface Props {
     [k: string]: any
 }
 
-export const placeNodes = (
-    container: HTMLElement | SVGElement,
-    nodes: HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]
-) => {
+export const placeNodes = (container: HTMLElement | SVGElement, nodes: Iterable<HTMLElement | SVGElement | Text>) => {
     const { childNodes } = container
 
-    if (Array.isArray(nodes)) {
-        for (let i = 0; i < nodes.length; i++) {
-            const node = nodes[i]
+    let i = 0
 
-            if (childNodes[i] !== node) {
-                if (node.parentNode === container) {
-                    // swap nodes
-                    container.insertBefore(childNodes[i], node)
-                }
-
-                container.insertBefore(node, childNodes[i])
+    for (const node of nodes as Iterable<Node>) {
+        if (childNodes[i] !== node) {
+            if (node.parentNode === container) {
+                // swap nodes
+                container.insertBefore(childNodes[i], node)
             }
+
+            container.insertBefore(node, childNodes[i])
         }
-    } else if (childNodes[0] !== nodes) {
-        container.insertBefore(nodes, childNodes[0])
+
+        i++
     }
 }
 
-export const removeNodes = (nodes: Iterable<Text | Element>) => {
+export const removeNodes = (nodes: Iterable<HTMLElement | SVGElement | Text>) => {
     for (const node of nodes) {
         node.remove()
     }
@@ -193,7 +188,10 @@ const isReadonlyProp = (prop: string) => {
     )
 }
 
-export const createMountObserver = <T extends Element | Text>(target: T, callback: (el: T) => void) => {
+export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(
+    target: T,
+    callback: (el: T) => void
+) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
@@ -214,7 +212,10 @@ export const createMountObserver = <T extends Element | Text>(target: T, callbac
     return observer
 }
 
-export const createUnmountObserver = <T extends Element | Text>(target: T, callback: (el: T) => void) => {
+export const createUnmountObserver = <T extends HTMLElement | SVGElement | Text>(
+    target: T,
+    callback: (el: T) => void
+) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.removedNodes) {

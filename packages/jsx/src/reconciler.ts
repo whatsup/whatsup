@@ -12,23 +12,21 @@ export class Reconciler {
     private oldTracker = new Map<Node | Node[], string>()
     private index?: Map<string, Node | Node[]>
     private trackerator?: IterableIterator<[Node | Node[], string]>
-    private isTrackeratorDone?: true
+    private isTrackeratorDone?: true;
 
-    reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
+    *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
         const { tracker, oldTracker } = this
 
         this.tracker = oldTracker
         this.oldTracker = tracker
 
-        const result = this.doReconcile(child)
+        yield* this.doReconcile(child)
 
         this.removeOldElements()
         this.oldTracker.clear()
         this.index?.clear()
         this.trackerator = undefined
         this.isTrackeratorDone = undefined
-
-        return result
     }
 
     private find(key: string) {
@@ -68,30 +66,22 @@ export class Reconciler {
         return
     }
 
-    private doReconcile(child: WhatsJSX.Child, nodes?: Node[]): Node | Node[] {
+    private *doReconcile(child: WhatsJSX.Child): Generator<Node, undefined, undefined> {
         if (Array.isArray(child)) {
-            if (!nodes) {
-                nodes = []
-            }
-
             for (let i = 0; i < child.length; i++) {
-                this.doReconcile(child[i], nodes)
+                yield* this.doReconcile(child[i])
             }
 
-            return nodes
+            return
         }
 
         if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
             this.oldTracker.delete(child)
             this.tracker.set(child, RENDERED_NODE_RECONCILE_KEY)
 
-            if (nodes) {
-                nodes.push(child)
+            yield child
 
-                return nodes
-            }
-
-            return child
+            return
         }
 
         if (child instanceof JsxMutator) {
@@ -100,17 +90,13 @@ export class Reconciler {
 
             this.tracker.set(result, child.key)
 
-            if (nodes) {
-                if (Array.isArray(result)) {
-                    nodes.push(...result)
-                } else {
-                    nodes.push(result)
-                }
-
-                return nodes
+            if (Array.isArray(result)) {
+                yield* result
+            } else {
+                yield result
             }
 
-            return result
+            return
         }
 
         if (typeof child === 'string' || typeof child === 'number') {
@@ -126,22 +112,13 @@ export class Reconciler {
 
             this.tracker.set(candidate, TEXT_NODE_RECONCILE_KEY)
 
-            if (nodes) {
-                nodes.push(candidate)
+            yield candidate
 
-                return nodes
-            }
-
-            return candidate
+            return
         }
 
         if (child === null || child === true || child === false) {
-            // Ignore null & booleans
-            if (nodes) {
-                return nodes
-            }
-
-            return []
+            return
         }
 
         throw new InvalidJSXChildError(child)

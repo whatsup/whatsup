@@ -62,56 +62,79 @@ class NodesMutator extends Mutator<Node | Node[]> {
     }
 
     mutate(prev?: Node | Node[]): Node | Node[] {
-        let next: Node | Node[]
-
         try {
             addContextToStack(this.component.context)
 
+            const prevIsArray = Array.isArray(prev)
+
             let child = this.component.produce()
+            let next: Node | Node[] | undefined
+            let isEqual = true
 
             while (true) {
                 try {
-                    next = this.reconciler.reconcile(child)
+                    let i = 0
+                    let nextIsArray = false
+
+                    const nodes = this.reconciler.reconcile(child)
+
+                    for (const node of nodes) {
+                        if (prevIsArray) {
+                            if (prev[i] !== node) {
+                                isEqual = false
+                            }
+                        } else if (i !== 0) {
+                            isEqual = false
+                        } else if (prev !== node) {
+                            isEqual = false
+                        }
+
+                        /* short equality condition
+
+                            if(prevIsArray && (prev[i] !== node || false) || i !== 0 || prev !== node){
+                                isEqual = false
+                            }
+
+                        */
+
+                        if (next) {
+                            if (nextIsArray) {
+                                ;(next as Node[]).push(node)
+                            } else {
+                                nextIsArray = true
+                                next = [next as Node, node]
+                            }
+                        } else {
+                            next = node
+                        }
+
+                        i++
+                    }
+
+                    if (!prevIsArray || !nextIsArray) {
+                        isEqual = false
+                    }
+
+                    break
                 } catch (e) {
                     child = this.component.handleError(e as Error)
+                    next = undefined
+                    isEqual = false
+
                     continue
                 }
-                break
             }
+
+            if (isEqual) {
+                return prev!
+            }
+
+            return next ?? []
         } catch (e) {
             throw e
         } finally {
             popContextFromStack()
         }
-
-        /*
-            reuse old elements container
-            to prevent recalculation of top-level atom
-        */
-
-        if (!prev) {
-            return next
-        }
-
-        if (prev === next) {
-            return prev
-        }
-
-        if (Array.isArray(prev) && Array.isArray(next)) {
-            if (prev.length !== next.length) {
-                return next
-            }
-
-            for (let i = 0; i < prev.length; i++) {
-                if (prev[i] !== next[i]) {
-                    return next
-                }
-            }
-
-            return prev
-        }
-
-        return next
     }
 }
 
