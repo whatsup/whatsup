@@ -14,7 +14,24 @@ export class Reconciler {
     private trackerator?: IterableIterator<[Node | Node[], string]>
     private isTrackeratorDone?: true
 
-    find(key: string) {
+    reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
+        const { tracker, oldTracker } = this
+
+        this.tracker = oldTracker
+        this.oldTracker = tracker
+
+        const result = this.doReconcile(child)
+
+        this.removeOldElements()
+        this.oldTracker.clear()
+        this.index?.clear()
+        this.trackerator = undefined
+        this.isTrackeratorDone = undefined
+
+        return result
+    }
+
+    private find(key: string) {
         if (this.index && this.index.has(key)) {
             const item = this.index.get(key)!
 
@@ -49,23 +66,6 @@ export class Reconciler {
         this.isTrackeratorDone = true
 
         return
-    }
-
-    reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
-        const { tracker, oldTracker } = this
-
-        this.tracker = oldTracker
-        this.oldTracker = tracker
-
-        const result = this.doReconcile(child)
-
-        this.removeOldElements()
-        this.oldTracker.clear()
-        this.index?.clear()
-        this.trackerator = undefined
-        this.isTrackeratorDone = undefined
-
-        return result
     }
 
     private doReconcile(child: WhatsJSX.Child, nodes?: Node[]): Node | Node[] {
