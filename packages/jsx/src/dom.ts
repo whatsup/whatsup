@@ -24,7 +24,7 @@ export const placeNodes = (
                 container.insertBefore(node, childNodes[i])
             }
         }
-    } else {
+    } else if (childNodes[0] !== nodes) {
         container.insertBefore(nodes, childNodes[0])
     }
 }
