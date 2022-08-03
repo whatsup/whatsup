@@ -1,4 +1,3 @@
-import { EMPTY_ARR } from './constants'
 import { removeNodes } from './dom'
 import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
@@ -142,7 +141,7 @@ export class Reconciler {
                 return nodes
             }
 
-            return EMPTY_ARR
+            return []
         }
 
         throw new InvalidJSXChildError(child)
