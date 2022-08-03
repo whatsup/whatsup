@@ -26,7 +26,7 @@ interface ComponentMutatorLike extends JsxMutatorLike {
     component?: Component
 }
 
-export const Fragment = (props: Props) => {
+export function Fragment(props: Props) {
     return props.children ?? null
 }
 
