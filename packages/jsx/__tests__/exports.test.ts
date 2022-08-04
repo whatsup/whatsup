@@ -1,6 +1,7 @@
 import { jsx, render, Fragment, createRef, createKey, Event } from '../src/index'
 import { render as _render } from '../src/render'
-import { jsx as _jsx, Fragment as _Fragment } from '../src/mutator'
+import { jsx as _jsx } from '../src/mutator'
+import { Fragment as _Fragment } from '../src/fragment'
 import { createRef as _createRef } from '../src/create_ref'
 import { createKey as _createKey } from '../src/context'
 import { Event as _Event } from '../src/event'

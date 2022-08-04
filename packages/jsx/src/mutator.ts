@@ -26,10 +26,6 @@ interface ComponentMutatorLike extends JsxMutatorLike {
     component?: Component
 }
 
-export function Fragment(props: Props) {
-    return props.children ?? null
-}
-
 const JSX_MOUNT_OBSERVER = Symbol('Jsx onMount observer')
 const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
 
