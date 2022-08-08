@@ -18,7 +18,7 @@ export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any
         ? JSX.IntrinsicElements[T]
         : never
 
-    const uid = generateUid()
+    const key = generateUid()
 
     return (props: Props<P, S>) => {
         const newProps = {} as { [k: string]: any }
@@ -73,7 +73,7 @@ export const cssx = <T extends WhatsJSX.TagName | WhatsJSX.ComponentProducer<any
             newProps.className = classnames.join(' ')
         }
 
-        return jsx(type, uid, newProps) as WhatsJSX.Child
+        return jsx(type, key, newProps) as WhatsJSX.Child
     }
 }
 
