@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "@whatsup/core": "^2.3.0",
+        "@whatsup/equals": "2.3.0",
         "@whatsup/jsx": "^2.3.6"
     },
     "devDependencies": {

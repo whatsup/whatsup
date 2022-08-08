@@ -1,4 +1,5 @@
-import { Computed, computed, mutator, observable } from '@whatsup/core'
+import { Computed, computed, observable } from '@whatsup/core'
+import { shallow } from '@whatsup/equals'
 
 export abstract class Navigation {
     abstract tail: string
@@ -115,7 +116,7 @@ export class NestedNavigation extends Navigation {
             }
         }
 
-        return shallowParamsEquality(acc) as unknown as Params
+        return shallow(acc) as unknown as Params
     }
 
     @computed
@@ -143,25 +144,3 @@ export class NestedNavigation extends Navigation {
 interface Params {
     [k: string]: number | string
 }
-
-const shallowParamsEquality = (next: Params) =>
-    mutator((prev?: Params) => {
-        if (!prev) {
-            return next
-        }
-
-        const prevKeys = Object.keys(prev)
-        const nextKeys = Object.keys(next)
-
-        if (prevKeys.length !== nextKeys.length) {
-            return next
-        }
-
-        for (const key of nextKeys) {
-            if (next[key] !== prev[key]) {
-                return next
-            }
-        }
-
-        return prev
-    })
