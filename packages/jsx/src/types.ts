@@ -1537,8 +1537,8 @@ export namespace WhatsJSX {
         key?: Key
         ref?: Ref
         children?: Child
-        onMount?: (node: Element | Text | (Element | Text)[]) => void
-        onUnmount?: (node: Element | Text | (Element | Text)[]) => void
+        onMount?: (node: HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]) => void
+        onUnmount?: (node: HTMLElement | SVGElement | Text | (HTMLElement | SVGElement | Text)[]) => void
     }
 
     export interface FnComponentProducer<P = any> {
