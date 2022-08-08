@@ -91,7 +91,7 @@ class NodesMutator extends Mutator<Node | Node[]> {
 
                         /* short equality condition
 
-                            if(prevIsArray && (prev[i] !== node || false) || i !== 0 || prev !== node){
+                            if(prevIsArray && prev[i] !== node || !prevIsArray && (i !== 0 || prev !== node)){
                                 isEqual = false
                             }
 
