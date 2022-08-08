@@ -11,10 +11,10 @@ describe('Params test', () => {
     it('should extract params and pass they as props', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -36,19 +36,19 @@ describe('Params test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/user')
+        navigation.navigate('/user')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/user/1')
+        navigation.navigate('/user/1')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User 1</div>')
 
-        navigator.navigate('/user/2')
+        navigation.navigate('/user/2')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User 2</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
     })
@@ -56,10 +56,10 @@ describe('Params test', () => {
     it('should convert number-like params to numbers', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -86,15 +86,15 @@ describe('Params test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/user')
+        navigation.navigate('/user')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/user/Barry/1')
+        navigation.navigate('/user/Barry/1')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User number string</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
     })
@@ -102,10 +102,10 @@ describe('Params test', () => {
     it('should extract params in nested routes and pass they as props', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -140,23 +140,23 @@ describe('Params test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/user/1')
+        navigation.navigate('/user/1')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User 1</div>')
 
-        navigator.navigate('/user/2')
+        navigation.navigate('/user/2')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User 2</div>')
 
-        navigator.navigate('/user/2/post/1')
+        navigation.navigate('/user/2/post/1')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User 2</div><div>Post 1</div>')
 
-        navigator.navigate('/user/3/post/2')
+        navigation.navigate('/user/3/post/2')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User 3</div><div>Post 2</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
     })

@@ -57,8 +57,8 @@ describe('Navigation', () => {
 
         expect(userNavigation).toBeInstanceOf(NestedNavigation)
         expect(postNavigation).toBeInstanceOf(NestedNavigation)
-        expect(userNavigation['parent']).toBe(appNavigation)
-        expect(postNavigation['parent']).toBe(userNavigation)
+        expect((userNavigation as NestedNavigation)['parent']).toBe(appNavigation)
+        expect((postNavigation as NestedNavigation)['parent']).toBe(userNavigation)
         expect(appNavigation.matchedUrl).toBe('')
         expect(userNavigation.matchedUrl).toBe('/user/1')
         expect(postNavigation.matchedUrl).toBe('/user/1/post/2')
@@ -76,10 +76,10 @@ describe('Navigation', () => {
     it('should replace history item', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -102,20 +102,20 @@ describe('Navigation', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/about')
+        navigation.navigate('/about')
 
         expect(container.innerHTML).toBe('<div>App</div><div>About</div>')
 
-        navigator.replace('/user')
+        navigation.replace('/user')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User</div>')
 
-        // navigator.back()
+        // navigation.back()
 
         // expect(window.location.pathname).toBe('/')
         // expect(container.innerHTML).toBe('<div>App</div>')
 
-        // navigator.navigate('/')
+        // navigation.navigate('/')
 
         // expect(container.innerHTML).toBe('<div>App</div>')
     })

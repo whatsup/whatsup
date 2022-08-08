@@ -11,10 +11,10 @@ describe('Base test', () => {
     it('should switch routes', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -42,15 +42,15 @@ describe('Base test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div><div>Index</div>')
 
-        navigator.navigate('/user')
+        navigation.navigate('/user')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User</div>')
 
-        navigator.navigate('/about')
+        navigation.navigate('/about')
 
         expect(container.innerHTML).toBe('<div>App</div><div>About</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div><div>Index</div>')
     })
@@ -58,10 +58,10 @@ describe('Base test', () => {
     it('should switch nested routes', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -98,23 +98,23 @@ describe('Base test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/user')
+        navigation.navigate('/user')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User</div>')
 
-        navigator.navigate('/about')
+        navigation.navigate('/about')
 
         expect(container.innerHTML).toBe('<div>App</div><div>About</div>')
 
-        navigator.navigate('/user/profile')
+        navigation.navigate('/user/profile')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User</div><div>Profile</div>')
 
-        navigator.navigate('/user/settings')
+        navigation.navigate('/user/settings')
 
         expect(container.innerHTML).toBe('<div>App</div><div>User</div><div>Settings</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
     })
@@ -127,10 +127,10 @@ describe('Base test', () => {
         const mockUserProfile = jest.fn()
         const mockUserSettings = jest.fn()
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             mockApp()
 
@@ -177,7 +177,7 @@ describe('Base test', () => {
         expect(mockUserSettings).toBeCalledTimes(0)
         expect(mockUserProfile).toBeCalledTimes(0)
 
-        navigator.navigate('/about')
+        navigation.navigate('/about')
 
         expect(mockApp).toBeCalledTimes(2)
         expect(mockAbout).toBeCalledTimes(1)
@@ -185,7 +185,7 @@ describe('Base test', () => {
         expect(mockUserSettings).toBeCalledTimes(0)
         expect(mockUserProfile).toBeCalledTimes(0)
 
-        navigator.navigate('/user')
+        navigation.navigate('/user')
 
         expect(mockApp).toBeCalledTimes(3)
         expect(mockAbout).toBeCalledTimes(1)
@@ -193,7 +193,7 @@ describe('Base test', () => {
         expect(mockUserSettings).toBeCalledTimes(0)
         expect(mockUserProfile).toBeCalledTimes(0)
 
-        navigator.navigate('/user/profile')
+        navigation.navigate('/user/profile')
 
         expect(mockApp).toBeCalledTimes(3)
         expect(mockAbout).toBeCalledTimes(1)
@@ -201,7 +201,7 @@ describe('Base test', () => {
         expect(mockUserSettings).toBeCalledTimes(0)
         expect(mockUserProfile).toBeCalledTimes(1)
 
-        navigator.navigate('/user/settings')
+        navigation.navigate('/user/settings')
 
         expect(mockApp).toBeCalledTimes(3)
         expect(mockAbout).toBeCalledTimes(1)
@@ -209,7 +209,7 @@ describe('Base test', () => {
         expect(mockUserSettings).toBeCalledTimes(1)
         expect(mockUserProfile).toBeCalledTimes(1)
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(mockApp).toBeCalledTimes(4)
         expect(mockAbout).toBeCalledTimes(1)
@@ -250,10 +250,10 @@ describe('Base test', () => {
     it('should not to be case sensitive', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -271,11 +271,11 @@ describe('Base test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/About')
+        navigation.navigate('/About')
 
         expect(container.innerHTML).toBe('<div>App</div><div>About</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
     })
@@ -283,10 +283,10 @@ describe('Base test', () => {
     it('should to be case sensitive', () => {
         const container = document.createElement('div')
 
-        let navigator!: Navigation
+        let navigation!: Navigation
 
         function App(this: Context) {
-            navigator = this.find(NAVIGATION)
+            navigation = this.find(NAVIGATION)
 
             return (
                 <>
@@ -304,15 +304,15 @@ describe('Base test', () => {
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/About')
+        navigation.navigate('/About')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
-        navigator.navigate('/about')
+        navigation.navigate('/about')
 
         expect(container.innerHTML).toBe('<div>App</div><div>About</div>')
 
-        navigator.navigate('/')
+        navigation.navigate('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
     })
