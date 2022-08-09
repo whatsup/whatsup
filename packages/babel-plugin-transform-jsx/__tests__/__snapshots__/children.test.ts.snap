@@ -1,131 +1,131 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`transform children Should safe whitespaces between children 1`] = `
-"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
   children: [\\"User \\", name, \\" \\", age]
 });"
 `;
 
 exports[`transform children Should transform children & props 1`] = `
-"import { jsx as _jsx3 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"ul\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"li\\", \\"UniqueId_\\"), _jsx3(\\"li\\", \\"UniqueId_\\")],
+_html(\\"ul\\", \\"UniqueId_\\", {
+  children: [_html2(\\"li\\", \\"UniqueId_\\"), _html3(\\"li\\", \\"UniqueId_\\")],
   prop: \\"1\\",
   prop2: 3
 });"
 `;
 
 exports[`transform children Should transform children spread 1`] = `
-"import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"span\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
+  children: [_html2(\\"span\\", \\"UniqueId_\\", {
     children: \\"foo\\"
   }), ...other]
 });"
 `;
 
 exports[`transform children Should transform children with expressions 1`] = `
-"import { jsx as _jsx3 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"span\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
+  children: [_html2(\\"span\\", \\"UniqueId_\\", {
     children: \\"foo\\"
-  }), [\`one\`, \`two\`].map(i => _jsx3(\\"span\\", \\"UniqueId_\\", {
+  }), [\`one\`, \`two\`].map(i => _html3(\\"span\\", \\"UniqueId_\\", {
     children: i
   }))]
 });"
 `;
 
 exports[`transform children Should transform children with primitives 1`] = `
-"import { jsx as _jsx3 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"span\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
+  children: [_html2(\\"span\\", \\"UniqueId_\\", {
     children: \\"foo\\"
-  }), \\"bar\\", _jsx3(\\"i\\", \\"UniqueId_\\", {
+  }), \\"bar\\", _html3(\\"i\\", \\"UniqueId_\\", {
     children: \\"baz\\"
   })]
 });"
 `;
 
 exports[`transform children Should transform many children 1`] = `
-"import { jsx as _jsx3 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"ul\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"li\\", \\"UniqueId_\\"), _jsx3(\\"li\\", \\"UniqueId_\\")]
+_html(\\"ul\\", \\"UniqueId_\\", {
+  children: [_html2(\\"li\\", \\"UniqueId_\\"), _html3(\\"li\\", \\"UniqueId_\\")]
 });"
 `;
 
 exports[`transform children Should transform once child 1`] = `
-"import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
-  children: _jsx2(\\"span\\", \\"UniqueId_\\")
+_html(\\"div\\", \\"UniqueId_\\", {
+  children: _html2(\\"span\\", \\"UniqueId_\\")
 });"
 `;
 
 exports[`transform children Should transform without children 1`] = `
-"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\");"
+_html(\\"div\\", \\"UniqueId_\\");"
 `;
 
 exports[`transform children Should trim newlines  1`] = `
-"import { jsx as _jsx3 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"div\\", \\"UniqueId_\\"), _jsx3(\\"div\\", \\"UniqueId_\\")]
+_html(\\"div\\", \\"UniqueId_\\", {
+  children: [_html2(\\"div\\", \\"UniqueId_\\"), _html3(\\"div\\", \\"UniqueId_\\")]
 });"
 `;
 
 exports[`transform children Should trim newlines 2 1`] = `
-"import { jsx as _jsx3 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx2 } from \\"@whatsup/jsx\\";
-import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html3 } from \\"@whatsup/jsx\\";
+import { html as _html2 } from \\"@whatsup/jsx\\";
+import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
-  children: [_jsx2(\\"div\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
+  children: [_html2(\\"div\\", \\"UniqueId_\\", {
     children: \\"child1\\"
-  }), _jsx3(\\"div\\", \\"UniqueId_\\", {
+  }), _html3(\\"div\\", \\"UniqueId_\\", {
     children: \\"child2\\"
   }), \\" child3 \\", 1612, null, false, true]
 });"
 `;
 
 exports[`transform children Should trim whitespaces and create empty children 1`] = `
-"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\");"
+_html(\\"div\\", \\"UniqueId_\\");"
 `;
 
 exports[`transform children Should trim whitespaces left only 1`] = `
-"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
   children: [\\"items \\", count]
 });"
 `;
 
 exports[`transform children Should trim whitespaces right only 1`] = `
-"import { jsx as _jsx } from \\"@whatsup/jsx\\";
+"import { html as _html } from \\"@whatsup/jsx\\";
 
-_jsx(\\"div\\", \\"UniqueId_\\", {
+_html(\\"div\\", \\"UniqueId_\\", {
   children: [count, \\" items\\"]
 });"
 `;

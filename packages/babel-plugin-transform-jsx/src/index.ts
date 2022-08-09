@@ -41,7 +41,7 @@ import {
     JSXIdentifier,
     JSXNamespacedName,
 } from '@babel/types'
-import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, JSX_FACTORY_NAME } from './constants'
+import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, JSX_LIBRARY_FACTORIES, IS_SVG_REGEX } from './constants'
 
 const VOID = identifier('undefined')
 
@@ -82,15 +82,19 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     attributes: (JSXAttribute | JSXSpreadAttribute)[],
     children: (JSXElement | JSXText | JSXExpressionContainer | JSXSpreadChild | JSXFragment)[]
 ) {
-    const factory = createFactoryImport(path)
+    const factory = getFactory(name)
+    const callee = createCalleeImport(path, factory)
     const type = createType(path, name)
     const { key, props, ref, onMount, onUnmount } = parseAttributes(attributes, parseChildren(children))
     const args = createCalleeArgs(type, key, props, ref, onMount, onUnmount)
-
-    const expression = callExpression(factory, args)
+    const expression = callExpression(callee, args)
 
     // Node from @babel/core & from @babel/types incompatible
     path.replaceWith(expression as any)
+}
+
+function createCalleeImport<T extends Node>(path: NodePath<T>, factory: string) {
+    return createImport(path, JSX_LIBRARY_NAME, factory)
 }
 
 function createCalleeArgs(
@@ -119,12 +123,13 @@ function createCalleeArgs(
     return args as Expression[]
 }
 
-function createFragmentImport<T extends Node>(path: NodePath<T>) {
-    return createImport(path, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME)
+function getFactory(name: string) {
+    const { HTML, SVG, Component } = JSX_LIBRARY_FACTORIES
+    return isComponent(name) ? Component : isSVG(name) ? SVG : HTML
 }
 
-function createFactoryImport<T extends Node>(path: NodePath<T>) {
-    return createImport(path, JSX_LIBRARY_NAME, JSX_FACTORY_NAME)
+function createFragmentImport<T extends Node>(path: NodePath<T>) {
+    return createImport(path, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME)
 }
 
 function createImport<T extends Node>(path: NodePath<T>, importSource: string, method: string) {
@@ -279,4 +284,8 @@ function isComponent(name: string) {
 
 function isFragment(name: string) {
     return name === FRAGMENT_COMPONENT_NAME
+}
+
+function isSVG(name: string) {
+    return IS_SVG_REGEX.test(name)
 }
