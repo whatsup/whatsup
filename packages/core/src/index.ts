@@ -1,4 +1,4 @@
-export { createAtom } from './atom'
+export { createAtom, CacheState } from './atom'
 export { computed } from './computed'
 export { observable } from './observable'
 export { array } from './array'
@@ -6,7 +6,6 @@ export { set } from './set'
 export { map } from './map'
 export { reaction, autorun } from './reactions'
 export { action, runInAction } from './action'
-export { rebuild } from './rebuild'
 export { delegate } from './delegation'
 export { mutator, Mutator, comparer, filter } from './mutator'
 
