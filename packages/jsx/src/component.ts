@@ -1,4 +1,4 @@
-import { createAtom, Atom, rebuild, Mutator } from '@whatsup/core'
+import { createAtom, Atom, Mutator, CacheState } from '@whatsup/core'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
 import { Props } from './mutator'
@@ -30,7 +30,7 @@ export abstract class Component {
     setProps(props: Props) {
         if (!isEqualProps(this.props, props)) {
             this.props = props
-            rebuild(this.nodes)
+            this.nodes.setCacheState(CacheState.Dirty)
         }
     }
 
