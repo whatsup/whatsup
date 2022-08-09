@@ -3,7 +3,8 @@
  */
 
 import { SVG_NAMESPACE } from '../src/constants'
-import { jsx, ElementMutator } from '../src/mutator'
+import { ElementMutator } from '../src/mutator'
+import { jsx } from '../src/factories'
 
 describe('reconcilation', function () {
     it('expect HTMLElementMutator.mutate return div element', function () {

@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { jsx } from '../src/mutator'
+import { jsx } from '../src/factories'
 
 describe('props', function () {
     it('should ignore children prop', function () {

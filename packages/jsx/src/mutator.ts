@@ -32,24 +32,6 @@ const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
 const FAKE_JSX_COMPONENT_MUTATOR: ComponentMutatorLike = {}
 const FAKE_JSX_ELEMENT_MUTATOR: ElementMutatorLike = {}
 
-const NS = {
-    isSvg: false,
-    toggle(type: WhatsJSX.TagName) {
-        if (type === 'svg') {
-            this.isSvg = true
-        } else if (this.isSvg && type === 'foreignObject') {
-            this.isSvg = false
-        }
-    },
-    untoggle(type: WhatsJSX.TagName) {
-        if (type === 'svg') {
-            this.isSvg = false
-        } else if (!this.isSvg && type === 'foreignObject') {
-            this.isSvg = true
-        }
-    },
-}
-
 export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extends Mutator<R> implements JsxMutatorLike {
     abstract doMutation(oldMutator: JsxMutatorLike | void): R
 
@@ -124,18 +106,24 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
     }
 }
 
-export class ElementMutator extends JsxMutator<WhatsJSX.TagName, Exclude<Node, Text>> implements ElementMutatorLike {
+export abstract class ElementMutator
+    extends JsxMutator<WhatsJSX.TagName, Exclude<Node, Text>>
+    implements ElementMutatorLike
+{
+    abstract createElement(): HTMLElement | SVGElement
+    protected abstract readonly isSvg: boolean
+
     node?: Exclude<Node, Text>
     reconciler?: Reconciler
 
     doMutation({ props: oldProps, node, reconciler } = FAKE_JSX_ELEMENT_MUTATOR) {
-        const { props } = this
-
-        NS.toggle(this.type)
+        const { props, isSvg } = this
 
         this.node = node || this.createElement()
 
-        mutateProps(this.node!, props || EMPTY_OBJ, oldProps || EMPTY_OBJ)
+        if (props !== undefined || oldProps !== undefined) {
+            mutateProps(this.node!, props || EMPTY_OBJ, oldProps || EMPTY_OBJ, isSvg)
+        }
 
         if (props?.children !== undefined || reconciler) {
             this.reconciler = reconciler || new Reconciler()
@@ -145,17 +133,23 @@ export class ElementMutator extends JsxMutator<WhatsJSX.TagName, Exclude<Node, T
             placeNodes(this.node!, childNodes)
         }
 
-        NS.untoggle(this.type)
-
         return this.node!
     }
+}
 
-    createElement(): HTMLElement | SVGElement {
-        if (NS.isSvg) {
-            return document.createElementNS(SVG_NAMESPACE, this.type)
-        }
+export class HTMLElementMutator extends ElementMutator {
+    protected readonly isSvg = false
 
+    createElement(): HTMLElement {
         return document.createElement(this.type)
+    }
+}
+
+export class SVGElementMutator extends ElementMutator {
+    protected readonly isSvg = true
+
+    createElement(): SVGElement {
+        return document.createElementNS(SVG_NAMESPACE, this.type)
     }
 }
 
@@ -177,18 +171,4 @@ export class ComponentMutator
 
         return this.component!.getNodes()
     }
-}
-
-export const jsx = <P extends Props>(
-    type: Type,
-    key: string,
-    props?: P,
-    ref?: WhatsJSX.Ref,
-    onMount?: (el: Node | Node[]) => void,
-    onUnmount?: (el: Node | Node[]) => void
-) => {
-    if (typeof type === 'string') {
-        return new ElementMutator(type, key, props, ref, onMount, onUnmount)
-    }
-    return new ComponentMutator(type, key, props, ref, onMount, onUnmount)
 }

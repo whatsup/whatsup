@@ -1,4 +1,4 @@
-import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_NAMESPACE, SVG_DASHED_PROPS } from './constants'
+import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
 
 export interface Props {
@@ -30,16 +30,16 @@ export const removeNodes = (nodes: Iterable<HTMLElement | SVGElement | Text>) =>
     }
 }
 
-export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T) => {
+export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T, isSvg: boolean) => {
     for (const prop in oldProps) {
         if (!(prop in props)) {
-            mutateProp(node, prop, undefined, oldProps[prop])
+            mutateProp(node, prop, undefined, oldProps[prop], isSvg)
         }
     }
 
     for (const prop in props) {
         if (props[prop] !== oldProps[prop]) {
-            mutateProp(node, prop, props[prop], oldProps[prop])
+            mutateProp(node, prop, props[prop], oldProps[prop], isSvg)
         }
     }
 }
@@ -48,9 +48,10 @@ const mutateProp = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
     value: T[K] | undefined,
-    oldValue: T[K] | undefined
+    oldValue: T[K] | undefined,
+    isSvg: boolean
 ) => {
-    if (isSVG(node)) {
+    if (isSvg) {
         // Normalize incorrect prop usage for SVG
         // Thanks preact team
         prop = (prop as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
@@ -69,7 +70,7 @@ const mutateProp = <T extends Props, K extends keyof T & string>(
         case isStyleProp(prop):
             mutateStyle(node, value, oldValue)
             break
-        case isReadonlyProp(prop) || isSVG(node):
+        case isReadonlyProp(prop) || isSvg:
             mutatePropThroughAttributeApi(node, prop, value)
             break
         default:
@@ -155,10 +156,6 @@ const mutatePropThroughUsualWay = <T extends HTMLElement | SVGElement>(
 
 const getEventName = (prop: string, capture: boolean) => {
     return prop.slice(2, capture ? -7 : Infinity).toLowerCase()
-}
-
-const isSVG = (node: HTMLElement | SVGElement) => {
-    return node.namespaceURI === SVG_NAMESPACE
 }
 
 const isEventListener = (prop: string) => {
