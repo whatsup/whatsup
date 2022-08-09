@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/equals",
     "description": "whatsup equal comparers set",
-    "version": "2.3.0",
+    "version": "2.3.8",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -27,6 +27,6 @@
         "access": "public"
     },
     "dependencies": {
-        "@whatsup/core": "^2.3.0"
+        "@whatsup/core": "^2.3.8"
     }
 }

@@ -1,7 +1,7 @@
 {
     "name": "whatsup",
     "description": "A frontend framework for chillout-mode development 🥤",
-    "version": "2.3.7",
+    "version": "2.3.8",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -44,10 +44,10 @@
         }
     },
     "dependencies": {
-        "@whatsup/core": "^2.3.0",
-        "@whatsup/cssx": "^2.3.7",
-        "@whatsup/equals": "^2.3.0",
-        "@whatsup/jsx": "^2.3.7",
-        "@whatsup/route": "^2.3.7"
+        "@whatsup/core": "^2.3.8",
+        "@whatsup/cssx": "^2.3.8",
+        "@whatsup/equals": "^2.3.8",
+        "@whatsup/jsx": "^2.3.8",
+        "@whatsup/route": "^2.3.8"
     }
 }
