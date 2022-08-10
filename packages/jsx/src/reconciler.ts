@@ -75,15 +75,6 @@ export class Reconciler {
             return
         }
 
-        if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
-            this.oldTracker.delete(child)
-            this.tracker.set(child, RENDERED_NODE_RECONCILE_KEY)
-
-            yield child
-
-            return
-        }
-
         if (child instanceof JsxMutator) {
             const candidate = this.find(child.key)
             const result = child.mutate(candidate) as Exclude<Node, Text> | Node[]
@@ -118,6 +109,15 @@ export class Reconciler {
         }
 
         if (child === null || child === true || child === false) {
+            return
+        }
+
+        if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
+            this.oldTracker.delete(child)
+            this.tracker.set(child, RENDERED_NODE_RECONCILE_KEY)
+
+            yield child
+
             return
         }
 
