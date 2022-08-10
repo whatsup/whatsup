@@ -36,7 +36,6 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
     abstract doMutation(oldMutator: JsxMutatorLike | void): R
 
     readonly key: string
-    readonly attachKey: symbol
     readonly type: T
     readonly props?: Props
     readonly ref?: WhatsJSX.Ref
@@ -54,7 +53,6 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
         super()
 
         this.key = key
-        this.attachKey = Symbol.for(key)
         this.type = type
 
         if (props) this.props = props
@@ -81,13 +79,13 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
     }
 
     private extractFrom(target: any): JsxMutator<T, R> | void {
-        if (target != null && typeof target === 'object' && Reflect.has(target, this.attachKey)) {
-            return Reflect.get(target, this.attachKey) as JsxMutator<T, R>
+        if (target != null && typeof target === 'object' && Reflect.has(target, this.key)) {
+            return Reflect.get(target, this.key) as JsxMutator<T, R>
         }
     }
 
     private attachSelfTo(target: R) {
-        Reflect.set(target, this.attachKey, this)
+        Reflect.set(target, this.key, this)
     }
 
     private attachMountingCallbacks(result: R) {

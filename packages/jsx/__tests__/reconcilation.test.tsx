@@ -179,10 +179,10 @@ describe('reconcilation', function () {
     })
 
     it('should render nested array', function () {
-        const mutator = jsx('div', '1', {
+        const mutator = jsx('div', 'uid1', {
             children: [
-                jsx('div', '2', { children: ['foo'] }),
-                [jsx('div', '3', { children: ['baz'] }), jsx('div', '3', { children: ['bar'] })],
+                jsx('div', 'uid2', { children: ['foo'] }),
+                [jsx('div', 'uid3', { children: ['baz'] }), jsx('div', 'uid3', { children: ['bar'] })],
             ],
         })
         const element = mutator.mutate() as HTMLElement
@@ -193,9 +193,9 @@ describe('reconcilation', function () {
 
     it('should be prepared for the child to return an array', function () {
         function Comp() {
-            return [jsx('div', '3', { children: ['baz'] }), jsx('div', '3', { children: ['bar'] })]
+            return [jsx('div', 'uid3', { children: ['baz'] }), jsx('div', 'uid3', { children: ['bar'] })]
         }
-        const mutator = jsx('div', '1', { children: [jsx('div', '2', { children: ['foo'] }), jsx(Comp, '1')] })
+        const mutator = jsx('div', 'uid1', { children: [jsx('div', 'uid2', { children: ['foo'] }), jsx(Comp, 'uid1')] })
         const element = mutator.mutate() as HTMLElement
 
         expect(element.childNodes.length).toBe(3)
@@ -203,7 +203,7 @@ describe('reconcilation', function () {
     })
 
     it('should svg children have rich namespace', function () {
-        const mutator = jsx('svg', '', { children: jsx('circle', '') })
+        const mutator = jsx('svg', 'uid1', { children: jsx('circle', '') })
         const element = mutator.mutate() as SVGElement
 
         expect(element.children[0].namespaceURI).toBe(SVG_NAMESPACE)
