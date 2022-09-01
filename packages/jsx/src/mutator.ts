@@ -7,6 +7,7 @@ import { WhatsJSX } from './types'
 
 export interface Props {
     children?: WhatsJSX.Child
+    style?: { [k: string]: string }
     [k: string]: any
 }
 

@@ -128,6 +128,214 @@ describe('render', function () {
         expect(container.innerHTML).toBe('<div>1</div>')
     })
 
+    it('should prevent recalc when children not changed', function () {
+        const container = document.createElement('div')
+        const trigger = observable(0)
+        const mock1 = jest.fn()
+        const mock2 = jest.fn()
+
+        function Wrapper(props: { children: any }) {
+            mock2()
+
+            return <div>{props.children}</div>
+        }
+
+        function* Root() {
+            while (true) {
+                mock1()
+
+                yield (
+                    <div>
+                        <div>{trigger()}</div>
+                        <Wrapper>
+                            <div>test</div>
+                        </Wrapper>
+                    </div>
+                )
+            }
+        }
+
+        const dispose = render(<Root />, container)
+
+        expect(mock1).toBeCalledTimes(1)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div>0</div><div><div>test</div></div></div>')
+
+        trigger(1)
+
+        expect(mock1).toBeCalledTimes(2)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div>1</div><div><div>test</div></div></div>')
+
+        dispose()
+    })
+
+    it('should recalc when children changed', function () {
+        const container = document.createElement('div')
+        const trigger = observable(0)
+        const mock1 = jest.fn()
+        const mock2 = jest.fn()
+
+        function Wrapper(props: { children: any }) {
+            mock2()
+
+            return <div>{props.children}</div>
+        }
+
+        function* Root() {
+            while (true) {
+                mock1()
+
+                yield (
+                    <div>
+                        <Wrapper>
+                            <div>{trigger()}</div>
+                        </Wrapper>
+                    </div>
+                )
+            }
+        }
+
+        const dispose = render(<Root />, container)
+
+        expect(mock1).toBeCalledTimes(1)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div><div>0</div></div></div>')
+
+        trigger(1)
+
+        expect(mock1).toBeCalledTimes(2)
+        expect(mock2).toBeCalledTimes(2)
+        expect(container.innerHTML).toBe('<div><div><div>1</div></div></div>')
+
+        dispose()
+    })
+
+    it('should prevent recalc when children style not changed', function () {
+        const container = document.createElement('div')
+        const trigger = observable(0)
+        const mock1 = jest.fn()
+        const mock2 = jest.fn()
+
+        function Wrapper(props: { children: any }) {
+            mock2()
+
+            return <div>{props.children}</div>
+        }
+
+        function* Root() {
+            while (true) {
+                mock1()
+
+                yield (
+                    <div>
+                        <div>{trigger()}</div>
+                        <Wrapper>
+                            <div style={{ color: 'red' }}>test</div>
+                        </Wrapper>
+                    </div>
+                )
+            }
+        }
+
+        const dispose = render(<Root />, container)
+
+        expect(mock1).toBeCalledTimes(1)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div>0</div><div><div style="color: red;">test</div></div></div>')
+
+        trigger(1)
+
+        expect(mock1).toBeCalledTimes(2)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div>1</div><div><div style="color: red;">test</div></div></div>')
+
+        dispose()
+    })
+
+    it('should recalc when children style changed', function () {
+        const container = document.createElement('div')
+        const trigger = observable(0)
+        const mock1 = jest.fn()
+        const mock2 = jest.fn()
+
+        function Wrapper(props: { children: any }) {
+            mock2()
+
+            return <div>{props.children}</div>
+        }
+
+        function* Root() {
+            while (true) {
+                mock1()
+
+                yield (
+                    <div>
+                        <Wrapper>
+                            <div style={{ fontSize: trigger() }}>test</div>
+                        </Wrapper>
+                    </div>
+                )
+            }
+        }
+
+        const dispose = render(<Root />, container)
+
+        expect(mock1).toBeCalledTimes(1)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div><div style="font-size: 0px;">test</div></div></div>')
+
+        trigger(1)
+
+        expect(mock1).toBeCalledTimes(2)
+        expect(mock2).toBeCalledTimes(2)
+        expect(container.innerHTML).toBe('<div><div><div style="font-size: 1px;">test</div></div></div>')
+
+        dispose()
+    })
+
+    it('should recalc when childrens changed', function () {
+        const container = document.createElement('div')
+        const trigger = observable(0)
+        const mock1 = jest.fn()
+        const mock2 = jest.fn()
+
+        function Wrapper(props: { children: any }) {
+            mock2()
+
+            return <div>{props.children}</div>
+        }
+
+        function* Root() {
+            while (true) {
+                mock1()
+
+                yield (
+                    <div>
+                        <Wrapper>
+                            <div>test</div>
+                            {trigger() === 0 ? <span>test</span> : <div>test</div>}
+                        </Wrapper>
+                    </div>
+                )
+            }
+        }
+
+        const dispose = render(<Root />, container)
+
+        expect(mock1).toBeCalledTimes(1)
+        expect(mock2).toBeCalledTimes(1)
+        expect(container.innerHTML).toBe('<div><div><div>test</div><span>test</span></div></div>')
+
+        trigger(1)
+
+        expect(mock1).toBeCalledTimes(2)
+        expect(mock2).toBeCalledTimes(2)
+        expect(container.innerHTML).toBe('<div><div><div>test</div><div>test</div></div></div>')
+
+        dispose()
+    })
+
     it('should render many children', function () {
         const container = document.createElement('div')
         function* Root() {

@@ -1,7 +1,7 @@
 import { createAtom, Atom, Mutator, CacheState } from '@whatsup/core'
 import { EMPTY_OBJ } from './constants'
 import { Context, createContext, addContextToStack, popContextFromStack } from './context'
-import { Props } from './mutator'
+import { JsxMutator, Props } from './mutator'
 import { WhatsJSX } from './types'
 import { Reconciler } from './reconciler'
 import { isGenerator } from './utils'
@@ -217,26 +217,86 @@ const isEqualProps = <P extends Props>(prev: P, next: P) => {
     }
 
     for (const key of prevKeys) {
-        if (key !== 'children' && prev[key] !== next[key]) {
-            return false
-        }
-    }
-
-    if (Array.isArray(prev.children) && Array.isArray(next.children)) {
-        if (prev.children.length !== next.children.length) {
-            return false
-        }
-
-        for (let i = 0; i < prev.children.length; i++) {
-            if (prev.children[i] !== next.children[i]) {
+        if (key === 'style') {
+            if (!isEqualStyle(prev.style || EMPTY_OBJ, next.style || EMPTY_OBJ)) {
                 return false
             }
-        }
-    }
 
-    if (prev.children !== next.children) {
-        return false
+            continue
+        }
+
+        if (key === 'children') {
+            if (!isEqualChildren(prev.children, next.children)) {
+                return false
+            }
+
+            continue
+        }
+
+        if (prev[key] !== next[key]) {
+            return false
+        }
     }
 
     return true
+}
+
+const isEqualStyle = <S extends { [k: string]: string }>(prev: S, next: S) => {
+    const prevKeys = Object.keys(prev)
+    const nextKeys = Object.keys(next)
+
+    if (prevKeys.length !== nextKeys.length) {
+        return false
+    }
+
+    for (const key of prevKeys) {
+        if (prev[key] !== next[key]) {
+            return false
+        }
+    }
+
+    return true
+}
+
+const isEqualChildren = (prev: WhatsJSX.Child | undefined, next: WhatsJSX.Child | undefined) => {
+    const prevIsArray = Array.isArray(prev)
+    const nextIsArray = Array.isArray(next)
+
+    if (prevIsArray && nextIsArray) {
+        if (prev.length !== next.length) {
+            return false
+        }
+
+        for (let i = 0; i < prev.length; i++) {
+            if (!isEqualChildren(prev[i], next[i])) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    if (prevIsArray || nextIsArray) {
+        return false
+    }
+
+    const prevIsMutator = prev instanceof JsxMutator
+    const nextIsMutator = next instanceof JsxMutator
+
+    if (prevIsMutator && nextIsMutator) {
+        return (
+            prev.key === next.key &&
+            prev.type === next.type &&
+            prev.ref === next.ref &&
+            prev.onMount === next.onMount &&
+            prev.onUnmount === next.onUnmount &&
+            isEqualProps(prev.props || EMPTY_OBJ, next.props || EMPTY_OBJ)
+        )
+    }
+
+    if (prevIsMutator || nextIsMutator) {
+        return false
+    }
+
+    return prev === next
 }
