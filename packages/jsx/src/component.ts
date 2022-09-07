@@ -284,14 +284,23 @@ const isEqualChildren = (prev: WhatsJSX.Child | undefined, next: WhatsJSX.Child 
     const nextIsMutator = next instanceof JsxMutator
 
     if (prevIsMutator && nextIsMutator) {
-        return (
-            prev.key === next.key &&
-            prev.type === next.type &&
-            prev.ref === next.ref &&
-            prev.onMount === next.onMount &&
-            prev.onUnmount === next.onUnmount &&
-            isEqualProps(prev.props || EMPTY_OBJ, next.props || EMPTY_OBJ)
-        )
+        if (
+            prev.key !== next.key ||
+            prev.type !== next.type ||
+            prev.ref !== next.ref ||
+            prev.onMount !== next.onMount ||
+            prev.onUnmount !== next.onUnmount
+        ) {
+            return false
+        }
+
+        if (isEqualProps(prev.props || EMPTY_OBJ, next.props || EMPTY_OBJ)) {
+            Object.assign(next, { props: prev.props })
+
+            return true
+        }
+
+        return false
     }
 
     if (prevIsMutator || nextIsMutator) {
