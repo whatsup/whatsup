@@ -10,7 +10,7 @@ describe('reconcilation', function () {
         const container = document.createElement('div')
         const trigger = observable(0)
 
-        function* Test() {
+        function Test() {
             return <div />
         }
 
@@ -27,7 +27,7 @@ describe('reconcilation', function () {
         const container = document.createElement('div')
         const trigger = observable(0)
 
-        function* Test() {
+        function Test() {
             return trigger() ? <div key="1" /> : <div key="2" />
         }
 
@@ -43,7 +43,7 @@ describe('reconcilation', function () {
     it('should render children', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     <div>child1</div>
@@ -60,7 +60,7 @@ describe('reconcilation', function () {
     it('should render children elements, mutators, strings, numbers & ignore null & booleans', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     <div>child1</div>
@@ -86,7 +86,7 @@ describe('reconcilation', function () {
 
         console.error = mock
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     <div>child1</div>
@@ -112,7 +112,7 @@ describe('reconcilation', function () {
         const container = document.createElement('div')
         const trigger = observable(true)
 
-        function* Test() {
+        function Test() {
             return <div>{trigger() && <div />}</div>
         }
 
@@ -129,7 +129,7 @@ describe('reconcilation', function () {
         const container = document.createElement('div')
         const trigger = observable(true)
 
-        function* Test() {
+        function Test() {
             return <div>{trigger() ? <div key="1" /> : <div key="2" />}</div>
         }
 
@@ -147,7 +147,7 @@ describe('reconcilation', function () {
         const container = document.createElement('div')
         const trigger = observable([0, 1])
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     {trigger().map((key) => (
@@ -174,7 +174,7 @@ describe('reconcilation', function () {
         const textRendered = document.createTextNode('')
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     {htmlRendered}
@@ -192,7 +192,7 @@ describe('reconcilation', function () {
     it('should render string | number to TextNode', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     {'hello'}
@@ -214,7 +214,7 @@ describe('reconcilation', function () {
         const container = document.createElement('div')
         const trigger = observable(false)
 
-        function* Test() {
+        function Test() {
             return <div>{trigger() ? ['hello', 1612] : ['hello', 'world']}</div>
         }
 
@@ -235,7 +235,7 @@ describe('reconcilation', function () {
     it('should render nested array', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     <div>foo</div>
@@ -257,7 +257,7 @@ describe('reconcilation', function () {
             return [<div>baz</div>, <div>bar</div>]
         }
 
-        function* Test() {
+        function Test() {
             return (
                 <div>
                     <div>foo</div>

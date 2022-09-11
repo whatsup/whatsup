@@ -2,9 +2,14 @@ import { Context, createContext } from './context'
 import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
 import { Reconciler } from './reconciler'
-import { Atom, CacheState, createAtom } from '@whatsup/core'
+import { Atom, CacheState, createAtom, isComputed, isObservable } from '@whatsup/core'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { Props } from './dom'
+
+export interface Attributes {
+    style?: { [k: string]: string | number }
+    [k: string]: any
+}
 
 type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 type Node = HTMLElement | SVGElement | Text
@@ -59,18 +64,48 @@ function* controller<T extends Type, N extends Node | Node[]>(this: Controller<T
 export abstract class ElementController<N extends Exclude<Node, Text>> extends Controller<WhatsJSX.TagName, N> {
     abstract createElement(): N
 
-    private oldProps?: Props
+    private prevAttrs?: Attributes
 
-    getOldProps() {
-        return this.oldProps
-    }
+    getAttrs(props: Props) {
+        const { prevAttrs = EMPTY_OBJ } = this
+        const nextAttrs = {} as Attributes
+        const propsKeys = Object.keys(props)
 
-    setOldProps(oldProps: Props | undefined) {
-        this.oldProps = oldProps
-    }
+        for (const key of propsKeys) {
+            const propValue = props[key]
 
-    hasOldProps() {
-        return !!this.oldProps
+            if (key === 'children') {
+                continue
+            }
+
+            if (key === 'style') {
+                nextAttrs.style = {}
+
+                const styleKeys = Object.keys(propValue)
+
+                for (const key of styleKeys) {
+                    const styleValue = propValue[key]
+
+                    if (isComputed<string | number>(styleValue) || isObservable<string | number>(styleValue)) {
+                        nextAttrs.style[key] = styleValue()
+                    } else {
+                        nextAttrs.style[key] = styleValue
+                    }
+                }
+
+                continue
+            }
+
+            if (isComputed(propValue) || isObservable(propValue)) {
+                nextAttrs[key] = propValue()
+            } else {
+                nextAttrs[key] = propValue
+            }
+        }
+
+        this.prevAttrs = nextAttrs
+
+        return [prevAttrs, nextAttrs]
     }
 }
 

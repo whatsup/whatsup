@@ -1,7 +1,7 @@
 import { Mutator } from '@whatsup/core'
 import { EMPTY_OBJ } from './constants'
-import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
-import { WhatsJSX } from './types'
+import { placeNodes, mutateAttrs, createMountObserver, createUnmountObserver } from './dom'
+import { WhatsJSX, Atomic } from './types'
 import {
     Controller,
     ElementController,
@@ -10,13 +10,13 @@ import {
     ComponentController,
     FnComponentController,
     GnComponentController,
+    Attributes,
 } from './controller'
 import { addContextToStack, popContextFromStack } from './context'
 
 export interface Props {
     children?: WhatsJSX.Child
-    style?: { [k: string]: string | number }
-    [k: string]: any
+    [k: string]: Atomic<any>
 }
 
 type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
@@ -109,25 +109,22 @@ export abstract class JsxMutator<T extends Type, N extends Node | Node[]> extend
 }
 
 export abstract class ElementMutator<N extends Exclude<Node, Text>> extends JsxMutator<WhatsJSX.TagName, N> {
-    protected abstract mutateProps<T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T): void
+    protected abstract mutateAttrs<T extends Props>(node: HTMLElement | SVGElement, prevAttrs: T, nextAttrs: T): void
 
-    controller?: ElementController<N>
+    controller!: ElementController<N>
 
     mutate(node?: N): N {
         const { controller, props } = this
+        const [prevAttrs, nextAttrs] = controller.getAttrs(props)
 
         if (!node) {
-            node = controller!.createElement()
+            node = controller.createElement()
         }
 
-        const oldProps = controller!.getOldProps() || EMPTY_OBJ
+        this.mutateAttrs(node, prevAttrs, nextAttrs)
 
-        this.mutateProps(node, props, oldProps)
-
-        controller!.setOldProps(props)
-
-        if (props?.children !== undefined || controller!.hasReconciler()) {
-            const childNodes = controller!.reconcile(props?.children ?? null)
+        if (props.children !== undefined || controller.hasReconciler()) {
+            const childNodes = controller.reconcile(props.children ?? null)
 
             placeNodes(node!, childNodes)
         }
@@ -141,8 +138,8 @@ export class HTMLElementMutator extends ElementMutator<HTMLElement> {
         return new HTMLElementController(this)
     }
 
-    protected mutateProps<T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
-        mutateProps(node, props, oldProps, false)
+    protected mutateAttrs<T extends Attributes>(node: HTMLElement, prevAttrs: T, nextAttrs: T) {
+        mutateAttrs(node, prevAttrs, nextAttrs, false)
     }
 }
 
@@ -151,21 +148,22 @@ export class SVGElementMutator extends ElementMutator<SVGElement> {
         return new SVGElementController(this)
     }
 
-    protected mutateProps<T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
-        mutateProps(node, props, oldProps, true)
+    protected mutateAttrs<T extends Attributes>(node: SVGElement, prevAttrs: T, nextAttrs: T) {
+        mutateAttrs(node, prevAttrs, nextAttrs, true)
     }
 }
 
 export abstract class ComponentMutator<T extends WhatsJSX.ComponentProducer> extends JsxMutator<T, Node | Node[]> {
-    controller?: ComponentController<T>
+    controller!: ComponentController<T>
 
     mutate(prev?: Node | Node[]): Node | Node[] {
         try {
-            addContextToStack(this.controller!.context)
-
+            const { controller } = this
             const prevIsArray = Array.isArray(prev)
 
-            let child = this.controller!.produce()
+            addContextToStack(controller.context)
+
+            let child = controller.produce()
             let next: Node | Node[] | undefined
             let isEqual = true
 
@@ -174,7 +172,7 @@ export abstract class ComponentMutator<T extends WhatsJSX.ComponentProducer> ext
                     let i = 0
                     let nextIsArray = false
 
-                    const nodes = this.controller!.reconcile(child)
+                    const nodes = controller.reconcile(child)
 
                     for (const node of nodes) {
                         if (prevIsArray) {
@@ -215,7 +213,7 @@ export abstract class ComponentMutator<T extends WhatsJSX.ComponentProducer> ext
 
                     break
                 } catch (e) {
-                    child = this.controller!.handleError(e as Error)
+                    child = controller.handleError(e as Error)
                     next = undefined
                     isEqual = false
 

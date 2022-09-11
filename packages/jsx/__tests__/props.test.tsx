@@ -9,7 +9,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>('one')
 
-        function* Test() {
+        function Test() {
             return <div className={trigger()}>child</div>
         }
 
@@ -24,7 +24,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>('one')
 
-        function* Test() {
+        function Test() {
             return <div className={trigger()} />
         }
 
@@ -43,7 +43,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>({ className: 'one' })
 
-        function* Test() {
+        function Test() {
             return <div {...trigger()} />
         }
 
@@ -62,7 +62,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>('one')
 
-        function* Test() {
+        function Test() {
             return <div id="ID" className={trigger()} />
         }
 
@@ -83,7 +83,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>({ backgroundColor: 'red' })
 
-        function* Test() {
+        function Test() {
             return <div style={trigger()} />
         }
 
@@ -102,7 +102,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>({ backgroundColor: 'red' })
 
-        function* Test() {
+        function Test() {
             return <div style={trigger()} />
         }
 
@@ -121,7 +121,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>({ style: { backgroundColor: 'red', color: 'white' } })
 
-        function* Test() {
+        function Test() {
             return <div {...trigger()} />
         }
 
@@ -142,7 +142,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>({ backgroundColor: 'red', fontSize: 16 })
 
-        function* Test() {
+        function Test() {
             return <div style={trigger()} />
         }
 
@@ -160,33 +160,10 @@ describe('props', function () {
         expect(div.style.color).toBe('black')
     })
 
-    it('should copy style when style prop is CSSDeclaration', function () {
-        const container = document.createElement('div')
-        const trigger = observable<any>()
-
-        function* Test() {
-            const declaration = trigger()
-
-            return declaration ? <div style={declaration} /> : <div style={{ backgroundColor: 'red' }} />
-        }
-
-        render(<Test />, container)
-
-        const div = container.children[0] as HTMLElement
-
-        expect(div.style.backgroundColor).toBe('red')
-
-        trigger(div.style)
-
-        expect(div).not.toBe(container.children[0])
-
-        expect((container.children[0] as HTMLElement).style.backgroundColor).toBe('red')
-    })
-
     it('should add "px" suffix to dimensional style prop', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return <div style={{ top: 10 }} />
         }
 
@@ -198,7 +175,7 @@ describe('props', function () {
     it('should set readonly prop through attribute api', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return <a href="https://github.com/" />
         }
 
@@ -211,7 +188,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>('https://github.com/')
 
-        function* Test() {
+        function Test() {
             return <a href={trigger()} />
         }
 
@@ -227,7 +204,7 @@ describe('props', function () {
     it('should set svg prop through attribute api', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <svg className="test">
                     <circle cx="50" />
@@ -244,7 +221,7 @@ describe('props', function () {
         const mock = jest.fn()
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return <div onClick={mock} />
         }
 
@@ -262,7 +239,7 @@ describe('props', function () {
         const container = document.createElement('div')
         const trigger = observable<any>(mock)
 
-        function* Test() {
+        function Test() {
             return <div onClick={trigger()} />
         }
 
@@ -287,7 +264,7 @@ describe('props', function () {
         const listener = (e: MouseEvent) => (phase = e.eventPhase)
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return (
                 <div onClickCapture={listener as any}>
                     <div />
@@ -305,12 +282,54 @@ describe('props', function () {
     it('should normalize svg className prop', function () {
         const container = document.createElement('div')
 
-        function* Test() {
+        function Test() {
             return <svg className="test" />
         }
 
         render(<Test />, container)
 
         expect((container.children[0] as SVGElement).className.baseVal).toBe('test')
+    })
+
+    it('should mutate attribute without rerender component', function () {
+        const container = document.createElement('div')
+        const mock = jest.fn()
+        const className = observable('one')
+
+        function Test() {
+            mock()
+            return <div className={className} />
+        }
+
+        render(<Test />, container)
+
+        expect(container.innerHTML).toBe('<div class="one"></div>')
+        expect(mock).toBeCalledTimes(1)
+
+        className('two')
+
+        expect(container.innerHTML).toBe('<div class="two"></div>')
+        expect(mock).toBeCalledTimes(1)
+    })
+
+    it('should mutate style without rerender component', function () {
+        const container = document.createElement('div')
+        const mock = jest.fn()
+        const backgroundColor = observable('red')
+
+        function Test() {
+            mock()
+            return <div style={{ backgroundColor }} />
+        }
+
+        render(<Test />, container)
+
+        expect(container.innerHTML).toBe('<div style="background-color: red;"></div>')
+        expect(mock).toBeCalledTimes(1)
+
+        backgroundColor('green')
+
+        expect(container.innerHTML).toBe('<div style="background-color: green;"></div>')
+        expect(mock).toBeCalledTimes(1)
     })
 })

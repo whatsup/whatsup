@@ -30,51 +30,51 @@ export const removeNodes = (nodes: Iterable<HTMLElement | SVGElement | Text>) =>
     }
 }
 
-export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T, isSvg: boolean) => {
-    for (const prop in oldProps) {
-        if (!(prop in props)) {
-            mutateProp(node, prop, undefined, oldProps[prop], isSvg)
+export const mutateAttrs = <T extends Props>(node: HTMLElement | SVGElement, prev: T, next: T, isSvg: boolean) => {
+    for (const attr in prev) {
+        if (!(attr in next)) {
+            mutateAttr(node, attr, prev[attr], undefined, isSvg)
         }
     }
 
-    for (const prop in props) {
-        if (props[prop] !== oldProps[prop]) {
-            mutateProp(node, prop, props[prop], oldProps[prop], isSvg)
+    for (const attr in next) {
+        if (next[attr] !== prev[attr]) {
+            mutateAttr(node, attr, prev[attr], next[attr], isSvg)
         }
     }
 }
 
-const mutateProp = <T extends Props, K extends keyof T & string>(
+const mutateAttr = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
-    prop: K,
-    value: T[K] | undefined,
-    oldValue: T[K] | undefined,
+    attr: K,
+    prevValue: T[K] | undefined,
+    nextValue: T[K] | undefined,
     isSvg: boolean
 ) => {
     if (isSvg) {
         // Normalize incorrect prop usage for SVG
         // Thanks preact team
-        prop = (prop as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
+        attr = (attr as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
 
-        if (SVG_DASHED_PROPS.test(prop)) {
-            prop = prop.replace(/([A-Z0-9])/g, '-$&').toLowerCase() as K
+        if (SVG_DASHED_PROPS.test(attr)) {
+            attr = attr.replace(/([A-Z0-9])/g, '-$&').toLowerCase() as K
         }
     }
 
     switch (true) {
-        case isIgnorableProp(prop):
+        case isIgnorableProp(attr):
             break
-        case isEventListener(prop):
-            mutateEventListener(node, prop, value, oldValue)
+        case isEventListener(attr):
+            mutateEventListener(node, attr, prevValue, nextValue)
             break
-        case isStyleProp(prop):
-            mutateStyle(node, value, oldValue)
+        case isStyleProp(attr):
+            mutateStyle(node, prevValue, nextValue)
             break
-        case isReadonlyProp(prop) || isSvg:
-            mutatePropThroughAttributeApi(node, prop, value)
+        case isReadonlyProp(attr) || isSvg:
+            mutateThroughAttributeApi(node, attr, nextValue)
             break
         default:
-            mutatePropThroughUsualWay(node, prop, value)
+            mutateThroughAssignWay(node, attr, nextValue)
             break
     }
 }
@@ -82,38 +82,35 @@ const mutateProp = <T extends Props, K extends keyof T & string>(
 const mutateEventListener = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
-    listener: T[K] | undefined,
-    oldListener: T[K] | undefined
+    prevListener: T[K] | undefined,
+    nextListener: T[K] | undefined
 ) => {
     const capture = isEventCaptureListener(prop)
     const event = getEventName(prop, capture)
 
-    if (typeof oldListener === 'function') {
-        node.removeEventListener(event, oldListener, capture)
+    if (typeof prevListener === 'function') {
+        node.removeEventListener(event, prevListener, capture)
     }
-    if (typeof listener === 'function') {
-        node.addEventListener(event, listener, capture)
+
+    if (typeof nextListener === 'function') {
+        node.addEventListener(event, nextListener, capture)
     }
 }
 
 const mutateStyle = <T extends Partial<WhatsJSX.CSSProperties>>(
     node: HTMLElement | SVGElement,
-    value: CSSStyleDeclaration | T = EMPTY_OBJ as T,
-    oldValue: T = EMPTY_OBJ as T
+    prevValue: T = EMPTY_OBJ as T,
+    nextValue: T = EMPTY_OBJ as T
 ) => {
-    if (value instanceof CSSStyleDeclaration) {
-        node.style.cssText = value.cssText
-    } else {
-        for (const prop in oldValue) {
-            if (!(prop in value)) {
-                mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
-            }
+    for (const prop in prevValue) {
+        if (!(prop in nextValue)) {
+            mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
         }
+    }
 
-        for (const prop in value) {
-            if (value[prop] !== oldValue[prop]) {
-                mutateStyleProp<T, keyof T & string>(node.style, prop, value[prop])
-            }
+    for (const prop in nextValue) {
+        if (nextValue[prop] !== prevValue[prop]) {
+            mutateStyleProp<T, keyof T & string>(node.style, prop, nextValue[prop])
         }
     }
 }
@@ -134,7 +131,7 @@ const mutateStyleProp = <T extends Partial<WhatsJSX.CSSProperties>, K extends ke
     }
 }
 
-const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
+const mutateThroughAttributeApi = <T extends HTMLElement | SVGElement>(
     node: T,
     prop: keyof Props & string,
     value: Props[keyof Props]
@@ -146,7 +143,7 @@ const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
     }
 }
 
-const mutatePropThroughUsualWay = <T extends HTMLElement | SVGElement>(
+const mutateThroughAssignWay = <T extends HTMLElement | SVGElement>(
     node: T,
     prop: keyof Props,
     value: Props[keyof Props]
