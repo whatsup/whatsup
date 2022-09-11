@@ -3,6 +3,7 @@
  */
 
 import { observable } from '@whatsup/core'
+import { SVG_NAMESPACE } from '../src/constants'
 import { render } from '../src/render'
 
 describe('render', function () {
@@ -102,6 +103,23 @@ describe('render', function () {
         render(<Root />, container)
 
         expect(container.innerHTML).toBe('')
+    })
+
+    it('should svg elements have rich namespace', function () {
+        const container = document.createElement('div')
+
+        function* Test() {
+            return (
+                <svg>
+                    <circle />
+                </svg>
+            )
+        }
+
+        render(<Test />, container)
+
+        expect(container.children[0].namespaceURI).toBe(SVG_NAMESPACE)
+        expect(container.children[0].children[0].namespaceURI).toBe(SVG_NAMESPACE)
     })
 
     it('should prevent recalc when disposed', function () {

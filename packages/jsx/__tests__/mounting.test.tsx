@@ -147,14 +147,9 @@ describe('Mounting', function () {
         document.body.innerHTML = ''
 
         const onUnmount = jest.fn()
-
-        let kickstart: () => void
+        const trigger = observable(0)
 
         function* Root() {
-            const trigger = observable(0)
-
-            kickstart = () => trigger(Math.random())
-
             trigger()
 
             yield <div onUnmount={onUnmount} />
@@ -167,7 +162,7 @@ describe('Mounting', function () {
 
         expect(onUnmount).toBeCalledTimes(0)
 
-        kickstart!()
+        trigger(1)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -179,14 +174,9 @@ describe('Mounting', function () {
         document.body.innerHTML = ''
 
         const onUnmount = jest.fn()
-
-        let kickstart: () => void
+        const trigger = observable(0)
 
         function* Root() {
-            const trigger = observable(0)
-
-            kickstart = () => trigger(Math.random())
-
             trigger()
 
             yield (
@@ -203,7 +193,7 @@ describe('Mounting', function () {
 
         expect(onUnmount).toBeCalledTimes(0)
 
-        kickstart!()
+        trigger(1)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -264,8 +254,7 @@ describe('Mounting', function () {
     it('should call onUnmount when component unmounted', async function () {
         document.body.innerHTML = ''
 
-        let kickstart: () => void
-
+        const trigger = observable(0)
         const onUnmount = jest.fn()
 
         function Component() {
@@ -273,10 +262,6 @@ describe('Mounting', function () {
         }
 
         function* Root() {
-            const trigger = observable(0)
-
-            kickstart = () => trigger(Math.random())
-
             trigger()
 
             yield <Component onUnmount={onUnmount} />
@@ -289,7 +274,7 @@ describe('Mounting', function () {
 
         expect(onUnmount).toBeCalledTimes(0)
 
-        kickstart!()
+        trigger(1)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -300,7 +285,7 @@ describe('Mounting', function () {
     it('should call child onUnmount when component unmounted', async function () {
         document.body.innerHTML = ''
 
-        let kickstart: () => void
+        const trigger = observable(0)
 
         const onUnmount = jest.fn()
 
@@ -309,10 +294,6 @@ describe('Mounting', function () {
         }
 
         function* Root() {
-            const trigger = observable(0)
-
-            kickstart = () => trigger(Math.random())
-
             trigger()
 
             yield (
@@ -320,6 +301,7 @@ describe('Mounting', function () {
                     <Component onUnmount={onUnmount} />
                 </Component>
             )
+
             yield <Component />
         }
 
@@ -329,7 +311,7 @@ describe('Mounting', function () {
 
         expect(onUnmount).toBeCalledTimes(0)
 
-        kickstart!()
+        trigger(1)
 
         await new Promise((r) => setTimeout(r, 100))
 
@@ -340,8 +322,7 @@ describe('Mounting', function () {
     it('should call return on generator when component unmounted', async function () {
         document.body.innerHTML = ''
 
-        let kickstart: () => void
-
+        const trigger = observable(0)
         const mock = jest.fn()
 
         function* Component() {
@@ -355,10 +336,6 @@ describe('Mounting', function () {
         }
 
         function* Root() {
-            const trigger = observable(0)
-
-            kickstart = () => trigger(Math.random())
-
             trigger()
 
             yield <Component />
@@ -369,7 +346,7 @@ describe('Mounting', function () {
 
         expect(mock).toBeCalledTimes(0)
 
-        kickstart!()
+        trigger(1)
 
         await new Promise((r) => setTimeout(r, 100))
 

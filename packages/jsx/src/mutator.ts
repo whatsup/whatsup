@@ -1,13 +1,21 @@
 import { Mutator } from '@whatsup/core'
-import { createComponent, Component } from './component'
-import { Reconciler } from './reconciler'
-import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
+import { EMPTY_OBJ } from './constants'
 import { placeNodes, mutateProps, createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX } from './types'
+import {
+    Controller,
+    ElementController,
+    HTMLElementController,
+    SVGElementController,
+    ComponentController,
+    FnComponentController,
+    GnComponentController,
+} from './controller'
+import { addContextToStack, popContextFromStack } from './context'
 
 export interface Props {
     children?: WhatsJSX.Child
-    style?: { [k: string]: string }
+    style?: { [k: string]: string | number }
     [k: string]: any
 }
 
@@ -15,56 +23,51 @@ type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 
 type Node = HTMLElement | SVGElement | Text
 
-interface JsxMutatorLike {}
+const JSX_MOUNT_OBSERVER = Symbol('JSX onMount observer')
+const JSX_UNMOUNT_OBSERVER = Symbol('JSX onUnmount observer')
 
-interface ElementMutatorLike extends JsxMutatorLike {
-    node?: Exclude<Node, Text>
-    reconciler?: Reconciler
-    props?: Props
-}
-
-interface ComponentMutatorLike extends JsxMutatorLike {
-    component?: Component
-}
-
-const JSX_MOUNT_OBSERVER = Symbol('Jsx onMount observer')
-const JSX_UNMOUNT_OBSERVER = Symbol('Jsx onUnmount observer')
-
-const FAKE_JSX_COMPONENT_MUTATOR: ComponentMutatorLike = {}
-const FAKE_JSX_ELEMENT_MUTATOR: ElementMutatorLike = {}
-
-export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extends Mutator<R> implements JsxMutatorLike {
-    abstract doMutation(oldMutator: JsxMutatorLike | void): R
+export abstract class JsxMutator<T extends Type, N extends Node | Node[]> extends Mutator<N> {
+    abstract controller?: Controller<T, N>
+    abstract createController(): Controller<T, N>
+    abstract mutate(prev: N | undefined): N
 
     readonly key: string
     readonly type: T
-    readonly props?: Props
+    readonly props: Props
     readonly ref?: WhatsJSX.Ref
-    readonly onMount?: (el: R) => void
-    readonly onUnmount?: (el: R) => void
+    readonly onMount?: (el: N) => void
+    readonly onUnmount?: (el: N) => void
 
     constructor(
         type: T,
         key: string,
         props?: Props,
         ref?: WhatsJSX.Ref,
-        onMount?: (el: R) => void,
-        onUnmount?: (el: R) => void
+        onMount?: (el: N) => void,
+        onUnmount?: (el: N) => void
     ) {
         super()
 
         this.key = key
         this.type = type
+        this.props = props || EMPTY_OBJ
 
-        if (props) this.props = props
         if (ref) this.ref = ref
         if (onMount) this.onMount = onMount
         if (onUnmount) this.onUnmount = onUnmount
     }
 
-    mutate(prev?: R) {
-        const oldMutator = this.extractFrom(prev)
-        const next = this.doMutation(oldMutator)
+    doMutation(prev?: N) {
+        const { controller } = this.extractFrom(prev) || (EMPTY_OBJ as JsxMutator<T, N>)
+
+        if (controller) {
+            this.controller = controller
+            this.controller.setMutator(this)
+        } else {
+            this.controller = this.createController()
+        }
+
+        const next = this.controller.getNodes()
 
         this.attachSelfTo(next)
         this.attachMountingCallbacks(next)
@@ -73,101 +76,170 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
         return next
     }
 
-    private updateRef(target: R) {
+    private attachSelfTo(target: N) {
+        Reflect.set(target, this.key, this)
+    }
+
+    private extractFrom(target: any): JsxMutator<T, N> | void {
+        if (target != null && typeof target === 'object' && Reflect.has(target, this.key)) {
+            return Reflect.get(target, this.key) as JsxMutator<T, N>
+        }
+    }
+
+    private updateRef(target: N) {
         if (this.ref) {
             this.ref.current = target
         }
     }
 
-    private extractFrom(target: any): JsxMutator<T, R> | void {
-        if (target != null && typeof target === 'object' && Reflect.has(target, this.key)) {
-            return Reflect.get(target, this.key) as JsxMutator<T, R>
-        }
-    }
-
-    private attachSelfTo(target: R) {
-        Reflect.set(target, this.key, this)
-    }
-
-    private attachMountingCallbacks(result: R) {
-        const node: Node = Array.isArray(result) ? result[0] : result
+    private attachMountingCallbacks(target: N) {
+        const node: Node = Array.isArray(target) ? target[0] : target
 
         if (node) {
             if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createMountObserver(node, () => this.onMount!(result))
+                const observer = createMountObserver(node, () => this.onMount!(target))
                 Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
             }
             if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createUnmountObserver(node, () => this.onUnmount!(result))
+                const observer = createUnmountObserver(node, () => this.onUnmount!(target))
                 Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
             }
         }
     }
 }
 
-export abstract class ElementMutator
-    extends JsxMutator<WhatsJSX.TagName, Exclude<Node, Text>>
-    implements ElementMutatorLike
-{
-    abstract createElement(): HTMLElement | SVGElement
+export abstract class ElementMutator<N extends Exclude<Node, Text>> extends JsxMutator<WhatsJSX.TagName, N> {
     protected abstract readonly isSvg: boolean
 
-    node?: Exclude<Node, Text>
-    reconciler?: Reconciler
+    controller?: ElementController<N>
 
-    doMutation({ props: oldProps, node, reconciler } = FAKE_JSX_ELEMENT_MUTATOR) {
-        const { props, isSvg } = this
+    mutate(node?: N): N {
+        const { controller, props, isSvg } = this
 
-        this.node = node || this.createElement()
-
-        if (props !== undefined || oldProps !== undefined) {
-            mutateProps(this.node!, props || EMPTY_OBJ, oldProps || EMPTY_OBJ, isSvg)
+        if (!node) {
+            node = controller!.createElement()
         }
 
-        if (props?.children !== undefined || reconciler) {
-            this.reconciler = reconciler || new Reconciler()
+        const oldProps = controller!.getOldProps() || EMPTY_OBJ
 
-            const childNodes = this.reconciler.reconcile(props?.children ?? null)
+        mutateProps(node, props, oldProps, isSvg)
 
-            placeNodes(this.node!, childNodes)
+        controller!.setOldProps(props)
+
+        if (props?.children !== undefined || controller!.hasReconciler()) {
+            const childNodes = controller!.reconcile(props?.children ?? null)
+
+            placeNodes(node!, childNodes)
         }
 
-        return this.node!
+        return node
     }
 }
 
-export class HTMLElementMutator extends ElementMutator {
+export class HTMLElementMutator extends ElementMutator<HTMLElement> {
     protected readonly isSvg = false
 
-    createElement(): HTMLElement {
-        return document.createElement(this.type)
+    createController(): HTMLElementController {
+        return new HTMLElementController(this)
     }
 }
 
-export class SVGElementMutator extends ElementMutator {
+export class SVGElementMutator extends ElementMutator<SVGElement> {
     protected readonly isSvg = true
 
-    createElement(): SVGElement {
-        return document.createElementNS(SVG_NAMESPACE, this.type)
+    createController(): SVGElementController {
+        return new SVGElementController(this)
     }
 }
 
-export class ComponentMutator
-    extends JsxMutator<WhatsJSX.ComponentProducer, Node | Node[]>
-    implements ComponentMutatorLike
-{
-    component?: Component
+export abstract class ComponentMutator<T extends WhatsJSX.ComponentProducer> extends JsxMutator<T, Node | Node[]> {
+    controller?: ComponentController<T>
 
-    doMutation({ component } = FAKE_JSX_COMPONENT_MUTATOR) {
-        const { type, props } = this
+    mutate(prev?: Node | Node[]): Node | Node[] {
+        try {
+            addContextToStack(this.controller!.context)
 
-        if (!component) {
-            this.component = createComponent(type, props)
-        } else {
-            this.component = component
-            this.component!.setProps(props || EMPTY_OBJ)
+            const prevIsArray = Array.isArray(prev)
+
+            let child = this.controller!.produce()
+            let next: Node | Node[] | undefined
+            let isEqual = true
+
+            while (true) {
+                try {
+                    let i = 0
+                    let nextIsArray = false
+
+                    const nodes = this.controller!.reconcile(child)
+
+                    for (const node of nodes) {
+                        if (prevIsArray) {
+                            if (prev[i] !== node) {
+                                isEqual = false
+                            }
+                        } else if (i !== 0) {
+                            isEqual = false
+                        } else if (prev !== node) {
+                            isEqual = false
+                        }
+
+                        /* short equality condition
+
+                            if(prevIsArray && prev[i] !== node || !prevIsArray && (i !== 0 || prev !== node)){
+                                isEqual = false
+                            }
+
+                        */
+
+                        if (next) {
+                            if (nextIsArray) {
+                                ;(next as Node[]).push(node)
+                            } else {
+                                nextIsArray = true
+                                next = [next as Node, node]
+                            }
+                        } else {
+                            next = node
+                        }
+
+                        i++
+                    }
+
+                    if (!prevIsArray || !nextIsArray) {
+                        isEqual = false
+                    }
+
+                    break
+                } catch (e) {
+                    child = this.controller!.handleError(e as Error)
+                    next = undefined
+                    isEqual = false
+
+                    continue
+                }
+            }
+
+            if (isEqual) {
+                return prev!
+            }
+
+            return next ?? []
+        } catch (e) {
+            throw e
+        } finally {
+            popContextFromStack()
         }
+    }
+}
 
-        return this.component!.getNodes()
+export class FnComponentMutator extends ComponentMutator<WhatsJSX.FnComponentProducer> {
+    createController(): FnComponentController {
+        return new FnComponentController(this)
+    }
+}
+
+export class GnComponentMutator extends ComponentMutator<WhatsJSX.GnComponentProducer> {
+    createController(): GnComponentController {
+        return new GnComponentController(this)
     }
 }

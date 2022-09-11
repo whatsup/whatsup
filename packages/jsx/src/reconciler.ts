@@ -77,7 +77,7 @@ export class Reconciler {
 
         if (child instanceof JsxMutator) {
             const candidate = this.find(child.key)
-            const result = child.mutate(candidate) as Exclude<Node, Text> | Node[]
+            const result = child.doMutation(candidate) as Exclude<Node, Text> | Node[]
 
             this.tracker.set(result, child.key)
 

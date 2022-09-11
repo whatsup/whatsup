@@ -2,210 +2,273 @@
  * @jest-environment jsdom
  */
 
-import { SVG_NAMESPACE } from '../src/constants'
-import { ElementMutator } from '../src/mutator'
-import { jsx } from '../src/factories'
+import { render } from '../src/render'
+import { observable } from '@whatsup/core'
 
 describe('reconcilation', function () {
-    it('expect HTMLElementMutator.mutate return div element', function () {
-        const mutator = (<div />) as ElementMutator
-        const element = mutator.mutate()
-
-        expect(element.tagName).toBe('DIV')
-    })
-
-    it('expect SVGElementMutator.mutate return svg element', function () {
-        const mutator = (<svg />) as ElementMutator
-        const element = mutator.mutate()
-
-        expect(element.tagName).toBe('svg')
-    })
-
     it('should return data when old mutator is same mutator', function () {
-        const mutator = (<div />) as ElementMutator
-        const element = mutator.mutate()
-        const nextElement = mutator.mutate(element)
+        const container = document.createElement('div')
+        const trigger = observable(0)
 
-        expect(nextElement).toBe(element)
+        function* Test() {
+            return <div />
+        }
+
+        render(<Test />, container)
+
+        const div = container.children[0]
+
+        trigger(1)
+
+        expect(container.children[0]).toBe(div)
     })
 
     it('should not reuse element when old mutator not have same type & reconcileId', function () {
-        const mutatorOne = (<div key={1} />) as ElementMutator
-        const mutatorTwo = (<div key={2} />) as ElementMutator
-        const elementOne = mutatorOne.mutate()
-        const elementTwo = mutatorTwo.mutate(elementOne)
+        const container = document.createElement('div')
+        const trigger = observable(0)
 
-        expect(elementOne).not.toBe(elementTwo)
+        function* Test() {
+            return trigger() ? <div key="1" /> : <div key="2" />
+        }
+
+        render(<Test />, container)
+
+        const div = container.children[0]
+
+        trigger(1)
+
+        expect(container.children[0]).not.toBe(div)
     })
 
     it('should render children', function () {
-        const mutator = (
-            <div>
-                <div>child1</div>
-                <div>child2</div>
-            </div>
-        ) as ElementMutator
+        const container = document.createElement('div')
 
-        const element = mutator.mutate()
+        function* Test() {
+            return (
+                <div>
+                    <div>child1</div>
+                    <div>child2</div>
+                </div>
+            )
+        }
 
-        expect(element.outerHTML).toBe('<div><div>child1</div><div>child2</div></div>')
+        render(<Test />, container)
+
+        expect(container.innerHTML).toBe('<div><div>child1</div><div>child2</div></div>')
     })
 
     it('should render children elements, mutators, strings, numbers & ignore null & booleans', function () {
-        const mutator = (
-            <div>
-                <div>child1</div>
-                <div>child2</div>
-                child3
-                {1612}
-                {null}
-                {false}
-                {true}
-            </div>
-        ) as ElementMutator
-        const element = mutator.mutate()
+        const container = document.createElement('div')
 
-        expect(element.outerHTML).toBe('<div><div>child1</div><div>child2</div> child3 1612</div>')
+        function* Test() {
+            return (
+                <div>
+                    <div>child1</div>
+                    <div>child2</div>
+                    child3
+                    {1612}
+                    {null}
+                    {false}
+                    {true}
+                </div>
+            )
+        }
+
+        render(<Test />, container)
+
+        expect(container.innerHTML).toBe('<div><div>child1</div><div>child2</div> child3 1612</div>')
     })
 
     it('should throw error on all children except elements, mutators, strings, numbers, booleans, null', function () {
-        const mutator = (
-            <div>
-                <div>child1</div>
-                <div>child2</div>
-                child3
-                {undefined as any}
-                {1612}
-                {null}
-                {false}
-                {true}
-            </div>
-        ) as ElementMutator
+        const container = document.createElement('div')
+        const mock = jest.fn()
+        const original = console.error
 
-        expect(() => mutator.mutate()).toThrow('Invalid JSX Child')
+        console.error = mock
+
+        function* Test() {
+            return (
+                <div>
+                    <div>child1</div>
+                    <div>child2</div>
+                    child3
+                    {undefined as any}
+                    {1612}
+                    {null}
+                    {false}
+                    {true}
+                </div>
+            )
+        }
+
+        render(<Test />, container)
+
+        console.log = original
+
+        expect(mock.mock.calls[0][0].message).toBe('Invalid JSX Child')
     })
 
     it('should remove unreconciled elements', function () {
-        const mutatorOne = jsx('div', 'uid1', { children: jsx('div', 'child1') })
-        const mutatorTwo = jsx('div', 'uid1')
-        const element = mutatorOne.mutate() as HTMLElement
+        const container = document.createElement('div')
+        const trigger = observable(true)
 
-        expect(element.childNodes.length).toBe(1)
+        function* Test() {
+            return <div>{trigger() && <div />}</div>
+        }
 
-        mutatorTwo.mutate(element as any)
+        render(<Test />, container)
 
-        expect(element.childNodes.length).toBe(0)
+        expect(container.children[0].children.length).toBe(1)
+
+        trigger(false)
+
+        expect(container.children[0].children.length).toBe(0)
     })
 
     it('should replace elements with different reconcileId', function () {
-        const mutatorOne = jsx('div', 'uid1', { children: jsx('div', 'child1') })
-        const mutatorTwo = jsx('div', 'uid1', { children: jsx('div', 'child2') })
-        const element = mutatorOne.mutate() as HTMLElement
-        const childOne = element.childNodes[0]
+        const container = document.createElement('div')
+        const trigger = observable(true)
 
-        mutatorTwo.mutate(element as any)
+        function* Test() {
+            return <div>{trigger() ? <div key="1" /> : <div key="2" />}</div>
+        }
 
-        const childTwo = element.childNodes[0]
+        render(<Test />, container)
 
-        expect(element.childNodes.length).toBe(1)
-        expect(childOne).not.toBe(childTwo)
+        const one = container.children[0].children[0]
+
+        trigger(false)
+
+        expect(container.children[0].children.length).toBe(1)
+        expect(container.children[0].children[0]).not.toBe(one)
     })
 
     it('should reverse elements when mutators reversed', function () {
-        const mutatorOne = jsx('div', 'uid1', { children: [jsx('div', 'child1'), jsx('div', 'child2')] })
-        const mutatorTwo = jsx('div', 'uid1', {
-            children: [jsx('div', 'child2'), jsx('div', 'child1')],
-        })
-        const element = mutatorOne.mutate() as HTMLElement
+        const container = document.createElement('div')
+        const trigger = observable([0, 1])
 
-        expect(element.childNodes.length).toBe(2)
+        function* Test() {
+            return (
+                <div>
+                    {trigger().map((key) => (
+                        <div key={key} />
+                    ))}
+                </div>
+            )
+        }
 
-        const childOne = element.childNodes[0]
-        const childTwo = element.childNodes[1]
+        render(<Test />, container)
 
-        mutatorTwo.mutate(element as any)
+        const one = container.children[0].children[0]
+        const two = container.children[0].children[1]
 
-        expect(element.childNodes.length).toBe(2)
-        expect(element.childNodes[0]).toBe(childTwo)
-        expect(element.childNodes[1]).toBe(childOne)
+        trigger([1, 0])
+
+        expect(container.children[0].children.length).toBe(2)
+        expect(container.children[0].children[0]).toBe(two)
+        expect(container.children[0].children[1]).toBe(one)
     })
 
     it('should save rendered elements', function () {
-        const htmlRendered = jsx('div', '').mutate() as HTMLElement
-        const svgRendered = jsx('svg', '').mutate() as SVGElement
+        const htmlRendered = document.createElement('div')
         const textRendered = document.createTextNode('')
-        const mutatorOne = jsx('div', 'uid1', { children: [htmlRendered, svgRendered, textRendered] })
-        const mutatorTwo = jsx('div', 'uid1', { children: [htmlRendered, svgRendered, textRendered] })
-        const element = mutatorOne.mutate() as HTMLElement
+        const container = document.createElement('div')
 
-        mutatorTwo.mutate(element as any)
+        function* Test() {
+            return (
+                <div>
+                    {htmlRendered}
+                    {textRendered}
+                </div>
+            )
+        }
 
-        expect(element.childNodes.length).toBe(3)
-        expect(element.childNodes[0]).toBe(htmlRendered)
-        expect(element.childNodes[1]).toBe(svgRendered)
-        expect(element.childNodes[2]).toBe(textRendered)
+        render(<Test />, container)
+
+        expect(container.children[0].childNodes[0]).toBe(htmlRendered)
+        expect(container.children[0].childNodes[1]).toBe(textRendered)
     })
 
     it('should render string | number to TextNode', function () {
-        const mutator = jsx('div', 'uid1', { children: ['hello', 1612] })
-        const element = mutator.mutate() as HTMLElement
+        const container = document.createElement('div')
 
-        expect(element.childNodes.length).toBe(2)
-        expect(element.childNodes[0]).toBeInstanceOf(Text)
-        expect(element.childNodes[1]).toBeInstanceOf(Text)
-        expect(element.childNodes[0].nodeValue).toBe('hello')
-        expect(element.childNodes[1].nodeValue).toBe('1612')
+        function* Test() {
+            return (
+                <div>
+                    {'hello'}
+                    {1612}
+                </div>
+            )
+        }
+
+        render(<Test />, container)
+
+        expect(container.children[0].childNodes.length).toBe(2)
+        expect(container.children[0].childNodes[0]).toBeInstanceOf(Text)
+        expect(container.children[0].childNodes[1]).toBeInstanceOf(Text)
+        expect(container.children[0].childNodes[0].nodeValue).toBe('hello')
+        expect(container.children[0].childNodes[1].nodeValue).toBe('1612')
     })
 
     it('should reuse TextNode', function () {
-        const mutatorOne = jsx('div', 'uid1', { children: ['hello', 1612] })
-        const mutatorTwo = jsx('div', 'uid1', { children: ['hello', 'world'] })
-        const element = mutatorOne.mutate() as HTMLElement
+        const container = document.createElement('div')
+        const trigger = observable(false)
 
-        expect(element.childNodes.length).toBe(2)
-        expect(element.childNodes[0].nodeValue).toBe('hello')
-        expect(element.childNodes[1].nodeValue).toBe('1612')
+        function* Test() {
+            return <div>{trigger() ? ['hello', 1612] : ['hello', 'world']}</div>
+        }
 
-        const childOne = element.childNodes[0]
-        const childTwo = element.childNodes[1]
+        render(<Test />, container)
 
-        mutatorTwo.mutate(element as any)
+        const childOne = container.children[0].childNodes[0]
+        const childTwo = container.children[0].childNodes[1]
 
-        expect(element.childNodes.length).toBe(2)
-        expect(element.childNodes[0]).toBe(childOne)
-        expect(element.childNodes[1]).toBe(childTwo)
-        expect(element.childNodes[0].nodeValue).toBe('hello')
-        expect(element.childNodes[1].nodeValue).toBe('world')
+        trigger(true)
+
+        expect(container.children[0].childNodes.length).toBe(2)
+        expect(container.children[0].childNodes[0]).toBe(childOne)
+        expect(container.children[0].childNodes[1]).toBe(childTwo)
+        expect(container.children[0].childNodes[0].nodeValue).toBe('hello')
+        expect(container.children[0].childNodes[1].nodeValue).toBe('1612')
     })
 
     it('should render nested array', function () {
-        const mutator = jsx('div', 'uid1', {
-            children: [
-                jsx('div', 'uid2', { children: ['foo'] }),
-                [jsx('div', 'uid3', { children: ['baz'] }), jsx('div', 'uid3', { children: ['bar'] })],
-            ],
-        })
-        const element = mutator.mutate() as HTMLElement
+        const container = document.createElement('div')
 
-        expect(element.childNodes.length).toBe(3)
-        expect(element.textContent).toBe('foobazbar')
+        function* Test() {
+            return (
+                <div>
+                    <div>foo</div>
+                    {[<div>baz</div>, <div>bar</div>]}
+                </div>
+            )
+        }
+
+        render(<Test />, container)
+
+        expect(container.children[0].childNodes.length).toBe(3)
+        expect(container.children[0].textContent).toBe('foobazbar')
     })
 
     it('should be prepared for the child to return an array', function () {
+        const container = document.createElement('div')
+
         function Comp() {
-            return [jsx('div', 'uid3', { children: ['baz'] }), jsx('div', 'uid3', { children: ['bar'] })]
+            return [<div>baz</div>, <div>bar</div>]
         }
-        const mutator = jsx('div', 'uid1', { children: [jsx('div', 'uid2', { children: ['foo'] }), jsx(Comp, 'uid1')] })
-        const element = mutator.mutate() as HTMLElement
 
-        expect(element.childNodes.length).toBe(3)
-        expect(element.textContent).toBe('foobazbar')
-    })
+        function* Test() {
+            return (
+                <div>
+                    <div>foo</div>
+                    <Comp />
+                </div>
+            )
+        }
 
-    it('should svg children have rich namespace', function () {
-        const mutator = jsx('svg', 'uid1', { children: jsx('circle', '') })
-        const element = mutator.mutate() as SVGElement
+        render(<Test />, container)
 
-        expect(element.children[0].namespaceURI).toBe(SVG_NAMESPACE)
+        expect(container.children[0].childNodes.length).toBe(3)
+        expect(container.children[0].textContent).toBe('foobazbar')
     })
 })
