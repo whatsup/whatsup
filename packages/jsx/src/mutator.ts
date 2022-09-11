@@ -27,9 +27,9 @@ const JSX_MOUNT_OBSERVER = Symbol('JSX onMount observer')
 const JSX_UNMOUNT_OBSERVER = Symbol('JSX onUnmount observer')
 
 export abstract class JsxMutator<T extends Type, N extends Node | Node[]> extends Mutator<N> {
-    abstract controller?: Controller<T, N>
-    abstract createController(): Controller<T, N>
     abstract mutate(prev: N | undefined): N
+    abstract controller?: Controller<T, N>
+    protected abstract createController(): Controller<T, N>
 
     readonly key: string
     readonly type: T
@@ -109,12 +109,12 @@ export abstract class JsxMutator<T extends Type, N extends Node | Node[]> extend
 }
 
 export abstract class ElementMutator<N extends Exclude<Node, Text>> extends JsxMutator<WhatsJSX.TagName, N> {
-    protected abstract readonly isSvg: boolean
+    protected abstract mutateProps<T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T): void
 
     controller?: ElementController<N>
 
     mutate(node?: N): N {
-        const { controller, props, isSvg } = this
+        const { controller, props } = this
 
         if (!node) {
             node = controller!.createElement()
@@ -122,7 +122,7 @@ export abstract class ElementMutator<N extends Exclude<Node, Text>> extends JsxM
 
         const oldProps = controller!.getOldProps() || EMPTY_OBJ
 
-        mutateProps(node, props, oldProps, isSvg)
+        this.mutateProps(node, props, oldProps)
 
         controller!.setOldProps(props)
 
@@ -137,18 +137,22 @@ export abstract class ElementMutator<N extends Exclude<Node, Text>> extends JsxM
 }
 
 export class HTMLElementMutator extends ElementMutator<HTMLElement> {
-    protected readonly isSvg = false
-
-    createController(): HTMLElementController {
+    protected createController(): HTMLElementController {
         return new HTMLElementController(this)
+    }
+
+    protected mutateProps<T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
+        mutateProps(node, props, oldProps, false)
     }
 }
 
 export class SVGElementMutator extends ElementMutator<SVGElement> {
-    protected readonly isSvg = true
-
-    createController(): SVGElementController {
+    protected createController(): SVGElementController {
         return new SVGElementController(this)
+    }
+
+    protected mutateProps<T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T) {
+        mutateProps(node, props, oldProps, true)
     }
 }
 
@@ -233,13 +237,13 @@ export abstract class ComponentMutator<T extends WhatsJSX.ComponentProducer> ext
 }
 
 export class FnComponentMutator extends ComponentMutator<WhatsJSX.FnComponentProducer> {
-    createController(): FnComponentController {
+    protected createController(): FnComponentController {
         return new FnComponentController(this)
     }
 }
 
 export class GnComponentMutator extends ComponentMutator<WhatsJSX.GnComponentProducer> {
-    createController(): GnComponentController {
+    protected createController(): GnComponentController {
         return new GnComponentController(this)
     }
 }
