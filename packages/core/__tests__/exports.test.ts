@@ -1,6 +1,6 @@
 import { createAtom, CacheState } from '../src/atom'
-import { computed } from '../src/computed'
-import { observable } from '../src/observable'
+import { computed, isComputed } from '../src/computed'
+import { observable, isObservable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
 import { action, runInAction } from '../src/action'
 import { delegate } from '../src/delegation'
@@ -13,7 +13,9 @@ import {
     createAtom as _createAtom,
     CacheState as _CacheState,
     computed as _computed,
+    isComputed as _isComputed,
     observable as _observable,
+    isObservable as _isObservable,
     reaction as _reaction,
     autorun as _autorun,
     action as _action,
@@ -32,7 +34,9 @@ it('Exports', () => {
     expect(createAtom).toBe(_createAtom)
     expect(CacheState).toBe(_CacheState)
     expect(computed).toBe(_computed)
+    expect(isComputed).toBe(_isComputed)
     expect(observable).toBe(_observable)
+    expect(isObservable).toBe(_isObservable)
     expect(reaction).toBe(_reaction)
     expect(autorun).toBe(_autorun)
     expect(action).toBe(_action)

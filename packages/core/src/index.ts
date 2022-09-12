@@ -1,6 +1,6 @@
 export { createAtom, CacheState } from './atom'
-export { computed } from './computed'
-export { observable } from './observable'
+export { computed, isComputed } from './computed'
+export { observable, isObservable } from './observable'
 export { array } from './array'
 export { set } from './set'
 export { map } from './map'
