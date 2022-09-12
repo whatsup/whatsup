@@ -40,6 +40,8 @@ describe('Base test', () => {
 
         render(<App />, container)
 
+        expect(navigation.pathname).toBe('/')
+
         expect(container.innerHTML).toBe('<div>App</div><div>Index</div>')
 
         navigation.navigate('/user')
@@ -95,6 +97,8 @@ describe('Base test', () => {
         }
 
         render(<App />, container)
+
+        expect(navigation.pathname).toBe('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
@@ -171,6 +175,8 @@ describe('Base test', () => {
 
         render(<App />, container)
 
+        expect(navigation.pathname).toBe('/')
+
         expect(mockApp).toBeCalledTimes(1)
         expect(mockAbout).toBeCalledTimes(0)
         expect(mockUser).toBeCalledTimes(0)
@@ -179,7 +185,7 @@ describe('Base test', () => {
 
         navigation.navigate('/about')
 
-        expect(mockApp).toBeCalledTimes(2)
+        expect(mockApp).toBeCalledTimes(1)
         expect(mockAbout).toBeCalledTimes(1)
         expect(mockUser).toBeCalledTimes(0)
         expect(mockUserSettings).toBeCalledTimes(0)
@@ -187,7 +193,7 @@ describe('Base test', () => {
 
         navigation.navigate('/user')
 
-        expect(mockApp).toBeCalledTimes(3)
+        expect(mockApp).toBeCalledTimes(1)
         expect(mockAbout).toBeCalledTimes(1)
         expect(mockUser).toBeCalledTimes(1)
         expect(mockUserSettings).toBeCalledTimes(0)
@@ -195,25 +201,25 @@ describe('Base test', () => {
 
         navigation.navigate('/user/profile')
 
-        expect(mockApp).toBeCalledTimes(3)
+        expect(mockApp).toBeCalledTimes(1)
         expect(mockAbout).toBeCalledTimes(1)
-        expect(mockUser).toBeCalledTimes(2)
+        expect(mockUser).toBeCalledTimes(1)
         expect(mockUserSettings).toBeCalledTimes(0)
         expect(mockUserProfile).toBeCalledTimes(1)
 
         navigation.navigate('/user/settings')
 
-        expect(mockApp).toBeCalledTimes(3)
+        expect(mockApp).toBeCalledTimes(1)
         expect(mockAbout).toBeCalledTimes(1)
-        expect(mockUser).toBeCalledTimes(3)
+        expect(mockUser).toBeCalledTimes(1)
         expect(mockUserSettings).toBeCalledTimes(1)
         expect(mockUserProfile).toBeCalledTimes(1)
 
         navigation.navigate('/')
 
-        expect(mockApp).toBeCalledTimes(4)
+        expect(mockApp).toBeCalledTimes(1)
         expect(mockAbout).toBeCalledTimes(1)
-        expect(mockUser).toBeCalledTimes(3)
+        expect(mockUser).toBeCalledTimes(1)
         expect(mockUserSettings).toBeCalledTimes(1)
         expect(mockUserProfile).toBeCalledTimes(1)
     })
@@ -269,6 +275,8 @@ describe('Base test', () => {
 
         render(<App />, container)
 
+        expect(navigation.pathname).toBe('/')
+
         expect(container.innerHTML).toBe('<div>App</div>')
 
         navigation.navigate('/About')
@@ -301,6 +309,8 @@ describe('Base test', () => {
         }
 
         render(<App />, container)
+
+        expect(navigation.pathname).toBe('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 

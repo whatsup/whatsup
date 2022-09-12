@@ -34,6 +34,8 @@ describe('Params test', () => {
 
         render(<App />, container)
 
+        expect(navigation.pathname).toBe('/')
+
         expect(container.innerHTML).toBe('<div>App</div>')
 
         navigation.navigate('/user')
@@ -83,6 +85,8 @@ describe('Params test', () => {
         }
 
         render(<App />, container)
+
+        expect(navigation.pathname).toBe('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 
@@ -137,6 +141,8 @@ describe('Params test', () => {
         }
 
         render(<App />, container)
+
+        expect(navigation.pathname).toBe('/')
 
         expect(container.innerHTML).toBe('<div>App</div>')
 

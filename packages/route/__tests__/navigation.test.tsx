@@ -51,6 +51,8 @@ describe('Navigation', () => {
 
         render(<App />, container)
 
+        expect(appNavigation.pathname).toBe('/')
+
         expect(appNavigation).toBeInstanceOf(RootNavigation)
 
         appNavigation.navigate('/user/1/post/2')
@@ -100,6 +102,8 @@ describe('Navigation', () => {
 
         render(<App />, container)
 
+        expect(navigation.pathname).toBe('/')
+
         expect(container.innerHTML).toBe('<div>App</div>')
 
         navigation.navigate('/about')
@@ -110,13 +114,8 @@ describe('Navigation', () => {
 
         expect(container.innerHTML).toBe('<div>App</div><div>User</div>')
 
-        // navigation.back()
+        navigation.navigate('/')
 
-        // expect(window.location.pathname).toBe('/')
-        // expect(container.innerHTML).toBe('<div>App</div>')
-
-        // navigation.navigate('/')
-
-        // expect(container.innerHTML).toBe('<div>App</div>')
+        expect(container.innerHTML).toBe('<div>App</div>')
     })
 })
