@@ -1,6 +1,6 @@
 import { removeNodes } from './dom'
-import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
+import { VNode } from './vnode'
 
 type Node = HTMLElement | SVGElement | Text
 
@@ -10,23 +10,40 @@ const RENDERED_NODE_RECONCILE_KEY = '__RENDERED_NODE_RECONCILE_KEY__'
 export class Reconciler {
     private tracker = new Map<Node | Node[], string>()
     private oldTracker = new Map<Node | Node[], string>()
+    private reconcileVNodesMap = new Map<Node | Node[], VNode<any, any>>()
+    private oldReconcileVNodesMap = new Map<Node | Node[], VNode<any, any>>()
     private index?: Map<string, Node | Node[]>
     private trackerator?: IterableIterator<[Node | Node[], string]>
     private isTrackeratorDone?: true;
 
     *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
-        const { tracker, oldTracker } = this
+        const { tracker, oldTracker, reconcileVNodesMap, oldReconcileVNodesMap } = this
 
         this.tracker = oldTracker
         this.oldTracker = tracker
+        this.reconcileVNodesMap = oldReconcileVNodesMap
+        this.oldReconcileVNodesMap = reconcileVNodesMap
 
         yield* this.doReconcile(child)
 
         this.removeOldElements()
         this.oldTracker.clear()
+        this.oldReconcileVNodesMap.clear()
         this.index?.clear()
         this.trackerator = undefined
         this.isTrackeratorDone = undefined
+    }
+
+    private findVNode(node: Node | Node[]) {
+        if (this.oldReconcileVNodesMap.has(node)) {
+            return this.oldReconcileVNodesMap.get(node)
+        }
+
+        return
+    }
+
+    private bindVNode(node: Node | Node[], vnode: VNode<any, any>) {
+        this.reconcileVNodesMap.set(node, vnode)
     }
 
     private find(key: string) {
@@ -75,11 +92,13 @@ export class Reconciler {
             return
         }
 
-        if (child instanceof JsxMutator) {
+        if (child instanceof VNode) {
             const candidate = this.find(child.key)
-            const result = child.doMutation(candidate) as Exclude<Node, Text> | Node[]
+            const vnode = candidate ? this.findVNode(candidate) : undefined
+            const result = child.mutate(vnode) as Exclude<Node, Text> | Node[]
 
             this.tracker.set(result, child.key)
+            this.bindVNode(result, child)
 
             if (Array.isArray(result)) {
                 yield* result
@@ -93,17 +112,17 @@ export class Reconciler {
         if (typeof child === 'string' || typeof child === 'number') {
             const value = child.toString()
 
-            let candidate = this.find(TEXT_NODE_RECONCILE_KEY) as Text | undefined
+            let node = this.find(TEXT_NODE_RECONCILE_KEY) as Text | undefined
 
-            if (!candidate) {
-                candidate = document.createTextNode(value)
-            } else if (candidate.nodeValue !== value) {
-                candidate.nodeValue = value
+            if (!node) {
+                node = document.createTextNode(value)
+            } else if (node.nodeValue !== value) {
+                node.nodeValue = value
             }
 
-            this.tracker.set(candidate, TEXT_NODE_RECONCILE_KEY)
+            this.tracker.set(node, TEXT_NODE_RECONCILE_KEY)
 
-            yield candidate
+            yield node
 
             return
         }

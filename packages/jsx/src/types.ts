@@ -4,14 +4,14 @@
 import { Computed, Observable } from '@whatsup/core'
 import * as CSS from 'csstype'
 import { Context } from './context'
-import { JsxMutator } from './mutator'
+import { VNode } from './vnode'
 
 type Booleanish = boolean | 'true' | 'false'
 
 export type Atomic<T> = T | Computed<T> | Observable<T>
 
 export type AtomicMap<T extends { [k: string]: any }> = {
-    [K in keyof T]: Atomic<T[K]>
+    [K in keyof T]: Atomic<Exclude<T[K], undefined>>
 }
 
 //
@@ -1524,7 +1524,7 @@ export namespace WhatsJSX {
 
     export type Key = string | number
     export type Child =
-        | JsxMutator<any, any>
+        | VNode<any, any>
         | HTMLElement
         | SVGElement
         | Text

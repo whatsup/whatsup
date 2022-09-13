@@ -1,9 +1,7 @@
+import { Computed, isComputed, isObservable, Observable } from '@whatsup/core'
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
-
-export interface Props {
-    [k: string]: any
-}
+import { Props } from './vnode'
 
 export const placeNodes = (container: HTMLElement | SVGElement, nodes: Iterable<HTMLElement | SVGElement | Text>) => {
     const { childNodes } = container
@@ -30,23 +28,38 @@ export const removeNodes = (nodes: Iterable<HTMLElement | SVGElement | Text>) =>
     }
 }
 
-export const mutateAttrs = <T extends Props>(node: HTMLElement | SVGElement, prev: T, next: T, isSvg: boolean) => {
-    for (const attr in prev) {
-        if (!(attr in next)) {
-            mutateAttr(node, attr, prev[attr], undefined, isSvg)
+export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, prev: T, next: T, isSvg: boolean) => {
+    for (const prop in prev) {
+        if (!(prop in next)) {
+            mutateProp(node, prop, prev[prop], undefined, isSvg)
+            delete prev[prop]
         }
     }
 
-    for (const attr in next) {
-        if (next[attr] !== prev[attr]) {
-            mutateAttr(node, attr, prev[attr], next[attr], isSvg)
+    for (const prop in next) {
+        if (prop === 'children') {
+            continue
+        }
+        if (prop === 'style' && !prev.style) {
+            prev.style = {}
+        }
+
+        const prevValue = prev[prop]
+        const nextValue = extractAtomicValue(next[prop])
+
+        if (prevValue !== nextValue) {
+            mutateProp(node, prop, prevValue, nextValue, isSvg)
+
+            if (prop !== 'style') {
+                prev[prop] = nextValue
+            }
         }
     }
 }
 
-const mutateAttr = <T extends Props, K extends keyof T & string>(
+const mutateProp = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
-    attr: K,
+    prop: K,
     prevValue: T[K] | undefined,
     nextValue: T[K] | undefined,
     isSvg: boolean
@@ -54,27 +67,25 @@ const mutateAttr = <T extends Props, K extends keyof T & string>(
     if (isSvg) {
         // Normalize incorrect prop usage for SVG
         // Thanks preact team
-        attr = (attr as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
+        prop = (prop as string).replace(/xlink[H:h]/, 'h').replace(/sName$/, 's') as K
 
-        if (SVG_DASHED_PROPS.test(attr)) {
-            attr = attr.replace(/([A-Z0-9])/g, '-$&').toLowerCase() as K
+        if (SVG_DASHED_PROPS.test(prop)) {
+            prop = prop.replace(/([A-Z0-9])/g, '-$&').toLowerCase() as K
         }
     }
 
     switch (true) {
-        case isIgnorableProp(attr):
+        case isEventListener(prop):
+            mutateEventListener(node, prop, prevValue, nextValue)
             break
-        case isEventListener(attr):
-            mutateEventListener(node, attr, prevValue, nextValue)
-            break
-        case isStyleProp(attr):
+        case isStyleProp(prop):
             mutateStyle(node, prevValue, nextValue)
             break
-        case isReadonlyProp(attr) || isSvg:
-            mutateThroughAttributeApi(node, attr, nextValue)
+        case isReadonlyProp(prop) || isSvg:
+            mutateThroughAttributeApi(node, prop, nextValue)
             break
         default:
-            mutateThroughAssignWay(node, attr, nextValue)
+            mutateThroughAssignWay(node, prop, nextValue)
             break
     }
 }
@@ -97,20 +108,26 @@ const mutateEventListener = <T extends Props, K extends keyof T & string>(
     }
 }
 
-const mutateStyle = <T extends Partial<WhatsJSX.CSSProperties>>(
+const mutateStyle = <T extends WhatsJSX.CSSProperties>(
     node: HTMLElement | SVGElement,
-    prevValue: T = EMPTY_OBJ as T,
-    nextValue: T = EMPTY_OBJ as T
+    prev: T = EMPTY_OBJ as T,
+    next: T = EMPTY_OBJ as T
 ) => {
-    for (const prop in prevValue) {
-        if (!(prop in nextValue)) {
+    for (const prop in prev) {
+        if (!(prop in next)) {
             mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
+            delete prev[prop]
         }
     }
 
-    for (const prop in nextValue) {
-        if (nextValue[prop] !== prevValue[prop]) {
-            mutateStyleProp<T, keyof T & string>(node.style, prop, nextValue[prop])
+    for (const prop in next) {
+        const prevValue = prev[prop]
+        const nextValue = extractAtomicValue(next[prop])
+
+        if (prevValue !== nextValue) {
+            mutateStyleProp<T, keyof T & string>(node.style, prop, nextValue)
+
+            prev[prop] = nextValue
         }
     }
 }
@@ -151,6 +168,13 @@ const mutateThroughAssignWay = <T extends HTMLElement | SVGElement>(
     node[prop as keyof T] = value == null ? '' : value
 }
 
+const extractAtomicValue = <T>(value: T | Computed<T> | Observable<T>): T => {
+    if (isComputed<T>(value) || isObservable<T>(value)) {
+        return value()
+    }
+    return value
+}
+
 const getEventName = (prop: string, capture: boolean) => {
     return prop.slice(2, capture ? -7 : Infinity).toLowerCase()
 }
@@ -165,10 +189,6 @@ const isEventCaptureListener = (prop: string) => {
 
 const isStyleProp = (prop: string) => {
     return prop === 'style'
-}
-
-const isIgnorableProp = (prop: string) => {
-    return prop === 'key' || prop === 'ref' || prop === 'children' || prop === 'onMount' || prop === 'onUnmount'
 }
 
 const isReadonlyProp = (prop: string) => {

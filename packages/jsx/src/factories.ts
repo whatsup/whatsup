@@ -1,4 +1,4 @@
-import { HTMLElementMutator, SVGElementMutator, GnComponentMutator, FnComponentMutator, Props } from './mutator'
+import { HTMLElementVNode, SVGElementVNode, GnComponentVNode, FnComponentVNode, Props } from './vnode'
 import { IS_SVG_REGEX } from './constants'
 import { WhatsJSX } from './types'
 import { isGenerator } from './utils'
@@ -13,7 +13,7 @@ export const html = <P extends Props>(
     onMount?: (el: Node | Node[]) => void,
     onUnmount?: (el: Node | Node[]) => void
 ) => {
-    return new HTMLElementMutator(type, key, props, ref, onMount, onUnmount)
+    return new HTMLElementVNode(type, key, props, ref, onMount, onUnmount)
 }
 
 export const svg = <P extends Props>(
@@ -24,7 +24,7 @@ export const svg = <P extends Props>(
     onMount?: (el: Node | Node[]) => void,
     onUnmount?: (el: Node | Node[]) => void
 ) => {
-    return new SVGElementMutator(type, key, props, ref, onMount, onUnmount)
+    return new SVGElementVNode(type, key, props, ref, onMount, onUnmount)
 }
 
 export const component = <P extends Props>(
@@ -36,9 +36,9 @@ export const component = <P extends Props>(
     onUnmount?: (el: Node | Node[]) => void
 ) => {
     if (isGenerator(type)) {
-        return new GnComponentMutator(type as WhatsJSX.GnComponentProducer, key, props, ref, onMount, onUnmount)
+        return new GnComponentVNode(type as WhatsJSX.GnComponentProducer, key, props, ref, onMount, onUnmount)
     }
-    return new FnComponentMutator(type, key, props, ref, onMount, onUnmount)
+    return new FnComponentVNode(type, key, props, ref, onMount, onUnmount)
 }
 
 export const jsx = <P extends Props>(
