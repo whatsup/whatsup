@@ -84,13 +84,14 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
 
     try {
         while (true) {
-            try {
-                addContextToStack(context)
+            addContextToStack(context)
 
+            let next: Node | Node[] | undefined
+            let nextIsArray = false
+            let isEqual = true
+
+            try {
                 let child = this.produce(context)
-                let next: Node | Node[] | undefined
-                let nextIsArray = false
-                let isEqual = true
 
                 while (true) {
                     try {
@@ -145,22 +146,22 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                         continue
                     }
                 }
-
-                if (isEqual) {
-                    yield prev!
-                } else if (next) {
-                    prevIsArray = nextIsArray
-
-                    yield (prev = next)
-                } else {
-                    prevIsArray = true
-
-                    yield (prev = [])
-                }
             } catch (e) {
                 throw e
             } finally {
                 popContextFromStack()
+            }
+
+            if (isEqual) {
+                yield prev!
+            } else if (next) {
+                prevIsArray = nextIsArray
+
+                yield (prev = next)
+            } else {
+                prevIsArray = true
+
+                yield (prev = [])
             }
         }
     } finally {
