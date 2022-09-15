@@ -28,33 +28,81 @@ export const removeNodes = (nodes: Iterable<HTMLElement | SVGElement | Text>) =>
     }
 }
 
-export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, prev: T, next: T, isSvg: boolean) => {
-    for (const prop in prev) {
-        if (!(prop in next)) {
-            mutateProp(node, prop, prev[prop], undefined, isSvg)
-            delete prev[prop]
+/*
+function* keys<T extends { [k: string]: any }>(obj: T) {
+    for (const key of obj) {
+        yield key
+    }
+}
+
+function syncRemoveOldAndUpdateProps<T extends Props>(prev: T, next: T) {
+    const prevIterator = keys(prev)
+    const nextIterator = keys(next)
+
+    while (true) {
+        const { done: isPrevDone, value: prevKey } = prevIterator.next()
+        const { done: isNextDone, value: nextKey } = nextIterator.next()
+
+        if (!(prevKey in next)) {
+            // remove prop
+        }
+
+        if (prev[prevKey] !== next[nextKey]) {
+            // update prop
+        }
+
+        if (isPrevDone && isNextDone) {
+            break
+        }
+    }
+}
+*/
+
+export const mutateProps = <T extends Props>(
+    node: HTMLElement | SVGElement,
+    prev: T | undefined,
+    next: T,
+    isSvg: boolean
+) => {
+    if (prev) {
+        for (const prop in prev) {
+            if (!(prop in next)) {
+                mutateProp(node, prop, prev[prop], undefined, isSvg)
+                delete prev[prop]
+            }
         }
     }
 
     for (const prop in next) {
-        if (prop === 'children') {
+        if (isChildrenProp(prop)) {
             continue
         }
-        if (prop === 'style' && !prev.style) {
-            prev.style = {}
+
+        if (!prev) {
+            prev = {} as T
+        }
+
+        const nextValue = extractAtomicValue(next[prop])
+
+        if (isStyleProp(prop)) {
+            if (!prev.style) {
+                prev.style = {}
+            }
+
+            mutateStyle(node, prev.style, nextValue)
+            continue
         }
 
         const prevValue = prev[prop]
-        const nextValue = extractAtomicValue(next[prop])
 
         if (prevValue !== nextValue) {
             mutateProp(node, prop, prevValue, nextValue, isSvg)
 
-            if (prop !== 'style') {
-                prev[prop] = nextValue
-            }
+            prev[prop] = nextValue
         }
     }
+
+    return prev
 }
 
 const mutateProp = <T extends Props, K extends keyof T & string>(
@@ -74,20 +122,17 @@ const mutateProp = <T extends Props, K extends keyof T & string>(
         }
     }
 
-    switch (true) {
-        case isEventListener(prop):
-            mutateEventListener(node, prop, prevValue, nextValue)
-            break
-        case isStyleProp(prop):
-            mutateStyle(node, prevValue, nextValue)
-            break
-        case isReadonlyProp(prop) || isSvg:
-            mutateThroughAttributeApi(node, prop, nextValue)
-            break
-        default:
-            mutateThroughAssignWay(node, prop, nextValue)
-            break
+    if (isEventListener(prop)) {
+        mutateEventListener(node, prop, prevValue, nextValue)
+        return
     }
+
+    if (isReadonlyProp(prop) || isSvg) {
+        mutateThroughAttributeApi(node, prop, nextValue)
+        return
+    }
+
+    mutateThroughAssignWay(node, prop, nextValue)
 }
 
 const mutateEventListener = <T extends Props, K extends keyof T & string>(
@@ -108,11 +153,7 @@ const mutateEventListener = <T extends Props, K extends keyof T & string>(
     }
 }
 
-const mutateStyle = <T extends WhatsJSX.CSSProperties>(
-    node: HTMLElement | SVGElement,
-    prev: T = EMPTY_OBJ as T,
-    next: T = EMPTY_OBJ as T
-) => {
+const mutateStyle = <T extends WhatsJSX.CSSProperties>(node: HTMLElement | SVGElement, prev: T, next: T) => {
     for (const prop in prev) {
         if (!(prop in next)) {
             mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
@@ -178,6 +219,10 @@ const isEventListener = (prop: string) => {
 
 const isEventCaptureListener = (prop: string) => {
     return (prop as string).endsWith('Capture')
+}
+
+const isChildrenProp = (prop: string) => {
+    return prop === 'children'
 }
 
 const isStyleProp = (prop: string) => {

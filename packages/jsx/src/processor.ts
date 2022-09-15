@@ -33,7 +33,7 @@ export abstract class Processor<T extends Type, N extends Node | Node[]> {
 
 export abstract class ElementProcessor<N extends Exclude<Node, Text>> extends Processor<WhatsJSX.TagName, N> {
     abstract createElement(): N
-    abstract mutateProps(node: N, prev: Props, next: Props): void
+    abstract mutateProps(node: N, prev: Props | undefined, next: Props): Props | undefined
 
     constructor(vnode: VNode<WhatsJSX.TagName, N>) {
         super(vnode, elementProducer)
@@ -54,19 +54,19 @@ function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<
     const node = this.createElement()
 
     let reconciler: Reconciler | undefined
-    let prev = {} as Props
+    let prevProps: Props | undefined
 
     while (true) {
-        const next = this.vnode.props
+        const nextProps = this.vnode.props
 
-        this.mutateProps(node, prev, next)
+        prevProps = this.mutateProps(node, prevProps, nextProps)
 
-        if (next.children !== undefined || !!reconciler) {
+        if (nextProps.children !== undefined || !!reconciler) {
             if (!reconciler) {
                 reconciler = new Reconciler()
             }
 
-            const childNodes = reconciler.reconcile(next.children ?? null)
+            const childNodes = reconciler.reconcile(nextProps.children ?? null)
 
             placeNodes(node, childNodes)
         }
@@ -173,8 +173,8 @@ export class HTMLElementProcessor extends ElementProcessor<HTMLElement> {
         return document.createElement(this.vnode.type)
     }
 
-    mutateProps(node: HTMLElement, prev: Props, next: Props) {
-        mutateProps(node, prev, next, false)
+    mutateProps(node: HTMLElement, prev: Props | undefined, next: Props) {
+        return mutateProps(node, prev, next, false)
     }
 }
 
@@ -183,8 +183,8 @@ export class SVGElementProcessor extends ElementProcessor<SVGElement> {
         return document.createElementNS(SVG_NAMESPACE, this.vnode.type)
     }
 
-    mutateProps(node: SVGElement, prev: Props, next: Props) {
-        mutateProps(node, prev, next, true)
+    mutateProps(node: SVGElement, prev: Props | undefined, next: Props) {
+        return mutateProps(node, prev, next, true)
     }
 }
 
