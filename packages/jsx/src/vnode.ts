@@ -59,12 +59,12 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
             this.processor = this.createProcessor()
         }
 
-        const next = this.processor.getNodes()
+        const dom = this.processor.getDOM()
 
-        this.attachMountingCallbacks(next)
-        this.updateRef(next)
+        this.attachMountingCallbacks(dom)
+        this.updateRef(dom)
 
-        return next
+        return dom
     }
 
     private updateRef(target: N) {
@@ -73,45 +73,45 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
         }
     }
 
-    private attachMountingCallbacks(target: N) {
-        const node: Node = Array.isArray(target) ? target[0] : target
+    private attachMountingCallbacks(dom: N) {
+        const { onMount, onUnmount } = this
 
-        if (node) {
-            if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createMountObserver(node, () => this.onMount!(target))
-                Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
-            }
-            if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createUnmountObserver(node, () => this.onUnmount!(target))
-                Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
+        if (onMount || onUnmount) {
+            const target: Node = Array.isArray(dom) ? dom[0] : dom
+
+            if (target) {
+                if (onMount && !Reflect.has(target, JSX_MOUNT_OBSERVER)) {
+                    const observer = createMountObserver(target, () => onMount(dom))
+                    Reflect.set(target, JSX_MOUNT_OBSERVER, observer)
+                }
+                if (onUnmount && !Reflect.has(target, JSX_MOUNT_OBSERVER)) {
+                    const observer = createUnmountObserver(target, () => onUnmount(dom))
+                    Reflect.set(target, JSX_UNMOUNT_OBSERVER, observer)
+                }
             }
         }
     }
 }
 
-export abstract class ElementVNode<N extends Exclude<Node, Text>> extends VNode<WhatsJSX.TagName, N> {}
-
-export abstract class ComponentVNode<T extends WhatsJSX.ComponentProducer> extends VNode<T, Node | Node[]> {}
-
-export class HTMLElementVNode extends ElementVNode<HTMLElement> {
+export class HTMLElementVNode extends VNode<WhatsJSX.TagName, HTMLElement> {
     protected createProcessor(): HTMLElementProcessor {
         return new HTMLElementProcessor(this)
     }
 }
 
-export class SVGElementVNode extends ElementVNode<SVGElement> {
+export class SVGElementVNode extends VNode<WhatsJSX.TagName, SVGElement> {
     protected createProcessor(): SVGElementProcessor {
         return new SVGElementProcessor(this)
     }
 }
 
-export class FnComponentVNode extends ComponentVNode<WhatsJSX.FnComponentProducer> {
+export class FnComponentVNode extends VNode<WhatsJSX.FnComponentProducer, Node | Node[]> {
     protected createProcessor(): FnComponentProcessor {
         return new FnComponentProcessor(this)
     }
 }
 
-export class GnComponentVNode extends ComponentVNode<WhatsJSX.GnComponentProducer> {
+export class GnComponentVNode extends VNode<WhatsJSX.GnComponentProducer, Node | Node[]> {
     protected createProcessor(): GnComponentProcessor {
         return new GnComponentProcessor(this)
     }

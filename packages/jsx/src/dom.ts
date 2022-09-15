@@ -1,4 +1,4 @@
-import { Computed, isComputed, isObservable, Observable } from '@whatsup/core'
+import { extractAtomicValue } from './utils'
 import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
 import { Props } from './vnode'
@@ -168,13 +168,6 @@ const mutateThroughAssignWay = <T extends HTMLElement | SVGElement>(
     node[prop as keyof T] = value == null ? '' : value
 }
 
-const extractAtomicValue = <T>(value: T | Computed<T> | Observable<T>): T => {
-    if (isComputed<T>(value) || isObservable<T>(value)) {
-        return value()
-    }
-    return value
-}
-
 const getEventName = (prop: string, capture: boolean) => {
     return prop.slice(2, capture ? -7 : Infinity).toLowerCase()
 }
@@ -202,15 +195,12 @@ const isReadonlyProp = (prop: string) => {
     )
 }
 
-export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(
-    target: T,
-    callback: (el: T) => void
-) => {
+export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(target: T, callback: () => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
                 if (node === target || node.contains(target)) {
-                    callback(target)
+                    callback()
                     observer.disconnect()
                     return
                 }
@@ -226,15 +216,12 @@ export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(
     return observer
 }
 
-export const createUnmountObserver = <T extends HTMLElement | SVGElement | Text>(
-    target: T,
-    callback: (el: T) => void
-) => {
+export const createUnmountObserver = <T extends HTMLElement | SVGElement | Text>(target: T, callback: () => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.removedNodes) {
                 if (node === target || node.contains(target)) {
-                    callback(target)
+                    callback()
                     observer.disconnect()
                     return
                 }

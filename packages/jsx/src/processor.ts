@@ -10,11 +10,8 @@ type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 type Node = HTMLElement | SVGElement | Text
 
 export abstract class Processor<T extends Type, N extends Node | Node[]> {
-    abstract dispose(): void
-
     private readonly atom: Atom<N>
     protected vnode: VNode<T, N>
-    private reconciler?: Reconciler
 
     constructor(vnode: VNode<T, N>, producer: () => Generator<N, void, unknown>) {
         this.atom = createAtom(producer, this)
@@ -29,20 +26,8 @@ export abstract class Processor<T extends Type, N extends Node | Node[]> {
         this.vnode = vnode
     }
 
-    getNodes() {
+    getDOM() {
         return this.atom.get()
-    }
-
-    reconcile(child: WhatsJSX.Child) {
-        if (!this.reconciler) {
-            this.reconciler = new Reconciler()
-        }
-
-        return this.reconciler.reconcile(child)
-    }
-
-    hasReconciler() {
-        return !!this.reconciler
     }
 }
 
@@ -68,6 +53,7 @@ export abstract class ComponentProcessor<T extends WhatsJSX.ComponentProducer> e
 function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<N>) {
     const node = this.createElement()
 
+    let reconciler: Reconciler | undefined
     let prev = {} as Props
 
     while (true) {
@@ -75,8 +61,12 @@ function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<
 
         this.mutateProps(node, prev, next)
 
-        if (next.children !== undefined || this.hasReconciler()) {
-            const childNodes = this.reconcile(next.children ?? null)
+        if (next.children !== undefined || !!reconciler) {
+            if (!reconciler) {
+                reconciler = new Reconciler()
+            }
+
+            const childNodes = reconciler.reconcile(next.children ?? null)
 
             placeNodes(node, childNodes)
         }
@@ -87,6 +77,7 @@ function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<
 
 function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: ComponentProcessor<T>) {
     const context = createContext(this.vnode.type.name)
+    const reconciler = new Reconciler()
 
     let prev: Node | Node[] | undefined = undefined
     let prevIsArray = false
@@ -105,7 +96,7 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                     try {
                         let i = 0
 
-                        const nodes = this.reconcile(child)
+                        const nodes = reconciler.reconcile(child)
 
                         for (const node of nodes) {
                             if (prevIsArray) {
@@ -120,11 +111,11 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
 
                             /* short equality condition
 
-                            if(prevIsArray && prev[i] !== node || !prevIsArray && (i !== 0 || prev !== node)){
-                                isEqual = false
-                            }
+                                if(prevIsArray && prev[i] !== node || !prevIsArray && (i !== 0 || prev !== node)){
+                                    isEqual = false
+                                }
 
-                        */
+                            */
 
                             if (next) {
                                 if (nextIsArray) {
@@ -185,8 +176,6 @@ export class HTMLElementProcessor extends ElementProcessor<HTMLElement> {
     mutateProps(node: HTMLElement, prev: Props, next: Props) {
         mutateProps(node, prev, next, false)
     }
-
-    dispose() {}
 }
 
 export class SVGElementProcessor extends ElementProcessor<SVGElement> {
@@ -197,8 +186,6 @@ export class SVGElementProcessor extends ElementProcessor<SVGElement> {
     mutateProps(node: SVGElement, prev: Props, next: Props) {
         mutateProps(node, prev, next, true)
     }
-
-    dispose() {}
 }
 
 export class FnComponentProcessor extends ComponentProcessor<WhatsJSX.FnComponentProducer> {
