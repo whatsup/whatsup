@@ -28,7 +28,7 @@ export abstract class Atom<T = any> {
 
     readonly observers: Set<Atom>
     private dependencies: Set<Atom>
-    private disposeCandidates: Set<Atom>
+    private oldDependencies?: Set<Atom>
     private disposeListeners?: ((cache: Cache<T>) => void)[]
     private cache?: Cache<T>
     private cacheType = CacheType.Empty
@@ -37,7 +37,6 @@ export abstract class Atom<T = any> {
     constructor() {
         this.observers = new Set<Atom>()
         this.dependencies = new Set<Atom>()
-        this.disposeCandidates = new Set<Atom>()
     }
 
     get() {
@@ -159,16 +158,17 @@ export abstract class Atom<T = any> {
 
     addDependency(atom: Atom) {
         this.dependencies.add(atom)
-        this.disposeCandidates.delete(atom)
+
+        if (this.oldDependencies) {
+            this.oldDependencies.delete(atom)
+        }
 
         atom.addObserver(this)
     }
 
     trackRelations() {
-        const { dependencies, disposeCandidates } = this
-
-        this.dependencies = disposeCandidates
-        this.disposeCandidates = dependencies
+        this.oldDependencies = this.dependencies
+        this.dependencies = new Set()
 
         RELATIONS_STACK.push(this)
     }
@@ -188,11 +188,13 @@ export abstract class Atom<T = any> {
     untrackRelations() {
         RELATIONS_STACK.pop()!
 
-        for (const dependency of this.disposeCandidates) {
-            dependency.dispose(this)
-        }
+        if (this.oldDependencies) {
+            for (const dependency of this.oldDependencies) {
+                dependency.dispose(this)
+            }
 
-        this.disposeCandidates.clear()
+            this.oldDependencies = undefined
+        }
     }
 
     onDispose(listener: (cache: Cache<T>) => void) {
