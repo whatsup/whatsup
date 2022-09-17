@@ -11,3 +11,13 @@ export const extractAtomicValue = <T>(value: T | Computed<T> | Observable<T>): T
 
     return value
 }
+
+export function* flatten<T>(iterator: IterableIterator<T>) {
+    for (const item of iterator) {
+        if (Array.isArray(item)) {
+            yield* item
+        } else {
+            yield item
+        }
+    }
+}
