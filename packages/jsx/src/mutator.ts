@@ -90,16 +90,20 @@ export abstract class JsxMutator<T extends Type, R extends Node | Node[]> extend
     }
 
     private attachMountingCallbacks(result: R) {
-        const node: Node = Array.isArray(result) ? result[0] : result
+        const { onMount, onUnmount } = this
 
-        if (node) {
-            if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createMountObserver(node, () => this.onMount!(result))
-                Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
-            }
-            if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
-                const observer = createUnmountObserver(node, () => this.onUnmount!(result))
-                Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
+        if (onMount || onUnmount) {
+            const node: Node = Array.isArray(result) ? result[0] : result
+
+            if (node) {
+                if (this.onMount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
+                    const observer = createMountObserver(node, () => this.onMount!(result))
+                    Reflect.set(node, JSX_MOUNT_OBSERVER, observer)
+                }
+                if (this.onUnmount && !Reflect.has(node, JSX_MOUNT_OBSERVER)) {
+                    const observer = createUnmountObserver(node, () => this.onUnmount!(result))
+                    Reflect.set(node, JSX_UNMOUNT_OBSERVER, observer)
+                }
             }
         }
     }

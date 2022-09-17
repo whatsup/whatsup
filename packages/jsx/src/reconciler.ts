@@ -3,33 +3,37 @@ import { JsxMutator } from './mutator'
 import { WhatsJSX } from './types'
 
 type Node = HTMLElement | SVGElement | Text
+type Tracker = Map<Node | Node[], string>
+type Index = Map<string, Node | Node[]>
 
 const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_KEY__'
 const RENDERED_NODE_RECONCILE_KEY = '__RENDERED_NODE_RECONCILE_KEY__'
 
 export class Reconciler {
-    private tracker = new Map<Node | Node[], string>()
-    private oldTracker = new Map<Node | Node[], string>()
-    private index?: Map<string, Node | Node[]>
+    private tracker!: Tracker
+    private oldTracker?: Tracker
+    private index?: Index
     private trackerator?: IterableIterator<[Node | Node[], string]>
     private isTrackeratorDone?: true;
 
     *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
-        const { tracker, oldTracker } = this
-
-        this.tracker = oldTracker
-        this.oldTracker = tracker
+        this.oldTracker = this.tracker
+        this.tracker = new Map()
 
         yield* this.doReconcile(child)
 
         this.removeOldElements()
-        this.oldTracker.clear()
-        this.index?.clear()
+
+        this.index = undefined
         this.trackerator = undefined
         this.isTrackeratorDone = undefined
     }
 
     private find(key: string) {
+        if (!this.oldTracker) {
+            return
+        }
+
         if (this.index && this.index.has(key)) {
             const item = this.index.get(key)!
 
@@ -113,8 +117,11 @@ export class Reconciler {
         }
 
         if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
-            this.oldTracker.delete(child)
             this.tracker.set(child, RENDERED_NODE_RECONCILE_KEY)
+
+            if (this.oldTracker) {
+                this.oldTracker.delete(child)
+            }
 
             yield child
 
@@ -125,11 +132,13 @@ export class Reconciler {
     }
 
     private removeOldElements() {
-        removeNodes(this.oldTrackableNodes())
+        if (this.oldTracker) {
+            removeNodes(this.oldTrackableNodes())
+        }
     }
 
     private *oldTrackableNodes() {
-        for (const item of this.oldTracker.keys()) {
+        for (const item of this.oldTracker!.keys()) {
             if (Array.isArray(item)) {
                 yield* item
             } else {
