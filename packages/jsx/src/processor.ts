@@ -276,19 +276,18 @@ const isEqualProps = <T extends Props>(prev: T, next: T) => {
 
     for (const key of prevKeys) {
         if (key === 'style') {
-            if (!isEqualStyle(prev.style || EMPTY_OBJ, next.style || EMPTY_OBJ)) {
-                return false
+            if (isEqualStyle(prev.style || EMPTY_OBJ, next.style || EMPTY_OBJ)) {
+                continue
             }
-
-            continue
+            return false
         }
 
         if (key === 'children') {
-            if (!isEqualChildren(prev.children, next.children)) {
-                return false
+            if (isEqualChildren(prev.children, next.children)) {
+                next.children = prev.children
+                continue
             }
-
-            continue
+            return false
         }
 
         if (prev[key] !== next[key]) {
@@ -331,7 +330,7 @@ const isEqualChildren = <T extends WhatsJSX.Child | undefined>(prev: T, next: T)
 
         for (let i = 0; i < prev.length; i++) {
             if (isEqualChildren(prev[i], next[i])) {
-                prev[i] === next[i]
+                prev[i] = next[i]
                 continue
             }
 
