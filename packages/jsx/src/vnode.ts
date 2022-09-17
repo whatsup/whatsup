@@ -67,9 +67,9 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
         return dom
     }
 
-    private updateRef(target: N) {
+    private updateRef(dom: N) {
         if (this.ref) {
-            this.ref.current = target
+            this.ref.current = dom
         }
     }
 

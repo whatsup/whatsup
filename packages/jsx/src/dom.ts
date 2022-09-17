@@ -1,5 +1,5 @@
 import { extractAtomicValue } from './utils'
-import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
+import { NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
 import { Props } from './vnode'
 

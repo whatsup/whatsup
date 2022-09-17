@@ -11,37 +11,39 @@ const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_KEY__'
 const RENDERED_NODE_RECONCILE_KEY = '__RENDERED_NODE_RECONCILE_KEY__'
 
 export class Reconciler {
-    private tracker: Tracker
-    private vnodesMap: VNodesMap
+    private tracker!: Tracker
+    private vnodesMap!: VNodesMap
+    private oldTracker?: Tracker
+    private oldVNodesMap?: VNodesMap
     private index?: Index
     private trackerator?: IterableIterator<[Node | Node[], string]>
-    private isTrackeratorDone?: true
-
-    constructor() {
-        this.tracker = new Map()
-        this.vnodesMap = new Map()
-    }
+    private isTrackeratorDone?: true;
 
     *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
-        const { tracker: oldTracker, vnodesMap: oldVNodesMap } = this
-
+        this.oldTracker = this.tracker
+        this.oldVNodesMap = this.vnodesMap
         this.tracker = new Map()
         this.vnodesMap = new Map()
 
-        yield* this.doReconcile(child, oldTracker, oldVNodesMap)
+        yield* this.doReconcile(child)
 
-        this.removeOldElements(oldTracker)
-        this.index?.clear()
+        this.removeOldElements()
+
+        this.index = undefined
         this.trackerator = undefined
         this.isTrackeratorDone = undefined
     }
 
-    private find(key: string, tracker: Tracker) {
+    private find(key: string) {
+        if (!this.oldTracker) {
+            return
+        }
+
         if (this.index && this.index.has(key)) {
             const item = this.index.get(key)!
 
             this.index.delete(key)
-            tracker.delete(item)
+            this.oldTracker.delete(item)
 
             return item
         }
@@ -51,12 +53,12 @@ export class Reconciler {
         }
 
         if (!this.trackerator) {
-            this.trackerator = tracker.entries()
+            this.trackerator = this.oldTracker.entries()
         }
 
         for (const [item, itemKey] of this.trackerator) {
             if (key === itemKey) {
-                tracker.delete(item)
+                this.oldTracker.delete(item)
 
                 return item
             }
@@ -73,22 +75,31 @@ export class Reconciler {
         return
     }
 
-    private *doReconcile(
-        child: WhatsJSX.Child,
-        oldTracker: Tracker,
-        oldVNodesMap: VNodesMap
-    ): Generator<Node, undefined, undefined> {
+    private findOldVNode(key: string) {
+        const dom = this.find(key)
+
+        if (!dom || !this.oldVNodesMap || !this.oldVNodesMap.has(dom)) {
+            return
+        }
+
+        return this.oldVNodesMap.get(dom)
+    }
+
+    private *doReconcile(child: WhatsJSX.Child): Generator<Node, undefined, undefined> {
+        if (child === null || child === true || child === false) {
+            return
+        }
+
         if (Array.isArray(child)) {
             for (let i = 0; i < child.length; i++) {
-                yield* this.doReconcile(child[i], oldTracker, oldVNodesMap)
+                yield* this.doReconcile(child[i])
             }
 
             return
         }
 
         if (child instanceof VNode) {
-            const candidate = this.find(child.key, oldTracker)
-            const vnode = candidate && oldVNodesMap.has(candidate) ? oldVNodesMap.get(candidate) : undefined
+            const vnode = this.findOldVNode(child.key)
             const result = child.mutate(vnode) as Exclude<Node, Text> | Node[]
 
             this.tracker.set(result, child.key)
@@ -103,10 +114,10 @@ export class Reconciler {
             return
         }
 
-        if (typeof child === 'string' || typeof child === 'number') {
+        if (typeof child === 'string' || typeof child === 'number' || typeof child === 'bigint') {
             const value = child.toString()
 
-            let node = this.find(TEXT_NODE_RECONCILE_KEY, oldTracker) as Text | undefined
+            let node = this.find(TEXT_NODE_RECONCILE_KEY) as Text | undefined
 
             if (!node) {
                 node = document.createTextNode(value)
@@ -121,13 +132,12 @@ export class Reconciler {
             return
         }
 
-        if (child === null || child === true || child === false) {
-            return
-        }
-
         if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
             this.tracker.set(child, RENDERED_NODE_RECONCILE_KEY)
-            oldTracker.delete(child)
+
+            if (this.oldTracker) {
+                this.oldTracker.delete(child)
+            }
 
             yield child
 
@@ -137,12 +147,14 @@ export class Reconciler {
         throw new InvalidJSXChildError(child)
     }
 
-    private removeOldElements(oldTracker: Tracker) {
-        removeNodes(this.oldTrackableNodes(oldTracker))
+    private removeOldElements() {
+        if (this.oldTracker) {
+            removeNodes(this.oldTrackableNodes())
+        }
     }
 
-    private *oldTrackableNodes(oldTracker: Tracker) {
-        for (const item of oldTracker.keys()) {
+    private *oldTrackableNodes() {
+        for (const item of this.oldTracker!.keys()) {
             if (Array.isArray(item)) {
                 yield* item
             } else {
