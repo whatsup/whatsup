@@ -1,4 +1,4 @@
-import { addContextToStack, Context, createContext, popContextFromStack } from './context'
+import { Context } from './context'
 import { VNode, Props } from './vnode'
 import { WhatsJSX } from './types'
 import { Reconciler } from './reconciler'
@@ -11,11 +11,13 @@ type Node = HTMLElement | SVGElement | Text
 
 export abstract class Processor<T extends Type, N extends Node | Node[]> {
     private readonly atom: Atom<N>
+    protected readonly context: Context
     protected vnode: VNode<T, N>
 
-    constructor(vnode: VNode<T, N>, producer: () => Generator<N, void, unknown>) {
-        this.atom = createAtom(producer, this)
+    constructor(context: Context, vnode: VNode<T, N>, producer: () => Generator<N, void, unknown>) {
+        this.context = context
         this.vnode = vnode
+        this.atom = createAtom(producer, this)
     }
 
     setVNode(vnode: VNode<T, N>) {
@@ -35,22 +37,25 @@ export abstract class ElementProcessor<N extends Exclude<Node, Text>> extends Pr
     abstract createElement(): N
     abstract mutateProps(node: N, prev: Props | undefined, next: Props): Props | undefined
 
-    constructor(vnode: VNode<WhatsJSX.TagName, N>) {
-        super(vnode, elementProducer)
+    constructor(vnode: VNode<WhatsJSX.TagName, N>, context: Context) {
+        super(context, vnode, elementProducer)
     }
 }
 
 export abstract class ComponentProcessor<T extends WhatsJSX.ComponentProducer> extends Processor<T, Node | Node[]> {
-    abstract produce(context: Context): WhatsJSX.Child
+    abstract produce(): WhatsJSX.Child
     abstract handleError(e: Error): WhatsJSX.Child
     abstract dispose(): void
 
-    constructor(vnode: VNode<T, Node | Node[]>) {
-        super(vnode, componentProducer)
+    constructor(vnode: VNode<T, Node | Node[]>, context: Context) {
+        const newContext = new Context(context, vnode.type.name)
+
+        super(newContext, vnode, componentProducer)
     }
 }
 
 function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<N>) {
+    const { context } = this
     const node = this.createElement()
 
     let reconciler: Reconciler | undefined
@@ -66,7 +71,7 @@ function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<
                 reconciler = new Reconciler()
             }
 
-            const childNodes = reconciler.reconcile(nextProps.children ?? null)
+            const childNodes = reconciler.reconcile(nextProps.children ?? null, context)
 
             placeNodes(node, childNodes)
         }
@@ -76,7 +81,7 @@ function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<
 }
 
 function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: ComponentProcessor<T>) {
-    const context = createContext(this.vnode.type.name)
+    const { context } = this
     const reconciler = new Reconciler()
 
     let prev: Node | Node[] | undefined = undefined
@@ -84,20 +89,18 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
 
     try {
         while (true) {
-            addContextToStack(context)
-
             let next: Node | Node[] | undefined
             let nextIsArray = false
             let isEqual = true
 
             try {
-                let child = this.produce(context)
+                let child = this.produce()
 
                 while (true) {
                     try {
                         let i = 0
 
-                        const nodes = reconciler.reconcile(child)
+                        const nodes = reconciler.reconcile(child, context)
 
                         for (const node of nodes) {
                             if (prevIsArray) {
@@ -148,8 +151,6 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                 }
             } catch (e) {
                 throw e
-            } finally {
-                popContextFromStack()
             }
 
             if (isEqual) {
@@ -190,8 +191,9 @@ export class SVGElementProcessor extends ElementProcessor<SVGElement> {
 }
 
 export class FnComponentProcessor extends ComponentProcessor<WhatsJSX.FnComponentProducer> {
-    produce(context: Context) {
-        const { type, props } = this.vnode
+    produce() {
+        const { context, vnode } = this
+        const { type, props } = vnode
 
         return type.call(context, props, context)
     }
@@ -206,8 +208,9 @@ export class FnComponentProcessor extends ComponentProcessor<WhatsJSX.FnComponen
 export class GnComponentProcessor extends ComponentProcessor<WhatsJSX.GnComponentProducer> {
     private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
 
-    produce(context: Context) {
-        const { type, props } = this.vnode
+    produce() {
+        const { context, vnode } = this
+        const { type, props } = vnode
 
         if (!this.iterator) {
             this.iterator = type.call(context, props, context)

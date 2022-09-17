@@ -1,3 +1,4 @@
+import { Context } from './context'
 import { removeNodes } from './dom'
 import { WhatsJSX } from './types'
 import { VNode } from './vnode'
@@ -19,13 +20,13 @@ export class Reconciler {
     private trackerator?: IterableIterator<[Node | Node[], string]>
     private isTrackeratorDone?: true;
 
-    *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[]) {
+    *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[], context: Context) {
         this.oldTracker = this.tracker
         this.oldVNodesMap = this.vnodesMap
         this.tracker = new Map()
         this.vnodesMap = new Map()
 
-        yield* this.doReconcile(child)
+        yield* this.doReconcile(child, context)
 
         this.removeOldElements()
 
@@ -85,14 +86,14 @@ export class Reconciler {
         return this.oldVNodesMap.get(dom)
     }
 
-    private *doReconcile(child: WhatsJSX.Child): Generator<Node, undefined, undefined> {
+    private *doReconcile(child: WhatsJSX.Child, context: Context): Generator<Node, undefined, undefined> {
         if (child === null || child === true || child === false) {
             return
         }
 
         if (Array.isArray(child)) {
             for (let i = 0; i < child.length; i++) {
-                yield* this.doReconcile(child[i])
+                yield* this.doReconcile(child[i], context)
             }
 
             return
@@ -100,7 +101,7 @@ export class Reconciler {
 
         if (child instanceof VNode) {
             const vnode = this.findOldVNode(child.key)
-            const result = child.mutate(vnode) as Exclude<Node, Text> | Node[]
+            const result = child.mutate(vnode, context) as Exclude<Node, Text> | Node[]
 
             this.tracker.set(result, child.key)
             this.vnodesMap.set(result, child)

@@ -8,6 +8,7 @@ import {
     FnComponentProcessor,
     GnComponentProcessor,
 } from './processor'
+import { Context } from './context'
 
 export interface Props {
     style?: WhatsJSX.CSSProperties
@@ -23,7 +24,7 @@ const JSX_MOUNT_OBSERVER = Symbol('JSX onMount observer')
 const JSX_UNMOUNT_OBSERVER = Symbol('JSX onUnmount observer')
 
 export abstract class VNode<T extends Type, N extends Node | Node[]> {
-    protected abstract createProcessor(): Processor<T, N>
+    protected abstract createProcessor(context: Context): Processor<T, N>
 
     readonly key: string
     readonly type: T
@@ -51,12 +52,12 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
         if (onUnmount) this.onUnmount = onUnmount
     }
 
-    mutate(prev?: VNode<T, N>) {
+    mutate(prev: VNode<T, N> | undefined, context: Context) {
         if (prev) {
             this.processor = prev.processor
             this.processor.setVNode(this)
         } else {
-            this.processor = this.createProcessor()
+            this.processor = this.createProcessor(context)
         }
 
         const dom = this.processor.getDOM()
@@ -94,25 +95,25 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
 }
 
 export class HTMLElementVNode extends VNode<WhatsJSX.TagName, HTMLElement> {
-    protected createProcessor(): HTMLElementProcessor {
-        return new HTMLElementProcessor(this)
+    protected createProcessor(context: Context): HTMLElementProcessor {
+        return new HTMLElementProcessor(this, context)
     }
 }
 
 export class SVGElementVNode extends VNode<WhatsJSX.TagName, SVGElement> {
-    protected createProcessor(): SVGElementProcessor {
-        return new SVGElementProcessor(this)
+    protected createProcessor(context: Context): SVGElementProcessor {
+        return new SVGElementProcessor(this, context)
     }
 }
 
 export class FnComponentVNode extends VNode<WhatsJSX.FnComponentProducer, Node | Node[]> {
-    protected createProcessor(): FnComponentProcessor {
-        return new FnComponentProcessor(this)
+    protected createProcessor(context: Context): FnComponentProcessor {
+        return new FnComponentProcessor(this, context)
     }
 }
 
 export class GnComponentVNode extends VNode<WhatsJSX.GnComponentProducer, Node | Node[]> {
-    protected createProcessor(): GnComponentProcessor {
-        return new GnComponentProcessor(this)
+    protected createProcessor(context: Context): GnComponentProcessor {
+        return new GnComponentProcessor(this, context)
     }
 }

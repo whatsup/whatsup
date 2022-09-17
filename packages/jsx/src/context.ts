@@ -183,25 +183,3 @@ interface ContextKeyFactory {
 export const createKey: ContextKeyFactory = <T>(...args: [T?]) => {
     return new ContextKey(...args)
 }
-
-const CTX_STACK = [] as Context[]
-
-export const createContext = (name: string) => {
-    const parent = CTX_STACK.length === 0 ? null : CTX_STACK[CTX_STACK.length - 1]
-
-    return new Context(parent, name)
-}
-
-export const addContextToStack = (ctx: Context) => {
-    CTX_STACK.push(ctx)
-}
-
-export const popContextFromStack = (/* ctx: Context */) => {
-    CTX_STACK.pop()
-
-    /* TODO: 
-    if (CTX_STACK.pop() !== ctx) {
-        throw Error('Whats? This is not the right context!')
-    }
-    */
-}
