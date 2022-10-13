@@ -86,4 +86,22 @@ describe('Situations', () => {
             expect(mock).lastCalledWith('user Barry')
         })
     })
+
+    it('diamond test', () => {
+        const mock = jest.fn()
+        const one = observable(1)
+        const two = computed(() => one() + 1)
+        const three = computed(() => two() * 2)
+        const four = computed(() => two() * 3)
+
+        autorun(() => mock(three() + four()))
+
+        expect(mock).toBeCalledTimes(1)
+        expect(mock).lastCalledWith(10)
+
+        one(2)
+
+        expect(mock).toBeCalledTimes(2)
+        expect(mock).lastCalledWith(15)
+    })
 })
