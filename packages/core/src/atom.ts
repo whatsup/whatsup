@@ -16,7 +16,6 @@ export enum CacheState {
 }
 
 export enum CacheType {
-    Empty = 'Empty',
     Data = 'Data',
     Error = 'Error',
 }
@@ -26,17 +25,14 @@ const RELATIONS_STACK = [] as Atom[]
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    readonly observers: Set<Atom>
+    private observer?: Atom
+    private observers?: Set<Atom>
     private dependencies?: Set<Atom>
     private oldDependencies?: Set<Atom>
     private disposeListeners?: ((cache: Cache<T>) => void)[]
     private cache?: Cache<T>
-    private cacheType = CacheType.Empty
+    private cacheType?: CacheType
     private cacheState = CacheState.Dirty
-
-    constructor() {
-        this.observers = new Set<Atom>()
-    }
 
     get() {
         let cache: Cache<T>
@@ -122,7 +118,7 @@ export abstract class Atom<T = any> {
                 this.cache = newCache
                 this.cacheType = newCacheType
 
-                for (const observer of this.observers) {
+                for (const observer of this.eachObservers()) {
                     observer.setCacheState(CacheState.Dirty)
                 }
 
@@ -146,15 +142,41 @@ export abstract class Atom<T = any> {
     }
 
     hasObservers() {
-        return this.observers.size > 0
+        return !!this.observer || !!this.observers
+    }
+
+    *eachObservers() {
+        if (this.observers) {
+            yield* this.observers
+        } else if (this.observer) {
+            yield this.observer
+        }
     }
 
     addObserver(atom: Atom) {
-        this.observers.add(atom)
+        if (this.observers) {
+            this.observers.add(atom)
+        } else if (this.observer) {
+            if (this.observer !== atom) {
+                this.observers = new Set([this.observer, atom])
+                this.observer = undefined
+            }
+        } else {
+            this.observer = atom
+        }
     }
 
     deleteObserver(atom: Atom) {
-        this.observers.delete(atom)
+        if (this.observers) {
+            this.observers.delete(atom)
+
+            if (this.observers.size === 1) {
+                this.observer = this.observers.values().next().value
+                this.observers = undefined
+            }
+        } else if (this.observer === atom) {
+            this.observer = undefined
+        }
     }
 
     addDependency(atom: Atom) {
@@ -167,22 +189,21 @@ export abstract class Atom<T = any> {
         if (this.oldDependencies) {
             this.oldDependencies.delete(atom)
         }
-
-        atom.addObserver(this)
     }
 
-    trackRelations() {
+    private trackRelations() {
         this.oldDependencies = this.dependencies
         this.dependencies = undefined
 
         RELATIONS_STACK.push(this)
     }
 
-    establishRelations() {
+    private establishRelations() {
         if (RELATIONS_STACK.length > 0) {
             const observer = RELATIONS_STACK[RELATIONS_STACK.length - 1]
 
             observer.addDependency(this)
+            this.addObserver(observer)
 
             return true
         }
@@ -190,7 +211,7 @@ export abstract class Atom<T = any> {
         return false
     }
 
-    untrackRelations() {
+    private untrackRelations() {
         RELATIONS_STACK.pop()!
 
         if (this.oldDependencies) {
@@ -224,7 +245,7 @@ export abstract class Atom<T = any> {
             }
 
             this.cache = undefined
-            this.cacheType = CacheType.Empty
+            this.cacheType = undefined
             this.cacheState = CacheState.Dirty
 
             if (this.dependencies) {

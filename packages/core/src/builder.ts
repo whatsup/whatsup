@@ -22,7 +22,7 @@ class Process {
         atom.setCacheState(state)
 
         if (atom.hasObservers()) {
-            for (const observer of atom.observers) {
+            for (const observer of atom.eachObservers()) {
                 if (observer.isCacheState(CacheState.Actual)) {
                     this.findRoots(observer, CacheState.Check)
                 }

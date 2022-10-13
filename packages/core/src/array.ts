@@ -58,7 +58,7 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
                 const result = method.apply(target, args)
 
                 build((p) => {
-                    for (const observer of this.atom.observers) {
+                    for (const observer of this.atom.eachObservers()) {
                         p.rebuild(observer)
                     }
                 })
@@ -73,7 +73,7 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
             const result = Reflect.set(target, prop, value, receiver)
 
             build((p) => {
-                for (const observer of this.atom.observers) {
+                for (const observer of this.atom.eachObservers()) {
                     p.rebuild(observer)
                 }
             })
