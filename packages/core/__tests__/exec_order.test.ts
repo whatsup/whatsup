@@ -3,7 +3,7 @@ import { computed } from '../src/computed'
 import { observable } from '../src/observable'
 
 describe('Execution order', () => {
-    it('should run build only in transaction', () => {
+    it('should run build only in process', () => {
         const app = computed(function* App() {
             while (true) {
                 yield two() + one()

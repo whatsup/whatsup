@@ -2,8 +2,8 @@ import { observable } from '../src/observable'
 import { computed } from '../src/computed'
 import { autorun } from '../src/reactions'
 
-describe('Scheduler', () => {
-    it(`Should run every change in personal transaction`, () => {
+describe('Builder', () => {
+    it(`Should run every change in personal process`, () => {
         const mock = jest.fn()
         const a = observable('a')
         const b = observable('b')
@@ -26,7 +26,7 @@ describe('Scheduler', () => {
         expect(mock).nthCalledWith(3, 'ABc')
     })
 
-    it(`Should create slave transaction when call 'transaction' inside transaction`, () => {
+    it(`Should create slave process when call 'build' inside process`, () => {
         const mockB = jest.fn()
         const mockC = jest.fn()
         const a = observable('a')
@@ -56,7 +56,7 @@ describe('Scheduler', () => {
         expect(mockC).lastCalledWith('Ab')
     })
 
-    it(`Should create & add atoms to current slave transaction when call 'transaction' inside transaction`, () => {
+    it(`Should create & add atoms to current slave process when call 'build' inside process`, () => {
         const mockB = jest.fn()
         const mockC = jest.fn()
         const mockD = jest.fn()
@@ -101,7 +101,7 @@ describe('Scheduler', () => {
         expect(mockD).lastCalledWith('Ad')
     })
 
-    describe('should recalc only dirty streams', () => {
+    describe('should recalc only dirty atoms', () => {
         const mock = jest.fn()
         const mockWallet = jest.fn()
         const mockUser = jest.fn()

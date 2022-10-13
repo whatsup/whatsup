@@ -1,5 +1,5 @@
 import { createAtom, Producer } from './atom'
-import { transaction } from './scheduler'
+import { build } from './builder'
 
 export type DataHandler<T> = (data: T, prevData?: T | undefined) => void
 export type ErrorHandler = (e: Error) => void
@@ -22,7 +22,7 @@ export const reaction = <T>(producer: Producer<T>, onData: DataHandler<T>, onErr
         }
     })
 
-    transaction((t) => t.addEntry(atom))
+    build((p) => p.rebuild(atom))
 
     return () => atom.dispose()
 }
@@ -30,7 +30,7 @@ export const reaction = <T>(producer: Producer<T>, onData: DataHandler<T>, onErr
 export const autorun = <T>(producer: Producer<T>) => {
     const atom = createAtom(producer)
 
-    transaction((t) => t.addEntry(atom))
+    build((p) => p.rebuild(atom))
 
     return () => atom.dispose()
 }

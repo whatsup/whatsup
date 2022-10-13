@@ -4,7 +4,7 @@ import { computed } from '../src/computed'
 import { autorun } from '../src/reactions'
 
 describe('Action', () => {
-    it(`Should run all changes in single transaction`, () => {
+    it(`Should run all changes in single process`, () => {
         const mock = jest.fn()
         const a = observable('a')
         const b = observable('b')
@@ -25,7 +25,7 @@ describe('Action', () => {
         expect(mock).toBeCalledTimes(2)
         expect(mock).nthCalledWith(2, 'ABc')
     })
-    it(`Should decorate method and run all changes in single transaction`, () => {
+    it(`Should decorate method and run all changes in single process`, () => {
         const mock = jest.fn()
 
         class User {
@@ -59,7 +59,7 @@ describe('Action', () => {
         expect(mock).toBeCalledTimes(2)
         expect(mock).nthCalledWith(2, 'Barry Chu')
     })
-    it(`Should create action method and run all changes in single transaction`, () => {
+    it(`Should create action method and run all changes in single process`, () => {
         const mock = jest.fn()
 
         class User {

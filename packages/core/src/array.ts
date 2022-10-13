@@ -1,5 +1,5 @@
 import { createAtom, Atom } from './atom'
-import { transaction } from './scheduler'
+import { build } from './builder'
 
 export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
     /* @internal */
@@ -57,9 +57,9 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
                 const method = Reflect.get(target, prop, receiver)
                 const result = method.apply(target, args)
 
-                transaction((t) => {
+                build((p) => {
                     for (const observer of this.atom.observers) {
-                        t.addEntry(observer)
+                        p.rebuild(observer)
                     }
                 })
 
@@ -72,9 +72,9 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
         if (typeof prop === 'string' && (prop === 'length' || !isNaN(prop as any))) {
             const result = Reflect.set(target, prop, value, receiver)
 
-            transaction((t) => {
+            build((p) => {
                 for (const observer of this.atom.observers) {
-                    t.addEntry(observer)
+                    p.rebuild(observer)
                 }
             })
 

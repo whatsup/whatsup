@@ -1,5 +1,5 @@
 import { observable, Observable, isObservable } from './observable'
-import { transaction, isBuildProcess } from './scheduler'
+import { build, isBuildProcess } from './builder'
 
 export class ObservableMap<K, V> {
     private readonly hasMap: Map<K, null | Observable<boolean>>
@@ -86,7 +86,7 @@ export class ObservableMap<K, V> {
     }
 
     set(key: K, value: V) {
-        transaction(() => {
+        build(() => {
             let length = this.length()
 
             if (this.hasMap.has(key)) {
@@ -121,7 +121,7 @@ export class ObservableMap<K, V> {
 
     delete(key: K) {
         if (this.hasMap.has(key)) {
-            transaction(() => {
+            build(() => {
                 const accessor = this.hasMap.get(key)
                 const data = this.dataMap.get(key)
 
@@ -149,7 +149,7 @@ export class ObservableMap<K, V> {
     }
 
     clear() {
-        transaction(() => {
+        build(() => {
             for (const key of this.hasMap.keys()) {
                 this.delete(key)
             }

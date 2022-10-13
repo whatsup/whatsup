@@ -1,6 +1,6 @@
 import { createAtom, Payload } from './atom'
 import { Computed } from './computed'
-import { transaction } from './scheduler'
+import { build } from './builder'
 
 const SIGN = Symbol('This is observable')
 
@@ -24,7 +24,7 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
                 value = args[0]
 
                 if (atom.hasObservers()) {
-                    transaction((t) => t.addEntry(atom))
+                    build((p) => p.rebuild(atom))
                 }
 
                 return

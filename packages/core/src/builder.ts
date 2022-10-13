@@ -1,10 +1,10 @@
 import { Atom, CacheState } from './atom'
 
-export class Transaction {
+class Process {
     private readonly entries = new Set<Atom>()
     private readonly roots = new Set<Atom>()
 
-    addEntry(atom: Atom) {
+    rebuild(atom: Atom) {
         this.entries.add(atom)
     }
 
@@ -34,29 +34,29 @@ export class Transaction {
 }
 
 let key: symbol | null = null
-let trx: Transaction | null = null
+let prc: Process | null = null
 
-export const transaction = <T>(cb: (transaction: Transaction) => T): T => {
+export const build = <T>(cb: (process: Process) => T): T => {
     const localKey = Symbol()
 
-    if (trx === null) {
-        trx = new Transaction()
+    if (prc === null) {
+        prc = new Process()
 
         if (key === null) {
             key = localKey
         }
     }
 
-    const result = cb(trx)
+    const result = cb(prc)
 
     while (key === localKey) {
-        const transaction = trx!
+        const process = prc!
 
-        trx = null
+        prc = null
 
-        transaction.run()
+        process.run()
 
-        if (trx === null) {
+        if (prc === null) {
             key = null
         }
     }
