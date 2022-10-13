@@ -27,7 +27,7 @@ export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
     readonly observers: Set<Atom>
-    private dependencies: Set<Atom>
+    private dependencies?: Set<Atom>
     private oldDependencies?: Set<Atom>
     private disposeListeners?: ((cache: Cache<T>) => void)[]
     private cache?: Cache<T>
@@ -36,7 +36,6 @@ export abstract class Atom<T = any> {
 
     constructor() {
         this.observers = new Set<Atom>()
-        this.dependencies = new Set<Atom>()
     }
 
     get() {
@@ -94,9 +93,11 @@ export abstract class Atom<T = any> {
 
     rebuild() {
         check: if (this.isCacheState(CacheState.Check)) {
-            for (const dependency of this.dependencies) {
-                if (dependency.rebuild()) {
-                    break check
+            if (this.dependencies) {
+                for (const dependency of this.dependencies) {
+                    if (dependency.rebuild()) {
+                        break check
+                    }
                 }
             }
         }
@@ -157,6 +158,10 @@ export abstract class Atom<T = any> {
     }
 
     addDependency(atom: Atom) {
+        if (!this.dependencies) {
+            this.dependencies = new Set()
+        }
+
         this.dependencies.add(atom)
 
         if (this.oldDependencies) {
@@ -168,7 +173,7 @@ export abstract class Atom<T = any> {
 
     trackRelations() {
         this.oldDependencies = this.dependencies
-        this.dependencies = new Set()
+        this.dependencies = undefined
 
         RELATIONS_STACK.push(this)
     }
@@ -222,11 +227,13 @@ export abstract class Atom<T = any> {
             this.cacheType = CacheType.Empty
             this.cacheState = CacheState.Dirty
 
-            for (const dependency of this.dependencies) {
-                dependency.dispose(this)
-            }
+            if (this.dependencies) {
+                for (const dependency of this.dependencies) {
+                    dependency.dispose(this)
+                }
 
-            this.dependencies.clear()
+                this.dependencies = undefined
+            }
         }
     }
 }
