@@ -84,13 +84,13 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
     const { context } = this
     const reconciler = new Reconciler()
 
-    let prev: Node | Node[] | undefined = undefined
-    let prevIsArray = false
+    let prev: Node | undefined
+    let prevs: Node[] | undefined
 
     try {
         while (true) {
-            let next: Node | Node[] | undefined
-            let nextIsArray = false
+            let next: Node | undefined
+            let nexts: Node[] | undefined
             let isEqual = true
 
             try {
@@ -103,8 +103,8 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                         const nodes = reconciler.reconcile(child, context)
 
                         for (const node of nodes) {
-                            if (prevIsArray) {
-                                if ((prev! as Node[])[i] !== node) {
+                            if (prevs) {
+                                if (prevs[i] !== node) {
                                     isEqual = false
                                 }
                             } else if (i !== 0) {
@@ -115,19 +115,17 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
 
                             /* short equality condition
 
-                                if(prevIsArray && prev[i] !== node || !prevIsArray && (i !== 0 || prev !== node)){
+                                if(prevs && prev[i] !== node || !prevs && (i !== 0 || prev !== node)){
                                     isEqual = false
                                 }
 
                             */
 
-                            if (next) {
-                                if (nextIsArray) {
-                                    ;(next as Node[]).push(node)
-                                } else {
-                                    nextIsArray = true
-                                    next = [next as Node, node]
-                                }
+                            if (nexts) {
+                                nexts.push(node)
+                            } else if (next) {
+                                nexts = [next, node]
+                                next = undefined
                             } else {
                                 next = node
                             }
@@ -135,7 +133,7 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                             i++
                         }
 
-                        if (!prevIsArray || !nextIsArray) {
+                        if (!prevs || !nexts) {
                             isEqual = false
                         }
 
@@ -143,7 +141,7 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                     } catch (e) {
                         child = this.handleError(e as Error)
                         next = undefined
-                        nextIsArray = false
+                        nexts = undefined
                         isEqual = false
 
                         continue
@@ -153,17 +151,17 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
                 throw e
             }
 
-            if (isEqual) {
-                yield prev!
-            } else if (next) {
-                prevIsArray = nextIsArray
-
-                yield (prev = next)
-            } else {
-                prevIsArray = true
-
-                yield (prev = [])
+            if (!isEqual) {
+                if (next || nexts) {
+                    prev = next
+                    prevs = nexts
+                } else {
+                    prev = undefined
+                    prevs = []
+                }
             }
+
+            yield (prev || prevs)!
         }
     } finally {
         this.dispose()
