@@ -1,11 +1,18 @@
 // Based on type definitions for React 16.9
 // Thanks react team
 
+import { Computed, Observable } from '@whatsup/core'
 import * as CSS from 'csstype'
 import { Context } from './context'
-import { JsxMutator } from './mutator'
+import { VNode } from './vnode'
 
 type Booleanish = boolean | 'true' | 'false'
+
+export type Atomic<T> = T | Computed<T> | Observable<T>
+
+export type AtomicMap<T extends { [k: string]: any }> = {
+    [K in keyof T]: Atomic<Exclude<T[K], undefined>>
+}
 
 //
 // Events
@@ -381,7 +388,7 @@ export namespace WhatsJSX {
         onTransitionEndCapture?: TransitionEventHandler<T>
     }
 
-    export interface CSSProperties extends CSS.Properties<string | number, string> {}
+    export interface CSSProperties extends AtomicMap<CSS.Properties<string | number, string>> {}
 
     // All the WAI-ARIA 1.1 attributes from https://www.w3.org/TR/wai-aria-1.1/
     export interface AriaAttributes {
@@ -1329,9 +1336,9 @@ export namespace WhatsJSX {
         zoomAndPan?: string
     }
 
-    type SVGProps<T> = SVGAttributes<T> & Attributes
+    type SVGProps<T> = AtomicMap<SVGAttributes<T>> & Attributes
 
-    type HTMLProps<T extends HTMLAttributes<any>> = T & Attributes
+    type HTMLProps<T extends HTMLAttributes<any>> = AtomicMap<T> & Attributes
 
     export interface Elements {
         // HTML
@@ -1515,10 +1522,9 @@ export namespace WhatsJSX {
 
     export type TagName = keyof Elements
 
-    export type Uid = string
     export type Key = string | number
     export type Child =
-        | JsxMutator<any, any>
+        | VNode<any, any>
         | HTMLElement
         | SVGElement
         | Text

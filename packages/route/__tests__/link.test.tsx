@@ -134,8 +134,6 @@ describe('Link test', () => {
         rootLink.current?.click()
 
         expect(container.children[0].innerHTML).toBe('<div>App</div>')
-
-        expect(container.children[0].innerHTML).toBe('<div>App</div>')
     })
 
     it('should call onClick', () => {

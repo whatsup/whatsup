@@ -1,9 +1,7 @@
-import { EMPTY_OBJ, NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
+import { extractAtomicValue } from './utils'
+import { NON_DIMENSIONAL_STYLE_PROP, SVG_DASHED_PROPS } from './constants'
 import { WhatsJSX } from './types'
-
-export interface Props {
-    [k: string]: any
-}
+import { Props } from './vnode'
 
 export const placeNodes = (container: HTMLElement | SVGElement, nodes: Iterable<HTMLElement | SVGElement | Text>) => {
     const { childNodes } = container
@@ -30,25 +28,88 @@ export const removeNodes = (nodes: Iterable<HTMLElement | SVGElement | Text>) =>
     }
 }
 
-export const mutateProps = <T extends Props>(node: HTMLElement | SVGElement, props: T, oldProps: T, isSvg: boolean) => {
-    for (const prop in oldProps) {
-        if (!(prop in props)) {
-            mutateProp(node, prop, undefined, oldProps[prop], isSvg)
+/*
+function* keys<T extends { [k: string]: any }>(obj: T) {
+    for (const key of obj) {
+        yield key
+    }
+}
+
+function syncRemoveOldAndUpdateProps<T extends Props>(prev: T, next: T) {
+    const prevIterator = keys(prev)
+    const nextIterator = keys(next)
+
+    while (true) {
+        const { done: isPrevDone, value: prevKey } = prevIterator.next()
+        const { done: isNextDone, value: nextKey } = nextIterator.next()
+
+        if (!(prevKey in next)) {
+            // remove prop
+        }
+
+        if (prev[prevKey] !== next[nextKey]) {
+            // update prop
+        }
+
+        if (isPrevDone && isNextDone) {
+            break
+        }
+    }
+}
+*/
+
+export const mutateProps = <T extends Props>(
+    node: HTMLElement | SVGElement,
+    prev: T | undefined,
+    next: T,
+    isSvg: boolean
+) => {
+    if (prev) {
+        for (const prop in prev) {
+            if (!(prop in next)) {
+                mutateProp(node, prop, prev[prop], undefined, isSvg)
+                delete prev[prop]
+            }
         }
     }
 
-    for (const prop in props) {
-        if (props[prop] !== oldProps[prop]) {
-            mutateProp(node, prop, props[prop], oldProps[prop], isSvg)
+    for (const prop in next) {
+        if (isChildrenProp(prop)) {
+            continue
+        }
+
+        if (!prev) {
+            prev = {} as T
+        }
+
+        const nextValue = extractAtomicValue(next[prop])
+
+        if (isStyleProp(prop)) {
+            if (!prev.style) {
+                prev.style = {}
+            }
+
+            mutateStyle(node, prev.style, nextValue)
+            continue
+        }
+
+        const prevValue = prev[prop]
+
+        if (prevValue !== nextValue) {
+            mutateProp(node, prop, prevValue, nextValue, isSvg)
+
+            prev[prop] = nextValue
         }
     }
+
+    return prev
 }
 
 const mutateProp = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
-    value: T[K] | undefined,
-    oldValue: T[K] | undefined,
+    prevValue: T[K] | undefined,
+    nextValue: T[K] | undefined,
     isSvg: boolean
 ) => {
     if (isSvg) {
@@ -61,59 +122,53 @@ const mutateProp = <T extends Props, K extends keyof T & string>(
         }
     }
 
-    switch (true) {
-        case isIgnorableProp(prop):
-            break
-        case isEventListener(prop):
-            mutateEventListener(node, prop, value, oldValue)
-            break
-        case isStyleProp(prop):
-            mutateStyle(node, value, oldValue)
-            break
-        case isReadonlyProp(prop) || isSvg:
-            mutatePropThroughAttributeApi(node, prop, value)
-            break
-        default:
-            mutatePropThroughUsualWay(node, prop, value)
-            break
+    if (isEventListener(prop)) {
+        mutateEventListener(node, prop, prevValue, nextValue)
+        return
     }
+
+    if (isReadonlyProp(prop) || isSvg) {
+        mutateThroughAttributeApi(node, prop, nextValue)
+        return
+    }
+
+    mutateThroughAssignWay(node, prop, nextValue)
 }
 
 const mutateEventListener = <T extends Props, K extends keyof T & string>(
     node: HTMLElement | SVGElement,
     prop: K,
-    listener: T[K] | undefined,
-    oldListener: T[K] | undefined
+    prevListener: T[K] | undefined,
+    nextListener: T[K] | undefined
 ) => {
     const capture = isEventCaptureListener(prop)
     const event = getEventName(prop, capture)
 
-    if (typeof oldListener === 'function') {
-        node.removeEventListener(event, oldListener, capture)
+    if (typeof prevListener === 'function') {
+        node.removeEventListener(event, prevListener, capture)
     }
-    if (typeof listener === 'function') {
-        node.addEventListener(event, listener, capture)
+
+    if (typeof nextListener === 'function') {
+        node.addEventListener(event, nextListener, capture)
     }
 }
 
-const mutateStyle = <T extends Partial<WhatsJSX.CSSProperties>>(
-    node: HTMLElement | SVGElement,
-    value: CSSStyleDeclaration | T = EMPTY_OBJ as T,
-    oldValue: T = EMPTY_OBJ as T
-) => {
-    if (value instanceof CSSStyleDeclaration) {
-        node.style.cssText = value.cssText
-    } else {
-        for (const prop in oldValue) {
-            if (!(prop in value)) {
-                mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
-            }
+const mutateStyle = <T extends WhatsJSX.CSSProperties>(node: HTMLElement | SVGElement, prev: T, next: T) => {
+    for (const prop in prev) {
+        if (!(prop in next)) {
+            mutateStyleProp<T, keyof T & string>(node.style, prop, '' as any)
+            delete prev[prop]
         }
+    }
 
-        for (const prop in value) {
-            if (value[prop] !== oldValue[prop]) {
-                mutateStyleProp<T, keyof T & string>(node.style, prop, value[prop])
-            }
+    for (const prop in next) {
+        const prevValue = prev[prop]
+        const nextValue = extractAtomicValue(next[prop])
+
+        if (prevValue !== nextValue) {
+            mutateStyleProp<T, keyof T & string>(node.style, prop, nextValue)
+
+            prev[prop] = nextValue
         }
     }
 }
@@ -134,7 +189,7 @@ const mutateStyleProp = <T extends Partial<WhatsJSX.CSSProperties>, K extends ke
     }
 }
 
-const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
+const mutateThroughAttributeApi = <T extends HTMLElement | SVGElement>(
     node: T,
     prop: keyof Props & string,
     value: Props[keyof Props]
@@ -146,7 +201,7 @@ const mutatePropThroughAttributeApi = <T extends HTMLElement | SVGElement>(
     }
 }
 
-const mutatePropThroughUsualWay = <T extends HTMLElement | SVGElement>(
+const mutateThroughAssignWay = <T extends HTMLElement | SVGElement>(
     node: T,
     prop: keyof Props,
     value: Props[keyof Props]
@@ -166,12 +221,12 @@ const isEventCaptureListener = (prop: string) => {
     return (prop as string).endsWith('Capture')
 }
 
-const isStyleProp = (prop: string) => {
-    return prop === 'style'
+const isChildrenProp = (prop: string) => {
+    return prop === 'children'
 }
 
-const isIgnorableProp = (prop: string) => {
-    return prop === 'key' || prop === 'ref' || prop === 'children' || prop === 'onMount' || prop === 'onUnmount'
+const isStyleProp = (prop: string) => {
+    return prop === 'style'
 }
 
 const isReadonlyProp = (prop: string) => {
@@ -185,15 +240,12 @@ const isReadonlyProp = (prop: string) => {
     )
 }
 
-export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(
-    target: T,
-    callback: (el: T) => void
-) => {
+export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(target: T, callback: () => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.addedNodes) {
                 if (node === target || node.contains(target)) {
-                    callback(target)
+                    callback()
                     observer.disconnect()
                     return
                 }
@@ -209,15 +261,12 @@ export const createMountObserver = <T extends HTMLElement | SVGElement | Text>(
     return observer
 }
 
-export const createUnmountObserver = <T extends HTMLElement | SVGElement | Text>(
-    target: T,
-    callback: (el: T) => void
-) => {
+export const createUnmountObserver = <T extends HTMLElement | SVGElement | Text>(target: T, callback: () => void) => {
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             for (const node of mutation.removedNodes) {
                 if (node === target || node.contains(target)) {
-                    callback(target)
+                    callback()
                     observer.disconnect()
                     return
                 }
