@@ -27,7 +27,9 @@ export abstract class Atom<T = any> {
 
     private observer?: Atom
     private observers?: Set<Atom>
+    private dependency?: Atom
     private dependencies?: Set<Atom>
+    private oldDependency?: Atom
     private oldDependencies?: Set<Atom>
     private disposeListeners?: ((cache: Cache<T>) => void)[]
     private cache?: Cache<T>
@@ -89,8 +91,8 @@ export abstract class Atom<T = any> {
 
     rebuild() {
         check: if (this.isCacheState(CacheState.Check)) {
-            if (this.dependencies) {
-                for (const dependency of this.dependencies) {
+            if (this.hasDependencies()) {
+                for (const dependency of this.eachDependencies()) {
                     if (dependency.rebuild()) {
                         break check
                     }
@@ -145,11 +147,35 @@ export abstract class Atom<T = any> {
         return !!this.observer || !!this.observers
     }
 
+    hasDependencies() {
+        return !!this.dependency || !!this.dependencies
+    }
+
+    hasOldDependencies() {
+        return !!this.oldDependency || !!this.oldDependencies
+    }
+
     *eachObservers() {
         if (this.observers) {
             yield* this.observers
         } else if (this.observer) {
             yield this.observer
+        }
+    }
+
+    *eachDependencies() {
+        if (this.dependencies) {
+            yield* this.dependencies
+        } else if (this.dependency) {
+            yield this.dependency
+        }
+    }
+
+    *eachOldDependencies() {
+        if (this.oldDependencies) {
+            yield* this.oldDependencies
+        } else if (this.oldDependency) {
+            yield this.oldDependency
         }
     }
 
@@ -180,19 +206,33 @@ export abstract class Atom<T = any> {
     }
 
     addDependency(atom: Atom) {
-        if (!this.dependencies) {
-            this.dependencies = new Set()
+        if (this.dependencies) {
+            this.dependencies.add(atom)
+        } else if (this.dependency) {
+            if (this.dependency !== atom) {
+                this.dependencies = new Set([this.dependency, atom])
+                this.dependency = undefined
+            }
+        } else {
+            this.dependency = atom
         }
-
-        this.dependencies.add(atom)
 
         if (this.oldDependencies) {
             this.oldDependencies.delete(atom)
+
+            if (this.oldDependencies.size === 1) {
+                this.oldDependency = this.oldDependencies.values().next().value
+                this.oldDependencies = undefined
+            }
+        } else if (this.oldDependency === atom) {
+            this.oldDependency = undefined
         }
     }
 
     private trackRelations() {
+        this.oldDependency = this.dependency
         this.oldDependencies = this.dependencies
+        this.dependency = undefined
         this.dependencies = undefined
 
         RELATIONS_STACK.push(this)
@@ -214,11 +254,12 @@ export abstract class Atom<T = any> {
     private untrackRelations() {
         RELATIONS_STACK.pop()!
 
-        if (this.oldDependencies) {
-            for (const dependency of this.oldDependencies) {
+        if (this.hasOldDependencies()) {
+            for (const dependency of this.eachOldDependencies()) {
                 dependency.dispose(this)
             }
 
+            this.oldDependency = undefined
             this.oldDependencies = undefined
         }
     }
@@ -248,11 +289,12 @@ export abstract class Atom<T = any> {
             this.cacheType = undefined
             this.cacheState = CacheState.Dirty
 
-            if (this.dependencies) {
-                for (const dependency of this.dependencies) {
+            if (this.hasDependencies()) {
+                for (const dependency of this.eachDependencies()) {
                     dependency.dispose(this)
                 }
 
+                this.dependency = undefined
                 this.dependencies = undefined
             }
         }
