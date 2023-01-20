@@ -1,5 +1,5 @@
 import { Delegation } from './delegation'
-import { Mutator } from './mutator'
+import { Mutator, isMutator } from './mutator'
 import { isGenerator } from './utils'
 
 export type Payload<T> = T | Delegation<T> | Mutator<T>
@@ -74,8 +74,8 @@ export abstract class Atom<T = any> {
             value = this.produce()
             error = false
 
-            if (value instanceof Mutator) {
-                value = value.mutate(this.cache as T)
+            if (isMutator<T>(value)) {
+                value = value(this.cache as T)
             }
         } catch (e) {
             value = e as Error

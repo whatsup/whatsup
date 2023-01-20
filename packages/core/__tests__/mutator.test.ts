@@ -1,13 +1,13 @@
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
-import { mutator, comparer, filter } from '../src/mutator'
+import { comparer, filter } from '../src/mutator'
 import { autorun } from '../src/reactions'
 
 describe('Mutators', () => {
     describe('test shorthand', () => {
         let result: any
         let kickstart: () => void
-        const increment = mutator<number>((prev = 0) => prev + 1)
+        const increment = (prev = 0) => prev + 1
         const output = computed(function* () {
             const trigger = observable(0)
 

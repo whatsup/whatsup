@@ -237,10 +237,11 @@ describe('props', function () {
     it('should reset event listener', function () {
         const mock = jest.fn()
         const container = document.createElement('div')
-        const trigger = observable<any>(mock)
+        const trigger = observable<any>({ mock })
 
         function Test() {
-            return <div onClick={trigger()} />
+            const { mock } = trigger()
+            return <div onClick={mock} />
         }
 
         render(<Test />, container)
@@ -251,7 +252,7 @@ describe('props', function () {
 
         expect(mock).toBeCalledTimes(1)
 
-        trigger(undefined)
+        trigger({ mock: undefined })
 
         container.children[0].dispatchEvent(new MouseEvent('click'))
 

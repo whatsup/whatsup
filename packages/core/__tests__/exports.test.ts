@@ -4,7 +4,7 @@ import { observable, isObservable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
 import { action, runInAction } from '../src/action'
 import { delegate } from '../src/delegation'
-import { mutator, Mutator, comparer, filter } from '../src/mutator'
+import { comparer, filter } from '../src/mutator'
 import { array } from '../src/array'
 import { set } from '../src/set'
 import { map } from '../src/map'
@@ -21,8 +21,6 @@ import {
     action as _action,
     runInAction as _runInAction,
     delegate as _delegate,
-    mutator as _mutator,
-    Mutator as _Mutator,
     comparer as _comparer,
     filter as _filter,
     array as _array,
@@ -42,8 +40,6 @@ it('Exports', () => {
     expect(action).toBe(_action)
     expect(runInAction).toBe(_runInAction)
     expect(delegate).toBe(_delegate)
-    expect(mutator).toBe(_mutator)
-    expect(Mutator).toBe(_Mutator)
     expect(comparer).toBe(_comparer)
     expect(filter).toBe(_filter)
     expect(array).toBe(_array)
