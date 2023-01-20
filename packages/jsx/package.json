@@ -1,7 +1,7 @@
 {
     "name": "@whatsup/jsx",
     "description": "whatsup jsx render",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "author": "Denis Churbanov",
     "license": "MIT",
     "repository": {
@@ -27,7 +27,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@whatsup/core": "^2.4.0",
+        "@whatsup/core": "^2.5.0",
         "csstype": "^3.1.0"
     },
     "devDependencies": {
