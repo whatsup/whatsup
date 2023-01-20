@@ -1,6 +1,5 @@
 import { computed } from '../src/computed'
 import { observable } from '../src/observable'
-import { delegate } from '../src/delegation'
 import { autorun } from '../src/reactions'
 
 describe('Disposing', () => {
@@ -103,72 +102,12 @@ describe('Disposing', () => {
         dispose()
     })
 
-    it(`should dispose unused deps when inside generator used delegation`, () => {
-        const mock = jest.fn()
-        const mockB = jest.fn()
-        const toggle = observable(true)
-        const a = computed<string>(function* () {
-            while (true) {
-                yield toggle() ? yield delegate(b) : 'A'
-            }
-        })
-        const b = computed(function* () {
-            try {
-                while (true) {
-                    yield 'B'
-                }
-            } finally {
-                mockB()
-            }
-        })
-
-        const dispose = autorun(() => mock(a()))
-
-        expect(mock).toBeCalledTimes(1)
-        expect(mock).lastCalledWith('B')
-
-        toggle(false)
-
-        expect(mockB).toBeCalledTimes(1)
-
-        dispose()
-    })
-
     it(`should dispose unused deps when inside generator used return statement `, () => {
         const mock = jest.fn()
         const mockB = jest.fn()
         const toggle = observable(true)
         const a = computed(function* () {
             return toggle() ? b() : 'A'
-        })
-        const b = computed(function* () {
-            try {
-                while (true) {
-                    yield 'B'
-                }
-            } finally {
-                mockB()
-            }
-        })
-
-        const dispose = autorun(() => mock(a()))
-
-        expect(mock).toBeCalledTimes(1)
-        expect(mock).lastCalledWith('B')
-
-        toggle(false)
-
-        expect(mockB).toBeCalledTimes(1)
-
-        dispose()
-    })
-
-    it(`should dispose unused deps when inside generator used return statement & delegation`, () => {
-        const mock = jest.fn()
-        const mockB = jest.fn()
-        const toggle = observable(true)
-        const a = computed<string>(function* () {
-            return toggle() ? yield delegate(b) : 'A'
         })
         const b = computed(function* () {
             try {

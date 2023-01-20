@@ -1,7 +1,6 @@
-import { delegate } from '../src/delegation'
 import { observable } from '../src/observable'
 import { computed } from '../src/computed'
-import { autorun, reaction } from '../src/reactions'
+import { autorun } from '../src/reactions'
 
 describe('Errors', () => {
     describe('test catch error on parent level', () => {
@@ -203,49 +202,6 @@ describe('Errors', () => {
             balance(100)
             expect(mock).toBeCalledTimes(5)
             expect(mock).lastCalledWith('user wallet balance 100')
-        })
-    })
-
-    describe('test catch error with delegating', () => {
-        const mock = jest.fn((v) => v)
-        const mock2 = jest.fn((v) => v)
-        const toggle = observable(true)
-        const balance = observable(33)
-        const app = computed(function* () {
-            while (true) {
-                yield `user ${user()}`
-            }
-        })
-        const user = computed(function* () {
-            if (toggle()) {
-                throw delegate(wallet)
-            } else {
-                return delegate(wallet)
-            }
-        })
-        const wallet = computed(function* () {
-            while (true) {
-                yield `balance ${balance()}`
-            }
-        })
-
-        reaction(() => app(), mock, mock2)
-
-        it(`mock called with "user balance 33"`, () => {
-            expect(mock2).toBeCalledTimes(1)
-            expect(mock2).lastCalledWith(delegate(wallet))
-        })
-
-        it(`mock called with "user balance 10" always`, () => {
-            toggle(false)
-            expect(mock).toBeCalledTimes(1)
-            expect(mock).lastCalledWith('user balance 33', undefined)
-        })
-
-        it(`mock called with "user balance 10"`, () => {
-            balance(10)
-            expect(mock).toBeCalledTimes(2)
-            expect(mock).lastCalledWith('user balance 10', 'user balance 33')
         })
     })
 })

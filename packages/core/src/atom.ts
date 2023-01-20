@@ -1,13 +1,12 @@
-import { Delegation } from './delegation'
 import { Mutator, isMutator } from './mutator'
 import { isGenerator } from './utils'
 
-export type Payload<T> = T | Delegation<T> | Mutator<T>
+export type Payload<T> = T | Mutator<T>
 export type PayloadIterator<T> = Iterator<Payload<T> | never, Payload<T> | unknown, unknown>
 export type GnProducer<T> = () => PayloadIterator<T>
 export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
-export type Cache<T> = T | Delegation<T> | Error
+export type Cache<T> = T | Error
 
 export enum CacheState {
     Actual = 'Actual',
@@ -40,27 +39,18 @@ export abstract class Atom<T = any> {
         let cache: Cache<T>
         let atom = this as Atom<T>
 
-        while (true) {
-            if (atom.establishRelations() || atom.hasObservers()) {
-                if (atom.cacheState !== CacheState.Actual) {
-                    atom.rebuild()
-                }
-
-                if (atom.cacheType === CacheType.Error) {
-                    throw atom.cache
-                }
-
-                cache = atom.cache!
-            } else {
-                cache = atom.build()
+        if (atom.establishRelations() || atom.hasObservers()) {
+            if (atom.cacheState !== CacheState.Actual) {
+                atom.rebuild()
             }
 
-            if (cache instanceof Delegation) {
-                atom = cache.source.atom
-                continue
+            if (atom.cacheType === CacheType.Error) {
+                throw atom.cache
             }
 
-            break
+            cache = atom.cache!
+        } else {
+            cache = atom.build()
         }
 
         return cache as T
@@ -86,7 +76,7 @@ export abstract class Atom<T = any> {
             throw value
         }
 
-        return value as T | Delegation<T>
+        return value as T
     }
 
     rebuild() {

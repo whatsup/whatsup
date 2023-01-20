@@ -3,7 +3,6 @@ import { computed, isComputed } from '../src/computed'
 import { observable, isObservable } from '../src/observable'
 import { reaction, autorun } from '../src/reactions'
 import { action, runInAction } from '../src/action'
-import { delegate } from '../src/delegation'
 import { comparer, filter } from '../src/mutator'
 import { array } from '../src/array'
 import { set } from '../src/set'
@@ -20,7 +19,6 @@ import {
     autorun as _autorun,
     action as _action,
     runInAction as _runInAction,
-    delegate as _delegate,
     comparer as _comparer,
     filter as _filter,
     array as _array,
@@ -39,7 +37,6 @@ it('Exports', () => {
     expect(autorun).toBe(_autorun)
     expect(action).toBe(_action)
     expect(runInAction).toBe(_runInAction)
-    expect(delegate).toBe(_delegate)
     expect(comparer).toBe(_comparer)
     expect(filter).toBe(_filter)
     expect(array).toBe(_array)
