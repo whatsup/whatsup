@@ -36,24 +36,19 @@ export abstract class Atom<T = any> {
     private cacheState = CacheState.Dirty
 
     get() {
-        let cache: Cache<T>
-        let atom = this as Atom<T>
-
-        if (atom.establishRelations() || atom.hasObservers()) {
-            if (atom.cacheState !== CacheState.Actual) {
-                atom.rebuild()
+        if (this.establishRelations() || this.hasObservers()) {
+            if (this.cacheState !== CacheState.Actual) {
+                this.rebuild()
             }
 
-            if (atom.cacheType === CacheType.Error) {
-                throw atom.cache
+            if (this.cacheType === CacheType.Error) {
+                throw this.cache
             }
 
-            cache = atom.cache!
-        } else {
-            cache = atom.build()
+            return this.cache!
         }
 
-        return cache as T
+        return this.build()
     }
 
     build() {
