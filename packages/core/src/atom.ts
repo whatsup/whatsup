@@ -8,6 +8,16 @@ export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
 export type Cache<T> = T | Error
 
+export type Node = {
+    source: Atom
+    target: Atom
+    version?: symbol
+    prevSource?: Node
+    nextSource?: Node
+    prevTarget?: Node
+    nextTarget?: Node
+}
+
 export enum CacheState {
     Actual = 'Actual',
     Check = 'Check',
@@ -19,17 +29,22 @@ export enum CacheType {
     Error = 'Error',
 }
 
-const RELATIONS_STACK = [] as Atom[]
+let evalContext = null as Atom | null
 
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    private observer?: Atom
-    private observers?: Set<Atom>
-    private dependency?: Atom
-    private dependencies?: Set<Atom>
-    private oldDependency?: Atom
-    private oldDependencies?: Set<Atom>
+    readonly key = Symbol()
+
+    version?: symbol;
+
+    [k: symbol]: Node
+
+    sourcesHead?: Node
+    sourcesTail?: Node
+    targetsHead?: Node
+    targetsTail?: Node
+
     private disposeListeners?: ((cache: Cache<T>) => void)[]
     private cache?: Cache<T>
     private cacheType?: CacheType
@@ -45,7 +60,7 @@ export abstract class Atom<T = any> {
                 throw this.cache
             }
 
-            return this.cache!
+            return this.cache as T
         }
 
         return this.build()
@@ -76,17 +91,15 @@ export abstract class Atom<T = any> {
 
     rebuild() {
         check: if (this.isCacheState(CacheState.Check)) {
-            if (this.hasDependencies()) {
-                for (const dependency of this.eachDependencies()) {
-                    if (dependency.rebuild()) {
-                        break check
-                    }
+            for (let node = this.sourcesHead; node; node = node.nextSource) {
+                if (node.source.rebuild()) {
+                    break check
                 }
             }
         }
 
         if (this.isCacheState(CacheState.Dirty)) {
-            this.trackRelations()
+            const context = this.trackRelations()
 
             let newCache: Cache<T>
             let newCacheType: CacheType
@@ -99,14 +112,14 @@ export abstract class Atom<T = any> {
                 newCacheType = CacheType.Error
             }
 
-            this.untrackRelations()
+            this.untrackRelations(context)
 
             if (this.cache !== newCache || this.cacheType !== newCacheType) {
                 this.cache = newCache
                 this.cacheType = newCacheType
 
-                for (const observer of this.eachObservers()) {
-                    observer.setCacheState(CacheState.Dirty)
+                for (let node = this.targetsHead; node; node = node.nextTarget) {
+                    node.target.setCacheState(CacheState.Dirty)
                 }
 
                 this.setCacheState(CacheState.Actual)
@@ -129,123 +142,112 @@ export abstract class Atom<T = any> {
     }
 
     hasObservers() {
-        return !!this.observer || !!this.observers
-    }
-
-    hasDependencies() {
-        return !!this.dependency || !!this.dependencies
-    }
-
-    hasOldDependencies() {
-        return !!this.oldDependency || !!this.oldDependencies
-    }
-
-    *eachObservers() {
-        if (this.observers) {
-            yield* this.observers
-        } else if (this.observer) {
-            yield this.observer
-        }
-    }
-
-    *eachDependencies() {
-        if (this.dependencies) {
-            yield* this.dependencies
-        } else if (this.dependency) {
-            yield this.dependency
-        }
-    }
-
-    *eachOldDependencies() {
-        if (this.oldDependencies) {
-            yield* this.oldDependencies
-        } else if (this.oldDependency) {
-            yield this.oldDependency
-        }
-    }
-
-    addObserver(atom: Atom) {
-        if (this.observers) {
-            this.observers.add(atom)
-        } else if (this.observer) {
-            if (this.observer !== atom) {
-                this.observers = new Set([this.observer, atom])
-                this.observer = undefined
-            }
-        } else {
-            this.observer = atom
-        }
-    }
-
-    deleteObserver(atom: Atom) {
-        if (this.observers) {
-            this.observers.delete(atom)
-
-            if (this.observers.size === 1) {
-                this.observer = this.observers.values().next().value
-                this.observers = undefined
-            }
-        } else if (this.observer === atom) {
-            this.observer = undefined
-        }
-    }
-
-    addDependency(atom: Atom) {
-        if (this.dependencies) {
-            this.dependencies.add(atom)
-        } else if (this.dependency) {
-            if (this.dependency !== atom) {
-                this.dependencies = new Set([this.dependency, atom])
-                this.dependency = undefined
-            }
-        } else {
-            this.dependency = atom
-        }
-
-        if (this.oldDependencies) {
-            this.oldDependencies.delete(atom)
-
-            if (this.oldDependencies.size === 1) {
-                this.oldDependency = this.oldDependencies.values().next().value
-                this.oldDependencies = undefined
-            }
-        } else if (this.oldDependency === atom) {
-            this.oldDependency = undefined
-        }
+        return !!this.targetsHead
     }
 
     private trackRelations() {
-        this.oldDependency = this.dependency
-        this.oldDependencies = this.dependencies
-        this.dependency = undefined
-        this.dependencies = undefined
+        this.version = Symbol()
 
-        RELATIONS_STACK.push(this)
+        const prevEvalContext = evalContext
+
+        evalContext = this
+
+        return prevEvalContext
+
+        try {
+            return evalContext
+        } finally {
+            evalContext = this
+        }
     }
 
     private establishRelations() {
-        if (RELATIONS_STACK.length > 0) {
-            const observer = RELATIONS_STACK[RELATIONS_STACK.length - 1]
+        if (!evalContext) {
+            return false
+        }
 
-            observer.addDependency(this)
-            this.addObserver(observer)
+        const { key } = evalContext
 
+        if (!(key in this)) {
+            const node = {
+                source: this,
+                target: evalContext,
+                version: undefined,
+                prevSource: undefined,
+                nextSource: undefined,
+                prevTarget: undefined,
+                nextTarget: undefined,
+            } as Node
+
+            if (this.targetsTail) {
+                this.targetsTail.nextTarget = node
+                node.prevTarget = this.targetsTail
+            }
+
+            this.targetsTail = node
+
+            if (!this.targetsHead) {
+                this.targetsHead = node
+            }
+
+            if (evalContext.sourcesTail) {
+                evalContext.sourcesTail.nextSource = node
+                node.prevSource = evalContext.sourcesTail
+                evalContext.sourcesTail = node
+            } else {
+                evalContext.sourcesHead = node
+                evalContext.sourcesTail = node
+            }
+
+            this[key] = node
+        }
+
+        const node = this[key] // as Node
+
+        if (node.version === evalContext.version) {
+            // we already use this atom as source in current target
             return true
         }
 
-        return false
-    }
+        if (node.nextSource) {
+            node.nextSource.prevSource = node.prevSource
 
-    private untrackRelations() {
-        RELATIONS_STACK.pop()!
-
-        if (this.hasOldDependencies()) {
-            for (const dependency of this.eachOldDependencies()) {
-                dependency.dispose(this)
+            if (node.prevSource) {
+                node.prevSource.nextSource = node.nextSource
+            } else {
+                evalContext.sourcesHead = node.nextSource
             }
 
-            this.oldDependency = undefined
-            this.oldDependencies = undefined
+            node.prevSource = evalContext.sourcesTail
+            node.nextSource = undefined
+
+            evalContext.sourcesTail!.nextSource = node
+            evalContext.sourcesTail = node
+        }
+
+        // sync node actuality version
+        node.version = evalContext.version
+
+        return true
+    }
+
+    private untrackRelations(atom: Atom | null) {
+        evalContext = atom
+
+        // dispose unnecessary nodes
+
+        for (let node = this.sourcesHead; node; node = node.nextSource) {
+            if (node.prevSource) {
+                node.prevSource.nextSource = undefined
+                node.prevSource = undefined
+            }
+
+            if (node.version === this.version) {
+                this.sourcesHead = node
+                break
+            } else {
+                node.source.dispose(node)
+            }
         }
     }
 
@@ -256,12 +258,26 @@ export abstract class Atom<T = any> {
         this.disposeListeners.push(listener)
     }
 
-    dispose(initiator?: Atom) {
-        if (initiator) {
-            this.deleteObserver(initiator)
+    dispose(node?: Node) {
+        if (node) {
+            if (node.prevTarget) {
+                node.prevTarget.nextTarget = node.nextTarget
+            } else {
+                this.targetsHead = node.nextTarget
+            }
+
+            if (node.nextTarget) {
+                node.nextTarget.prevTarget = node.prevTarget
+            } else {
+                this.targetsTail = node.prevTarget
+            }
+
+            //  node.version = undefined // ??
+
+            delete this[node.target.key] // ??
         }
 
-        if (!this.hasObservers()) {
+        if (!this.targetsHead && !this.targetsTail) {
             if (this.disposeListeners) {
                 for (const listener of this.disposeListeners) {
                     listener(this.cache!)
@@ -274,14 +290,12 @@ export abstract class Atom<T = any> {
             this.cacheType = undefined
             this.cacheState = CacheState.Dirty
 
-            if (this.hasDependencies()) {
-                for (const dependency of this.eachDependencies()) {
-                    dependency.dispose(this)
-                }
-
-                this.dependency = undefined
-                this.dependencies = undefined
+            for (let node = this.sourcesHead; node; node = node.nextSource) {
+                node.source.dispose(node)
             }
+
+            this.sourcesHead = undefined
+            this.sourcesTail = undefined
         }
     }
 }
@@ -320,8 +334,8 @@ class GnAtom<T> extends Atom<T> {
         }
     }
 
-    dispose(initiator?: Atom) {
-        super.dispose(initiator)
+    dispose(node?: Node) {
+        super.dispose(node)
 
         if (!this.hasObservers() && this.iterator) {
             this.iterator.return!()

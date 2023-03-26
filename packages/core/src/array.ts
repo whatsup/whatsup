@@ -54,12 +54,12 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
             prop === 'splice'
         ) {
             return (...args: any[]) => {
-                const method = Reflect.get(target, prop, receiver)
+                const method = Reflect.get(target, prop, receiver) as (...args: any[]) => number
                 const result = method.apply(target, args)
 
                 build((p) => {
-                    for (const observer of this.atom.eachObservers()) {
-                        p.rebuild(observer)
+                    for (let node = this.atom.targetsHead; node; node = node.nextTarget) {
+                        p.rebuild(node.target)
                     }
                 })
 
@@ -73,8 +73,8 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
             const result = Reflect.set(target, prop, value, receiver)
 
             build((p) => {
-                for (const observer of this.atom.eachObservers()) {
-                    p.rebuild(observer)
+                for (let node = this.atom.targetsHead; node; node = node.nextTarget) {
+                    p.rebuild(node.target)
                 }
             })
 

@@ -1,4 +1,4 @@
-import { Atom, CacheState } from './atom'
+import { Atom, CacheState, Node } from './atom'
 
 class Process {
     private readonly entries = new Set<Atom>()
@@ -21,14 +21,15 @@ class Process {
     private findRoots(atom: Atom, state: CacheState) {
         atom.setCacheState(state)
 
-        if (atom.hasObservers()) {
-            for (const observer of atom.eachObservers()) {
-                if (observer.isCacheState(CacheState.Actual)) {
-                    this.findRoots(observer, CacheState.Check)
-                }
-            }
-        } else {
+        if (!atom.targetsHead) {
             this.roots.add(atom)
+            return
+        }
+
+        for (let node: Node | undefined = atom.targetsHead; node; node = node.nextTarget) {
+            if (node.target.isCacheState(CacheState.Actual)) {
+                this.findRoots(node.target, CacheState.Check)
+            }
         }
     }
 }
