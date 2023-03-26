@@ -11,7 +11,7 @@ export type Cache<T> = T | Error
 export type Node = {
     source: Atom
     target: Atom
-    version?: symbol
+    version: number
     prevSource?: Node
     nextSource?: Node
     prevTarget?: Node
@@ -30,28 +30,30 @@ export enum CacheType {
 }
 
 let evalContext = null as Atom | null
+//let globalId = 0
 
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    readonly key = Symbol()
+    //readonly key = globalId++
 
-    version?: symbol;
+    version = 0
 
-    [k: symbol]: Node
+    currentNode?: Node = undefined
+    sourcesHead?: Node = undefined
+    sourcesTail?: Node = undefined
+    targetsHead?: Node = undefined
+    targetsTail?: Node = undefined
 
-    sourcesHead?: Node
-    sourcesTail?: Node
-    targetsHead?: Node
-    targetsTail?: Node
+    private disposeListeners?: ((cache: Cache<T>) => void)[] = undefined
+    private cache?: Cache<T> = undefined
+    private cacheType?: CacheType = undefined
+    cacheState = CacheState.Dirty
 
-    private disposeListeners?: ((cache: Cache<T>) => void)[]
-    private cache?: Cache<T>
-    private cacheType?: CacheType
-    private cacheState = CacheState.Dirty
+    //[k: number]: Node
 
     get() {
-        if (this.establishRelations() || this.hasObservers()) {
+        if (this.establishRelations() || !!this.targetsHead) {
             if (this.cacheState !== CacheState.Actual) {
                 this.rebuild()
             }
@@ -90,15 +92,25 @@ export abstract class Atom<T = any> {
     }
 
     rebuild() {
-        check: if (this.isCacheState(CacheState.Check)) {
-            for (let node = this.sourcesHead; node; node = node.nextSource) {
-                if (node.source.rebuild()) {
-                    break check
-                }
+        let check = this.cacheState === CacheState.Check
+
+        for (let node = this.sourcesHead; node; node = node.nextSource) {
+            node.source.currentNode = node
+
+            if (check && node.source.rebuild()) {
+                check = false
             }
         }
 
-        if (this.isCacheState(CacheState.Dirty)) {
+        // check: if (this.isCacheState(CacheState.Check)) {
+        //     for (let node = this.sourcesHead; node; node = node.nextSource) {
+        //         if (node.source.rebuild()) {
+        //             break check
+        //         }
+        //     }
+        // }
+
+        if (this.cacheState === CacheState.Dirty) {
             const context = this.trackRelations()
 
             let newCache: Cache<T>
@@ -119,34 +131,22 @@ export abstract class Atom<T = any> {
                 this.cacheType = newCacheType
 
                 for (let node = this.targetsHead; node; node = node.nextTarget) {
-                    node.target.setCacheState(CacheState.Dirty)
+                    node.target.cacheState = CacheState.Dirty
                 }
 
-                this.setCacheState(CacheState.Actual)
+                this.cacheState = CacheState.Actual
 
                 return true
             }
         }
 
-        this.setCacheState(CacheState.Actual)
+        this.cacheState = CacheState.Actual
 
         return false
     }
 
-    setCacheState(state: CacheState) {
-        this.cacheState = state
-    }
-
-    isCacheState(state: CacheState) {
-        return this.cacheState === state
-    }
-
-    hasObservers() {
-        return !!this.targetsHead
-    }
-
     private trackRelations() {
-        this.version = Symbol()
+        this.version++
 
         const prevEvalContext = evalContext
 
@@ -166,13 +166,13 @@ export abstract class Atom<T = any> {
             return false
         }
 
-        const { key } = evalContext
+        //const { key } = evalContext
 
-        if (!(key in this)) {
+        if (!this.currentNode) {
             const node = {
                 source: this,
                 target: evalContext,
-                version: undefined,
+                version: this.version,
                 prevSource: undefined,
                 nextSource: undefined,
                 prevTarget: undefined,
@@ -199,10 +199,12 @@ export abstract class Atom<T = any> {
                 evalContext.sourcesTail = node
             }
 
-            this[key] = node
+            this.currentNode = node
         }
 
-        const node = this[key] // as Node
+        const node = this.currentNode // as Node
+
+        this.currentNode = undefined
 
         if (node.version === evalContext.version) {
             // we already use this atom as source in current target
@@ -274,7 +276,7 @@ export abstract class Atom<T = any> {
 
             //  node.version = undefined // ??
 
-            delete this[node.target.key] // ??
+            //delete this[node.target.key] // ??
         }
 
         if (!this.targetsHead && !this.targetsTail) {
@@ -337,7 +339,7 @@ class GnAtom<T> extends Atom<T> {
     dispose(node?: Node) {
         super.dispose(node)
 
-        if (!this.hasObservers() && this.iterator) {
+        if (!this.targetsHead && this.iterator) {
             this.iterator.return!()
             this.iterator = undefined
         }

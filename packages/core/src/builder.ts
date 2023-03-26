@@ -19,7 +19,7 @@ class Process {
     }
 
     private findRoots(atom: Atom, state: CacheState) {
-        atom.setCacheState(state)
+        atom.cacheState = state
 
         if (!atom.targetsHead) {
             this.roots.add(atom)
@@ -27,7 +27,7 @@ class Process {
         }
 
         for (let node: Node | undefined = atom.targetsHead; node; node = node.nextTarget) {
-            if (node.target.isCacheState(CacheState.Actual)) {
+            if (node.target.cacheState === CacheState.Actual) {
                 this.findRoots(node.target, CacheState.Check)
             }
         }
