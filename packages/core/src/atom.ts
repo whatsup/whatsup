@@ -294,6 +294,7 @@ export abstract class Atom<T = any> {
 
             this.sourcesHead = undefined
             this.sourcesTail = undefined
+            this.currentNode = undefined
         }
     }
 }
@@ -301,7 +302,7 @@ export abstract class Atom<T = any> {
 class GnAtom<T> extends Atom<T> {
     private readonly producer: GnProducer<T>
     private readonly thisArg: unknown
-    private iterator?: PayloadIterator<T>
+    private iterator?: PayloadIterator<T> = undefined
 
     constructor(producer: GnProducer<T>, thisArg: unknown) {
         super()
