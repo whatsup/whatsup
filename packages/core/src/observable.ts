@@ -23,7 +23,7 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
             if (args.length === 1) {
                 value = args[0]
 
-                if (atom.hasObservers()) {
+                if (atom.hasTargets()) {
                     build((p) => p.rebuild(atom))
                 }
 

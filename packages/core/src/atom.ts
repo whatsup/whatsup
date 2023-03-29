@@ -41,7 +41,7 @@ export abstract class Atom<T = any> {
     private cache?: Cache<T> = undefined
 
     get() {
-        if (this.establishRelations() || this.hasObservers()) {
+        if (this.establishRelations() || this.hasTargets()) {
             if (!this.isCacheState(ACTUAL)) {
                 this.rebuild()
             }
@@ -133,24 +133,18 @@ export abstract class Atom<T = any> {
         return !!(this.state & state)
     }
 
-    hasObservers() {
-        return !!this.targetsHead
+    hasTargets() {
+        return !!(this.targetsHead && this.targetsTail)
     }
 
     private trackRelations() {
         this.state ^= SYNCHRONIZER
 
-        // const prevEvalContext = evalContext
+        const prevEvalContext = evalContext
 
-        // evalContext = this
+        evalContext = this
 
-        // return prevEvalContext
-
-        try {
-            return evalContext
-        } finally {
-            evalContext = this
-        }
+        return prevEvalContext
     }
 
     private establishRelations() {
@@ -216,8 +210,8 @@ export abstract class Atom<T = any> {
         return true
     }
 
-    private untrackRelations(context: Atom | null) {
-        evalContext = context
+    private untrackRelations(prevEvalContext: Atom | null) {
+        evalContext = prevEvalContext
 
         const synchronizer = !!(this.state & SYNCHRONIZER)
 
@@ -258,7 +252,7 @@ export abstract class Atom<T = any> {
             }
         }
 
-        if (!this.targetsHead && !this.targetsTail) {
+        if (!this.hasTargets()) {
             if (this.disposeListeners) {
                 for (const listener of this.disposeListeners) {
                     listener(this.cache!)
@@ -318,7 +312,7 @@ class GnAtom<T> extends Atom<T> {
     dispose(node?: Node) {
         super.dispose(node)
 
-        if (!this.hasObservers() && this.iterator) {
+        if (!this.hasTargets() && this.iterator) {
             this.iterator.return!()
             this.iterator = undefined
         }
