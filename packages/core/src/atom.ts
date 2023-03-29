@@ -1,6 +1,12 @@
 import { Mutator, isMutator } from './mutator'
 import { isGenerator } from './utils'
 
+export const ACTUAL = 1 << 0
+export const CHECK = 1 << 1
+export const DIRTY = 1 << 2
+export const HAS_ERROR = 1 << 3
+export const SYNCHRONIZER = 1 << 4
+
 export type Payload<T> = T | Mutator<T>
 export type PayloadIterator<T> = Iterator<Payload<T> | never, Payload<T> | unknown, unknown>
 export type GnProducer<T> = () => PayloadIterator<T>
@@ -11,22 +17,11 @@ export type Cache<T> = T | Error
 export type Node = {
     source: Atom
     target: Atom
-    trackToggle: boolean
+    synchronizer: boolean
     prevSource?: Node
     nextSource?: Node
     prevTarget?: Node
     nextTarget?: Node
-}
-
-export enum CacheState {
-    Actual = 'Actual',
-    Check = 'Check',
-    Dirty = 'Dirty',
-}
-
-export enum CacheType {
-    Data = 'Data',
-    Error = 'Error',
 }
 
 let evalContext = null as Atom | null
@@ -34,7 +29,8 @@ let evalContext = null as Atom | null
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    trackToggle = true
+    state = DIRTY
+
     contextNode?: Node = undefined
     sourcesHead?: Node = undefined
     sourcesTail?: Node = undefined
@@ -43,16 +39,14 @@ export abstract class Atom<T = any> {
 
     private disposeListeners?: ((cache: Cache<T>) => void)[] = undefined
     private cache?: Cache<T> = undefined
-    private cacheType?: CacheType = undefined
-    private cacheState = CacheState.Dirty
 
     get() {
         if (this.establishRelations() || this.hasObservers()) {
-            if (this.cacheState !== CacheState.Actual) {
+            if (!this.isCacheState(ACTUAL)) {
                 this.rebuild()
             }
 
-            if (this.cacheType === CacheType.Error) {
+            if (this.state & HAS_ERROR) {
                 throw this.cache
             }
 
@@ -86,7 +80,7 @@ export abstract class Atom<T = any> {
     }
 
     rebuild() {
-        let isCheck = this.isCacheState(CacheState.Check)
+        let isCheck = this.isCacheState(CHECK)
 
         for (let node = this.sourcesHead; node; node = node.nextSource) {
             node.source.contextNode = node
@@ -96,47 +90,47 @@ export abstract class Atom<T = any> {
             }
         }
 
-        if (this.isCacheState(CacheState.Dirty)) {
+        if (this.isCacheState(DIRTY)) {
             const context = this.trackRelations()
 
             let newCache: Cache<T>
-            let newCacheType: CacheType
+            let hasError: boolean
 
             try {
                 newCache = this.build()
-                newCacheType = CacheType.Data
+                hasError = false
             } catch (e) {
                 newCache = e as Error
-                newCacheType = CacheType.Error
+                hasError = true
             }
 
             this.untrackRelations(context)
 
-            if (this.cache !== newCache || this.cacheType !== newCacheType) {
+            if (this.cache !== newCache || !!(this.state & HAS_ERROR) !== hasError) {
                 this.cache = newCache
-                this.cacheType = newCacheType
+                this.state = hasError ? this.state | HAS_ERROR : this.state & ~HAS_ERROR
 
                 for (let node = this.targetsHead; node; node = node.nextTarget) {
-                    node.target.setCacheState(CacheState.Dirty)
+                    node.target.setCacheState(DIRTY)
                 }
 
-                this.setCacheState(CacheState.Actual)
+                this.setCacheState(ACTUAL)
 
                 return true
             }
         }
 
-        this.setCacheState(CacheState.Actual)
+        this.setCacheState(ACTUAL)
 
         return false
     }
 
-    setCacheState(state: CacheState) {
-        this.cacheState = state
+    setCacheState(state: number) {
+        this.state = ((this.state >> 3) << 3) | state
     }
 
-    isCacheState(state: CacheState) {
-        return this.cacheState === state
+    isCacheState(state: number) {
+        return !!(this.state & state)
     }
 
     hasObservers() {
@@ -144,13 +138,13 @@ export abstract class Atom<T = any> {
     }
 
     private trackRelations() {
-        this.trackToggle = !this.trackToggle
+        this.state ^= SYNCHRONIZER
 
-        const prevEvalContext = evalContext
+        // const prevEvalContext = evalContext
 
-        evalContext = this
+        // evalContext = this
 
-        return prevEvalContext
+        // return prevEvalContext
 
         try {
             return evalContext
@@ -165,12 +159,13 @@ export abstract class Atom<T = any> {
         }
 
         const node = this.contextNode
+        const synchronizer = !!(evalContext.state & SYNCHRONIZER)
 
         if (!node || node.target !== evalContext) {
             const node = {
                 source: this,
                 target: evalContext,
-                trackToggle: evalContext.trackToggle,
+                synchronizer: synchronizer,
                 prevSource: undefined,
                 nextSource: undefined,
                 prevTarget: undefined,
@@ -196,7 +191,7 @@ export abstract class Atom<T = any> {
                 evalContext.sourcesHead = node
                 evalContext.sourcesTail = node
             }
-        } else if (node.trackToggle !== evalContext.trackToggle) {
+        } else if (node.synchronizer !== synchronizer) {
             if (node.nextSource) {
                 node.nextSource.prevSource = node.prevSource
 
@@ -213,7 +208,7 @@ export abstract class Atom<T = any> {
                 evalContext.sourcesTail = node
             }
 
-            node.trackToggle = evalContext.trackToggle
+            node.synchronizer = synchronizer
         }
 
         this.contextNode = undefined
@@ -221,10 +216,10 @@ export abstract class Atom<T = any> {
         return true
     }
 
-    private untrackRelations(atom: Atom | null) {
-        evalContext = atom
+    private untrackRelations(context: Atom | null) {
+        evalContext = context
 
-        // dispose unnecessary nodes
+        const synchronizer = !!(this.state & SYNCHRONIZER)
 
         for (let node = this.sourcesHead; node; node = node.nextSource) {
             if (node.prevSource) {
@@ -232,7 +227,7 @@ export abstract class Atom<T = any> {
                 node.prevSource = undefined
             }
 
-            if (node.trackToggle === this.trackToggle) {
+            if (node.synchronizer === synchronizer) {
                 this.sourcesHead = node
                 break
             } else {
@@ -261,10 +256,6 @@ export abstract class Atom<T = any> {
             } else {
                 this.targetsTail = node.prevTarget
             }
-
-            //  node.version = undefined // ??
-
-            // delete this[node.target.key] // ??
         }
 
         if (!this.targetsHead && !this.targetsTail) {
@@ -277,8 +268,7 @@ export abstract class Atom<T = any> {
             }
 
             this.cache = undefined
-            this.cacheType = undefined
-            this.cacheState = CacheState.Dirty
+            this.state = DIRTY
 
             for (let node = this.sourcesHead; node; node = node.nextSource) {
                 node.source.dispose(node)

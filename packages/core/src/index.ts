@@ -1,4 +1,4 @@
-export { createAtom, CacheState } from './atom'
+export { createAtom } from './atom'
 export { computed, isComputed } from './computed'
 export { observable, isObservable } from './observable'
 export { array } from './array'
