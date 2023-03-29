@@ -1,9 +1,9 @@
 import { Mutator, isMutator } from './mutator'
 import { isGenerator } from './utils'
 
-export const ACTUAL = 1 << 0
+export const DIRTY = 1 << 0
 export const CHECK = 1 << 1
-export const DIRTY = 1 << 2
+export const ACTUAL = 1 << 2
 export const HAS_ERROR = 1 << 3
 export const SYNCHRONIZER = 1 << 4
 
