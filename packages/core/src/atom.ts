@@ -11,7 +11,7 @@ export type Cache<T> = T | Error
 export type Node = {
     source: Atom
     target: Atom
-    version: number
+    trackToggle: boolean
     prevSource?: Node
     nextSource?: Node
     prevTarget?: Node
@@ -34,8 +34,8 @@ let evalContext = null as Atom | null
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    version = 0
-    currentNode?: Node = undefined
+    trackToggle = true
+    contextNode?: Node = undefined
     sourcesHead?: Node = undefined
     sourcesTail?: Node = undefined
     targetsHead?: Node = undefined
@@ -89,7 +89,7 @@ export abstract class Atom<T = any> {
         let isCheck = this.isCacheState(CacheState.Check)
 
         for (let node = this.sourcesHead; node; node = node.nextSource) {
-            node.source.currentNode = node
+            node.source.contextNode = node
 
             if (isCheck && node.source.rebuild()) {
                 isCheck = false
@@ -144,7 +144,7 @@ export abstract class Atom<T = any> {
     }
 
     private trackRelations() {
-        this.version++
+        this.trackToggle = !this.trackToggle
 
         const prevEvalContext = evalContext
 
@@ -164,11 +164,13 @@ export abstract class Atom<T = any> {
             return false
         }
 
-        if (!this.currentNode || this.currentNode.target !== evalContext) {
+        const node = this.contextNode
+
+        if (!node || node.target !== evalContext) {
             const node = {
                 source: this,
                 target: evalContext,
-                version: this.version,
+                trackToggle: evalContext.trackToggle,
                 prevSource: undefined,
                 nextSource: undefined,
                 prevTarget: undefined,
@@ -194,37 +196,27 @@ export abstract class Atom<T = any> {
                 evalContext.sourcesHead = node
                 evalContext.sourcesTail = node
             }
+        } else if (node.trackToggle !== evalContext.trackToggle) {
+            if (node.nextSource) {
+                node.nextSource.prevSource = node.prevSource
 
-            this.currentNode = node
-        }
+                if (node.prevSource) {
+                    node.prevSource.nextSource = node.nextSource
+                } else {
+                    evalContext.sourcesHead = node.nextSource
+                }
 
-        const node = this.currentNode // as Node
+                node.prevSource = evalContext.sourcesTail
+                node.nextSource = undefined
 
-        this.currentNode = undefined
-
-        if (node.version === evalContext.version) {
-            // we already use this atom as source in current target
-            return true
-        }
-
-        if (node.nextSource) {
-            node.nextSource.prevSource = node.prevSource
-
-            if (node.prevSource) {
-                node.prevSource.nextSource = node.nextSource
-            } else {
-                evalContext.sourcesHead = node.nextSource
+                evalContext.sourcesTail!.nextSource = node
+                evalContext.sourcesTail = node
             }
 
-            node.prevSource = evalContext.sourcesTail
-            node.nextSource = undefined
-
-            evalContext.sourcesTail!.nextSource = node
-            evalContext.sourcesTail = node
+            node.trackToggle = evalContext.trackToggle
         }
 
-        // sync node actuality version
-        node.version = evalContext.version
+        this.contextNode = undefined
 
         return true
     }
@@ -240,7 +232,7 @@ export abstract class Atom<T = any> {
                 node.prevSource = undefined
             }
 
-            if (node.version === this.version) {
+            if (node.trackToggle === this.trackToggle) {
                 this.sourcesHead = node
                 break
             } else {
@@ -294,7 +286,7 @@ export abstract class Atom<T = any> {
 
             this.sourcesHead = undefined
             this.sourcesTail = undefined
-            this.currentNode = undefined
+            this.contextNode = undefined
         }
     }
 }
