@@ -6,6 +6,7 @@ export const CHECK = 1 << 1
 export const ACTUAL = 1 << 2
 export const HAS_ERROR = 1 << 3
 export const SYNCHRONIZER = 1 << 4
+export const BUILDING = 1 << 5
 
 export type Payload<T> = T | Mutator<T>
 export type PayloadIterator<T> = Iterator<Payload<T> | never, Payload<T> | unknown, unknown>
@@ -29,13 +30,12 @@ let evalContext = null as Atom | null
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    state = DIRTY
-
-    contextNode?: Node = undefined
-    sourcesHead?: Node = undefined
-    sourcesTail?: Node = undefined
-    targetsHead?: Node = undefined
-    targetsTail?: Node = undefined
+    /* @internal */ state = DIRTY
+    /* @internal */ contextNode?: Node = undefined
+    /* @internal */ sourcesHead?: Node = undefined
+    /* @internal */ sourcesTail?: Node = undefined
+    /* @internal */ targetsHead?: Node = undefined
+    /* @internal */ targetsTail?: Node = undefined
 
     private disposeListeners?: ((cache: Cache<T>) => void)[] = undefined
     private cache?: Cache<T> = undefined
@@ -57,6 +57,12 @@ export abstract class Atom<T = any> {
     }
 
     build() {
+        if (this.state & BUILDING) {
+            throw new Error('Cycle detected')
+        }
+
+        this.state ^= BUILDING
+
         let value: Payload<T> | Error
         let error: boolean
 
@@ -71,6 +77,8 @@ export abstract class Atom<T = any> {
             value = e as Error
             error = true
         }
+
+        this.state ^= BUILDING
 
         if (error) {
             throw value
@@ -257,20 +265,18 @@ export abstract class Atom<T = any> {
                 for (const listener of this.disposeListeners) {
                     listener(this.cache!)
                 }
-
-                this.disposeListeners = undefined
             }
-
-            this.cache = undefined
-            this.state = DIRTY
 
             for (let node = this.sourcesHead; node; node = node.nextSource) {
                 node.source.dispose(node)
             }
 
+            this.state = DIRTY
+            this.cache = undefined
             this.sourcesHead = undefined
             this.sourcesTail = undefined
             this.contextNode = undefined
+            this.disposeListeners = undefined
         }
     }
 }
