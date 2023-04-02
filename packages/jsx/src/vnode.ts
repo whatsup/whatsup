@@ -29,11 +29,11 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     readonly key: string
     readonly type: T
     readonly props: Props
-    readonly ref?: WhatsJSX.Ref
-    readonly onMount?: (el: N) => void
-    readonly onUnmount?: (el: N) => void
+    readonly ref?: WhatsJSX.Ref = undefined
+    readonly onMount?: (el: N) => void = undefined
+    readonly onUnmount?: (el: N) => void = undefined
 
-    processor!: Processor<T, N>
+    processor?: Processor<T, N> = undefined
 
     constructor(
         type: T,
@@ -55,12 +55,12 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     mutate(prev: VNode<T, N> | undefined, context: Context) {
         if (prev) {
             this.processor = prev.processor
-            this.processor.setVNode(this)
+            this.processor!.setVNode(this)
         } else {
             this.processor = this.createProcessor(context)
         }
 
-        const dom = this.processor.getDOM()
+        const dom = this.processor!.getDOM()
 
         this.attachMountingCallbacks(dom)
         this.updateRef(dom)

@@ -2,7 +2,7 @@ import { Context } from './context'
 import { VNode, Props } from './vnode'
 import { WhatsJSX } from './types'
 import { Reconciler } from './reconciler'
-import { Atom, CacheState, createAtom } from '@whatsup/core'
+import { Atom, createAtom } from '@whatsup/core'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { mutateProps, placeNodes } from './dom'
 
@@ -22,7 +22,7 @@ export abstract class Processor<T extends Type, N extends Node | Node[]> {
 
     setVNode(vnode: VNode<T, N>) {
         if (!isEqualVNodes(this.vnode, vnode)) {
-            this.atom.setCacheState(CacheState.Dirty)
+            this.atom.setCacheStateDirty()
         }
 
         this.vnode = vnode
@@ -204,7 +204,7 @@ export class FnComponentProcessor extends ComponentProcessor<WhatsJSX.FnComponen
 }
 
 export class GnComponentProcessor extends ComponentProcessor<WhatsJSX.GnComponentProducer> {
-    private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
+    private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined = undefined
 
     produce() {
         const { context, vnode } = this

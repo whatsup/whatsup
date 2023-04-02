@@ -141,10 +141,6 @@ export class Reconciler {
                 this.oldTracker.delete(child)
             }
 
-            if (this.oldTracker) {
-                this.oldTracker.delete(child)
-            }
-
             yield child
 
             return
