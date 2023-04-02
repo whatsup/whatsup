@@ -1,70 +1,90 @@
 import { Atom, DIRTY, ACTUAL, CHECK, Node } from './atom'
 
-class Process {
-    private readonly entries = new Set<Atom>()
-    private readonly roots = new Set<Atom>()
+const enum NodeType {
+    Root,
+    Leaf,
+}
 
-    rebuild(atom: Atom) {
-        this.entries.add(atom)
+interface BuildNode {
+    type: NodeType
+    atom: Atom
+    next?: BuildNode
+}
+
+let busy = false
+let head = null as BuildNode | null
+let tail = null as BuildNode | null
+
+const addNode = (type: NodeType, atom: Atom) => {
+    const next = undefined
+    const node = { type, atom, next } as BuildNode
+
+    if (tail) {
+        tail.next = node
     }
 
-    run() {
-        for (const atom of this.entries) {
-            this.findRoots(atom, DIRTY)
-        }
+    tail = node
 
-        for (const atom of this.roots) {
-            atom.rebuild()
-        }
+    if (!head) {
+        head = tail
+    }
+}
+
+const findRoots = (atom: Atom, state: number) => {
+    atom.setCacheState(state)
+
+    if (!atom.targetsHead) {
+        addNode(NodeType.Root, atom)
+        return
     }
 
-    private findRoots(atom: Atom, state: number) {
-        atom.setCacheState(state)
-
-        if (!atom.targetsHead) {
-            this.roots.add(atom)
-            return
-        }
-
-        for (let node: Node | undefined = atom.targetsHead; node; node = node.nextTarget) {
-            if (node.target.isCacheState(ACTUAL)) {
-                this.findRoots(node.target, CHECK)
-            }
+    for (let node: Node | undefined = atom.targetsHead; node; node = node.nextTarget) {
+        if (node.target.isCacheState(ACTUAL)) {
+            findRoots(node.target, CHECK)
         }
     }
 }
 
-let key: symbol | null = null
-let prc: Process | null = null
+const addEntry = (atom: Atom) => {
+    if (busy) {
+        addNode(NodeType.Leaf, atom)
+    } else {
+        findRoots(atom, DIRTY)
+    }
+}
 
-export const build = <T>(cb: (process: Process) => T): T => {
-    const localKey = Symbol()
+export const build = <T>(cb: (addEntry: (atom: Atom) => void) => T) => {
+    const isRoot = !busy
 
-    if (prc === null) {
-        prc = new Process()
-
-        if (key === null) {
-            key = localKey
-        }
+    if (isRoot) {
+        busy = true
     }
 
-    const result = cb(prc)
+    const result = cb(addEntry)
 
-    while (key === localKey) {
-        const process = prc!
+    if (isRoot) {
+        let node = head as BuildNode | undefined
 
-        prc = null
+        for (; node; node = node.next) {
+            switch (node.type) {
+                case NodeType.Leaf:
+                    findRoots(node.atom, DIRTY)
+                    continue
 
-        process.run()
-
-        if (prc === null) {
-            key = null
+                case NodeType.Root:
+                    node.atom.rebuild()
+                    continue
+            }
         }
+
+        busy = false
+        head = null
+        tail = null
     }
 
     return result
 }
 
 export const isBuildProcess = () => {
-    return key !== null
+    return busy
 }

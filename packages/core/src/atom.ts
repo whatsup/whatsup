@@ -88,13 +88,14 @@ export abstract class Atom<T = any> {
     }
 
     rebuild() {
-        let isCheck = this.isCacheState(CHECK)
+        let result = false
+        let needTryRebuildSource = this.isCacheState(CHECK)
 
         for (let node = this.sourcesHead; node; node = node.nextSource) {
             node.source.contextNode = node
 
-            if (isCheck && node.source.rebuild()) {
-                isCheck = false
+            if (needTryRebuildSource && node.source.rebuild()) {
+                needTryRebuildSource = false
             }
         }
 
@@ -122,15 +123,17 @@ export abstract class Atom<T = any> {
                     node.target.setCacheState(DIRTY)
                 }
 
-                this.setCacheState(ACTUAL)
-
-                return true
+                result = true
             }
         }
 
         this.setCacheState(ACTUAL)
 
-        return false
+        return result
+    }
+
+    setCacheStateDirty() {
+        this.setCacheState(DIRTY)
     }
 
     setCacheState(state: number) {
@@ -153,6 +156,26 @@ export abstract class Atom<T = any> {
         evalContext = this
 
         return prevEvalContext
+    }
+
+    private untrackRelations(prevEvalContext: Atom | null) {
+        evalContext = prevEvalContext
+
+        const synchronizer = !!(this.state & SYNCHRONIZER)
+
+        for (let node = this.sourcesHead; node; node = node.nextSource) {
+            if (node.prevSource) {
+                node.prevSource.nextSource = undefined
+                node.prevSource = undefined
+            }
+
+            if (node.synchronizer === synchronizer) {
+                this.sourcesHead = node
+                break
+            } else {
+                node.source.dispose(node)
+            }
+        }
     }
 
     private establishRelations() {
@@ -213,29 +236,7 @@ export abstract class Atom<T = any> {
             node.synchronizer = synchronizer
         }
 
-        this.contextNode = undefined
-
         return true
-    }
-
-    private untrackRelations(prevEvalContext: Atom | null) {
-        evalContext = prevEvalContext
-
-        const synchronizer = !!(this.state & SYNCHRONIZER)
-
-        for (let node = this.sourcesHead; node; node = node.nextSource) {
-            if (node.prevSource) {
-                node.prevSource.nextSource = undefined
-                node.prevSource = undefined
-            }
-
-            if (node.synchronizer === synchronizer) {
-                this.sourcesHead = node
-                break
-            } else {
-                node.source.dispose(node)
-            }
-        }
     }
 
     onDispose(listener: (cache: Cache<T>) => void) {
@@ -273,9 +274,9 @@ export abstract class Atom<T = any> {
 
             this.state = DIRTY
             this.cache = undefined
+            this.contextNode = undefined
             this.sourcesHead = undefined
             this.sourcesTail = undefined
-            this.contextNode = undefined
             this.disposeListeners = undefined
         }
     }

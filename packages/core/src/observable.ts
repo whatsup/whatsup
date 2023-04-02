@@ -24,7 +24,7 @@ export const observable: ObservableFactory = <T>(...args: any[]): any => {
                 value = args[0]
 
                 if (atom.hasTargets()) {
-                    build((p) => p.rebuild(atom))
+                    build((addEntry) => addEntry(atom))
                 }
 
                 return

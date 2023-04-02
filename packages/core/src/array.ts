@@ -57,9 +57,9 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
                 const method = Reflect.get(target, prop, receiver) as (...args: any[]) => number
                 const result = method.apply(target, args)
 
-                build((p) => {
+                build((addEntry) => {
                     for (let node = this.atom.targetsHead; node; node = node.nextTarget) {
-                        p.rebuild(node.target)
+                        addEntry(node.target)
                     }
                 })
 
@@ -72,9 +72,9 @@ export class ArrayProxyHandler<T = unknown> implements ProxyHandler<T[]> {
         if (typeof prop === 'string' && (prop === 'length' || !isNaN(prop as any))) {
             const result = Reflect.set(target, prop, value, receiver)
 
-            build((p) => {
+            build((addEntry) => {
                 for (let node = this.atom.targetsHead; node; node = node.nextTarget) {
-                    p.rebuild(node.target)
+                    addEntry(node.target)
                 }
             })
 

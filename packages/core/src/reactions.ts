@@ -22,7 +22,7 @@ export const reaction = <T>(producer: Producer<T>, onData: DataHandler<T>, onErr
         }
     })
 
-    build((p) => p.rebuild(atom))
+    build((addEntry) => addEntry(atom))
 
     return () => atom.dispose()
 }
@@ -30,7 +30,7 @@ export const reaction = <T>(producer: Producer<T>, onData: DataHandler<T>, onErr
 export const autorun = <T>(producer: Producer<T>) => {
     const atom = createAtom(producer)
 
-    build((p) => p.rebuild(atom))
+    build((addEntry) => addEntry(atom))
 
     return () => atom.dispose()
 }
