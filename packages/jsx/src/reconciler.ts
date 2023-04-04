@@ -13,13 +13,13 @@ const TEXT_NODE_RECONCILE_KEY = '__TEXT_NODE_RECONCILE_KEY__'
 const RENDERED_NODE_RECONCILE_KEY = '__RENDERED_NODE_RECONCILE_KEY__'
 
 export class Reconciler {
-    private tracker!: Tracker
-    private vnodesMap!: VNodesMap
-    private oldTracker?: Tracker
-    private oldVNodesMap?: VNodesMap
-    private index?: Index
-    private trackerator?: IterableIterator<[Node | Node[], string]>
-    private isTrackeratorDone?: true;
+    private tracker?: Tracker = undefined
+    private vnodesMap?: VNodesMap = undefined
+    private oldTracker?: Tracker = undefined
+    private oldVNodesMap?: VNodesMap = undefined
+    private index?: Index = undefined
+    private trackerator?: IterableIterator<[Node | Node[], string]> = undefined
+    private isTrackeratorDone?: true = undefined;
 
     *reconcile(child: WhatsJSX.Child | WhatsJSX.Child[], context: Context) {
         this.oldTracker = this.tracker
@@ -104,8 +104,8 @@ export class Reconciler {
             const vnode = this.findVNode(child.key)
             const result = child.mutate(vnode, context) as Exclude<Node, Text> | Node[]
 
-            this.tracker.set(result, child.key)
-            this.vnodesMap.set(result, child)
+            this.tracker!.set(result, child.key)
+            this.vnodesMap!.set(result, child)
 
             if (Array.isArray(result)) {
                 yield* result
@@ -127,7 +127,7 @@ export class Reconciler {
                 node.nodeValue = value
             }
 
-            this.tracker.set(node, TEXT_NODE_RECONCILE_KEY)
+            this.tracker!.set(node, TEXT_NODE_RECONCILE_KEY)
 
             yield node
 
@@ -135,7 +135,7 @@ export class Reconciler {
         }
 
         if (child instanceof HTMLElement || child instanceof SVGElement || child instanceof Text) {
-            this.tracker.set(child, RENDERED_NODE_RECONCILE_KEY)
+            this.tracker!.set(child, RENDERED_NODE_RECONCILE_KEY)
 
             if (this.oldTracker) {
                 this.oldTracker.delete(child)

@@ -29,11 +29,11 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     readonly key: string
     readonly type: T
     readonly props: Props
-    readonly ref?: WhatsJSX.Ref = undefined
-    readonly onMount?: (el: N) => void = undefined
-    readonly onUnmount?: (el: N) => void = undefined
+    readonly ref?: WhatsJSX.Ref
+    readonly onMount?: (el: N) => void
+    readonly onUnmount?: (el: N) => void
 
-    processor?: Processor<T, N> = undefined
+    /* @internal */ processor?: Processor<T, N>
 
     constructor(
         type: T,
@@ -46,10 +46,10 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
         this.key = key
         this.type = type
         this.props = props || EMPTY_OBJ
-
-        if (ref) this.ref = ref
-        if (onMount) this.onMount = onMount
-        if (onUnmount) this.onUnmount = onUnmount
+        this.ref = ref
+        this.onMount = onMount
+        this.onUnmount = onUnmount
+        this.processor = undefined
     }
 
     mutate(prev: VNode<T, N> | undefined, context: Context) {

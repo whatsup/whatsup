@@ -16,13 +16,13 @@ export type Producer<T> = GnProducer<T> | FnProducer<T>
 export type Cache<T> = T | Error
 
 export type Node = {
-    source: Atom
-    target: Atom
-    synchronizer: boolean
-    prevSource?: Node
-    nextSource?: Node
-    prevTarget?: Node
-    nextTarget?: Node
+    /* @internal */ source: Atom
+    /* @internal */ target: Atom
+    /* @internal */ synchronizer: boolean
+    /* @internal */ prevSource?: Node
+    /* @internal */ nextSource?: Node
+    /* @internal */ prevTarget?: Node
+    /* @internal */ nextTarget?: Node
 }
 
 let evalContext = null as Atom | null
@@ -30,20 +30,22 @@ let evalContext = null as Atom | null
 export abstract class Atom<T = any> implements Node {
     protected abstract produce(): Payload<T>
 
+    /* Node implementation */
+    /* @internal */ source: Atom = this
+    /* @internal */ target: Atom = this
+    /* @internal */ synchronizer: boolean = false
+    /* @internal */ prevSource?: Node = undefined
+    /* @internal */ nextSource?: Node = undefined
+    /* @internal */ prevTarget?: Node = undefined
+    /* @internal */ nextTarget?: Node = undefined
+
+    /* Atom properties */
     /* @internal */ state = DIRTY
     /* @internal */ contextNode?: Node = undefined
     /* @internal */ sourcesHead?: Node = undefined
     /* @internal */ sourcesTail?: Node = undefined
     /* @internal */ targetsHead?: Node = undefined
     /* @internal */ targetsTail?: Node = undefined
-
-    source: Atom = this
-    target: Atom = this
-    synchronizer: boolean = false
-    prevSource?: Node = undefined
-    nextSource?: Node = undefined
-    prevTarget?: Node = undefined
-    nextTarget?: Node = undefined
 
     private disposeListeners?: ((cache: Cache<T>) => void)[] = undefined
     private cache?: Cache<T> = undefined
