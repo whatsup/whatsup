@@ -27,7 +27,7 @@ export type Node = {
 
 let evalContext = null as Atom | null
 
-export abstract class Atom<T = any> {
+export abstract class Atom<T = any> implements Node {
     protected abstract produce(): Payload<T>
 
     /* @internal */ state = DIRTY
@@ -36,6 +36,14 @@ export abstract class Atom<T = any> {
     /* @internal */ sourcesTail?: Node = undefined
     /* @internal */ targetsHead?: Node = undefined
     /* @internal */ targetsTail?: Node = undefined
+
+    source: Atom = this
+    target: Atom = this
+    synchronizer: boolean = false
+    prevSource?: Node = undefined
+    nextSource?: Node = undefined
+    prevTarget?: Node = undefined
+    nextTarget?: Node = undefined
 
     private disposeListeners?: ((cache: Cache<T>) => void)[] = undefined
     private cache?: Cache<T> = undefined
@@ -183,19 +191,26 @@ export abstract class Atom<T = any> {
             return false
         }
 
-        const node = this.contextNode
         const synchronizer = !!(evalContext.state & SYNCHRONIZER)
 
+        let node = this.contextNode
+
         if (!node || node.target !== evalContext) {
-            const node = {
-                source: this,
-                target: evalContext,
-                synchronizer: synchronizer,
-                prevSource: undefined,
-                nextSource: undefined,
-                prevTarget: undefined,
-                nextTarget: undefined,
-            } as Node
+            if (this.hasTargets()) {
+                node = {
+                    source: this,
+                    target: evalContext,
+                    synchronizer: synchronizer,
+                    prevSource: undefined,
+                    nextSource: undefined,
+                    prevTarget: undefined,
+                    nextTarget: undefined,
+                }
+            } else {
+                node = this
+                node.target = evalContext
+                node.synchronizer = synchronizer
+            }
 
             if (this.targetsTail) {
                 this.targetsTail.nextTarget = node
@@ -274,6 +289,8 @@ export abstract class Atom<T = any> {
 
             this.state = DIRTY
             this.cache = undefined
+            this.target = this
+            this.synchronizer = false
             this.contextNode = undefined
             this.sourcesHead = undefined
             this.sourcesTail = undefined
