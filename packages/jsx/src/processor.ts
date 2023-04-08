@@ -250,14 +250,7 @@ const isEqualVNodes = <T extends VNode<any, any>>(prev: T, next: T) => {
         return true
     }
 
-    return (
-        prev.key === next.key &&
-        prev.type === next.type &&
-        prev.ref === next.ref &&
-        prev.onMount === next.onMount &&
-        prev.onUnmount === next.onUnmount &&
-        isEqualProps(prev.props, next.props)
-    )
+    return prev.key === next.key && prev.type === next.type && isEqualProps(prev.props, next.props)
 }
 
 const isEqualProps = <T extends Props>(prev: T, next: T) => {

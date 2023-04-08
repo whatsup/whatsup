@@ -1,4 +1,3 @@
-import { EMPTY_OBJ } from './constants'
 import { createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX, Atomic } from './types'
 import {
@@ -13,6 +12,9 @@ import { Context } from './context'
 export interface Props {
     style?: WhatsJSX.CSSProperties
     children?: WhatsJSX.Child
+    ref?: WhatsJSX.Ref
+    onMount?: <N extends Node | Node[]>(el: N) => void
+    onUnmount?: <N extends Node | Node[]>(el: N) => void
     [k: string]: Atomic<any>
 }
 
@@ -29,27 +31,13 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     readonly key: string
     readonly type: T
     readonly props: Props
-    readonly ref?: WhatsJSX.Ref = undefined
-    readonly onMount?: (el: N) => void = undefined
-    readonly onUnmount?: (el: N) => void = undefined
 
     processor?: Processor<T, N> = undefined
 
-    constructor(
-        type: T,
-        key: string,
-        props?: Props,
-        ref?: WhatsJSX.Ref,
-        onMount?: (el: N) => void,
-        onUnmount?: (el: N) => void
-    ) {
+    constructor(type: T, key: string, props: Props) {
         this.key = key
         this.type = type
-        this.props = props || EMPTY_OBJ
-
-        if (ref) this.ref = ref
-        if (onMount) this.onMount = onMount
-        if (onUnmount) this.onUnmount = onUnmount
+        this.props = props
     }
 
     mutate(prev: VNode<T, N> | undefined, context: Context) {
@@ -69,13 +57,13 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     }
 
     private updateRef(dom: N) {
-        if (this.ref) {
-            this.ref.current = dom
+        if (this.props.ref) {
+            this.props.ref.current = dom
         }
     }
 
     private attachMountingCallbacks(dom: N) {
-        const { onMount, onUnmount } = this
+        const { onMount, onUnmount } = this.props
 
         if (onMount || onUnmount) {
             const target: Node = Array.isArray(dom) ? dom[0] : dom

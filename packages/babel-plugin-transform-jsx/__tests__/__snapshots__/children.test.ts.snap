@@ -14,7 +14,7 @@ import { html as _html2 } from \\"@whatsup/jsx\\";
 import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"ul\\", \\"UniqueId_\\", {
-  children: [_html2(\\"li\\", \\"UniqueId_\\"), _html3(\\"li\\", \\"UniqueId_\\")],
+  children: [_html2(\\"li\\", \\"UniqueId_\\", {}), _html3(\\"li\\", \\"UniqueId_\\", {})],
   prop: \\"1\\",
   prop2: 3
 });"
@@ -65,7 +65,7 @@ import { html as _html2 } from \\"@whatsup/jsx\\";
 import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"ul\\", \\"UniqueId_\\", {
-  children: [_html2(\\"li\\", \\"UniqueId_\\"), _html3(\\"li\\", \\"UniqueId_\\")]
+  children: [_html2(\\"li\\", \\"UniqueId_\\", {}), _html3(\\"li\\", \\"UniqueId_\\", {})]
 });"
 `;
 
@@ -74,14 +74,14 @@ exports[`transform children Should transform once child 1`] = `
 import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"div\\", \\"UniqueId_\\", {
-  children: _html2(\\"span\\", \\"UniqueId_\\")
+  children: _html2(\\"span\\", \\"UniqueId_\\", {})
 });"
 `;
 
 exports[`transform children Should transform without children 1`] = `
 "import { html as _html } from \\"@whatsup/jsx\\";
 
-_html(\\"div\\", \\"UniqueId_\\");"
+_html(\\"div\\", \\"UniqueId_\\", {});"
 `;
 
 exports[`transform children Should trim newlines  1`] = `
@@ -90,7 +90,7 @@ import { html as _html2 } from \\"@whatsup/jsx\\";
 import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"div\\", \\"UniqueId_\\", {
-  children: [_html2(\\"div\\", \\"UniqueId_\\"), _html3(\\"div\\", \\"UniqueId_\\")]
+  children: [_html2(\\"div\\", \\"UniqueId_\\", {}), _html3(\\"div\\", \\"UniqueId_\\", {})]
 });"
 `;
 
@@ -111,7 +111,7 @@ _html(\\"div\\", \\"UniqueId_\\", {
 exports[`transform children Should trim whitespaces and create empty children 1`] = `
 "import { html as _html } from \\"@whatsup/jsx\\";
 
-_html(\\"div\\", \\"UniqueId_\\");"
+_html(\\"div\\", \\"UniqueId_\\", {});"
 `;
 
 exports[`transform children Should trim whitespaces left only 1`] = `
