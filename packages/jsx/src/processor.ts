@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { VNode, Props } from './vnode'
+import { VNode, Props, V_PROPS, V_TYPE, V_KEY, isVNode } from './vnode'
 import { WhatsJSX } from './types'
 import { Reconciler } from './reconciler'
 import { Atom, createAtom } from '@whatsup/core'
@@ -12,23 +12,20 @@ type Node = HTMLElement | SVGElement | Text
 export abstract class Processor<T extends Type, N extends Node | Node[]> {
     private readonly atom: Atom<N>
     protected readonly context: Context
-    protected vnode: VNode<T, N>
+    protected vnode?: VNode<T, N> = undefined
 
-    constructor(context: Context, vnode: VNode<T, N>, producer: () => Generator<N, void, unknown>) {
+    constructor(context: Context, producer: () => Generator<N, void, unknown>) {
         this.context = context
-        this.vnode = vnode
         this.atom = createAtom(producer, this)
     }
 
-    setVNode(vnode: VNode<T, N>) {
-        if (!isEqualVNodes(this.vnode, vnode)) {
+    getDOM(vnode: VNode<T, N>) {
+        if (!this.vnode || !isEqualVNodes(this.vnode, vnode)) {
             this.atom.setCacheStateDirty()
         }
 
         this.vnode = vnode
-    }
 
-    getDOM() {
         return this.atom.get()
     }
 }
@@ -37,8 +34,8 @@ export abstract class ElementProcessor<N extends Exclude<Node, Text>> extends Pr
     abstract createElement(): N
     abstract mutateProps(node: N, prev: Props | undefined, next: Props): Props | undefined
 
-    constructor(vnode: VNode<WhatsJSX.TagName, N>, context: Context) {
-        super(context, vnode, elementProducer)
+    constructor(context: Context) {
+        super(context, elementProducer)
     }
 }
 
@@ -47,10 +44,8 @@ export abstract class ComponentProcessor<T extends WhatsJSX.ComponentProducer> e
     abstract handleError(e: Error): WhatsJSX.Child
     abstract dispose(): void
 
-    constructor(vnode: VNode<T, Node | Node[]>, context: Context) {
-        const newContext = new Context(context, vnode.type.name)
-
-        super(newContext, vnode, componentProducer)
+    constructor(context: Context) {
+        super(context, componentProducer)
     }
 }
 
@@ -62,7 +57,7 @@ function* elementProducer<N extends Exclude<Node, Text>>(this: ElementProcessor<
     let prevProps: Props | undefined
 
     while (true) {
-        const nextProps = this.vnode.props
+        const nextProps = this.vnode![V_PROPS]
 
         prevProps = this.mutateProps(node, prevProps, nextProps)
 
@@ -170,7 +165,7 @@ function* componentProducer<T extends WhatsJSX.ComponentProducer>(this: Componen
 
 export class HTMLElementProcessor extends ElementProcessor<HTMLElement> {
     createElement(): HTMLElement {
-        return document.createElement(this.vnode.type)
+        return document.createElement(this.vnode![V_TYPE])
     }
 
     mutateProps(node: HTMLElement, prev: Props | undefined, next: Props) {
@@ -180,7 +175,7 @@ export class HTMLElementProcessor extends ElementProcessor<HTMLElement> {
 
 export class SVGElementProcessor extends ElementProcessor<SVGElement> {
     createElement(): SVGElement {
-        return document.createElementNS(SVG_NAMESPACE, this.vnode.type)
+        return document.createElementNS(SVG_NAMESPACE, this.vnode![V_TYPE])
     }
 
     mutateProps(node: SVGElement, prev: Props | undefined, next: Props) {
@@ -191,7 +186,8 @@ export class SVGElementProcessor extends ElementProcessor<SVGElement> {
 export class FnComponentProcessor extends ComponentProcessor<WhatsJSX.FnComponentProducer> {
     produce() {
         const { context, vnode } = this
-        const { type, props } = vnode
+        const type = vnode![V_TYPE]
+        const props = vnode![V_PROPS]
 
         return type.call(context, props, context)
     }
@@ -208,7 +204,8 @@ export class GnComponentProcessor extends ComponentProcessor<WhatsJSX.GnComponen
 
     produce() {
         const { context, vnode } = this
-        const { type, props } = vnode
+        const type = vnode![V_TYPE]
+        const props = vnode![V_PROPS]
 
         if (!this.iterator) {
             this.iterator = type.call(context, props, context)
@@ -250,7 +247,7 @@ const isEqualVNodes = <T extends VNode<any, any>>(prev: T, next: T) => {
         return true
     }
 
-    return prev.key === next.key && prev.type === next.type && isEqualProps(prev.props, next.props)
+    return prev[V_KEY] === next[V_KEY] && prev[V_TYPE] === next[V_TYPE] && isEqualProps(prev[V_PROPS], next[V_PROPS])
 }
 
 const isEqualProps = <T extends Props>(prev: T, next: T) => {
@@ -311,8 +308,10 @@ const isEqualChildren = <T extends WhatsJSX.Child | undefined>(prev: T, next: T)
         return true
     }
 
-    const prevIsArray = Array.isArray(prev)
-    const nextIsArray = Array.isArray(next)
+    const prevIsVNode = isVNode(prev)
+    const nextIsVNode = isVNode(next)
+    const prevIsArray = Array.isArray(prev) && !prevIsVNode
+    const nextIsArray = Array.isArray(next) && !nextIsVNode
 
     if (prevIsArray && nextIsArray) {
         if (prev.length !== next.length) {
@@ -334,9 +333,6 @@ const isEqualChildren = <T extends WhatsJSX.Child | undefined>(prev: T, next: T)
     if (prevIsArray || nextIsArray) {
         return false
     }
-
-    const prevIsVNode = prev instanceof VNode
-    const nextIsVNode = next instanceof VNode
 
     if (prevIsVNode && nextIsVNode) {
         return isEqualVNodes(prev, next)

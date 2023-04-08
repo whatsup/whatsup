@@ -1,5 +1,5 @@
 export { render } from './render'
-export { jsx, svg, html, component } from './factories'
+//export { jsx, svg, html, component } from './factories'
 export { createRef } from './create_ref'
 export { createKey } from './context'
 export { Event } from './event'

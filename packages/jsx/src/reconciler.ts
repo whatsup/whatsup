@@ -2,7 +2,7 @@ import { Context } from './context'
 import { removeNodes } from './dom'
 import { WhatsJSX } from './types'
 import { flatten } from './utils'
-import { VNode } from './vnode'
+import { VNode, V_KEY, isVNode, mutateVNode } from './vnode'
 
 type Node = HTMLElement | SVGElement | Text
 type Tracker = Map<Node | Node[], string>
@@ -92,25 +92,25 @@ export class Reconciler {
             return
         }
 
-        if (Array.isArray(child)) {
-            for (let i = 0; i < child.length; i++) {
-                yield* this.doReconcile(child[i], context)
-            }
+        if (isVNode(child)) {
+            const vnode = this.findVNode(child[V_KEY])
+            const result = mutateVNode(vnode, child, context) as Exclude<Node, Text> | Node[]
 
-            return
-        }
-
-        if (child instanceof VNode) {
-            const vnode = this.findVNode(child.key)
-            const result = child.mutate(vnode, context) as Exclude<Node, Text> | Node[]
-
-            this.tracker!.set(result, child.key)
+            this.tracker!.set(result, child[V_KEY])
             this.vnodesMap!.set(result, child)
 
             if (Array.isArray(result)) {
                 yield* result
             } else {
                 yield result
+            }
+
+            return
+        }
+
+        if (Array.isArray(child)) {
+            for (let i = 0; i < child.length; i++) {
+                yield* this.doReconcile(child[i], context)
             }
 
             return

@@ -9,7 +9,7 @@ import {
     stringLiteral,
     booleanLiteral,
     spreadElement,
-    callExpression,
+    //callExpression,
     arrayExpression,
     objectExpression,
     objectProperty,
@@ -35,13 +35,13 @@ import {
     ObjectProperty,
     ArrayExpression,
     binaryExpression,
-    Identifier,
-    ObjectExpression,
+    //Identifier,
+    //ObjectExpression,
     isSpreadElement,
     JSXIdentifier,
     JSXNamespacedName,
 } from '@babel/types'
-import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, JSX_LIBRARY_FACTORIES, IS_SVG_REGEX } from './constants'
+import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, IS_SVG_REGEX } from './constants'
 
 export default function () {
     return {
@@ -80,35 +80,48 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     attributes: (JSXAttribute | JSXSpreadAttribute)[],
     children: (JSXElement | JSXText | JSXExpressionContainer | JSXSpreadChild | JSXFragment)[]
 ) {
-    const factory = getFactory(name)
-    const callee = createCalleeImport(path, factory)
     const type = createType(path, name)
+    const processorType = getProcessorType(name)
     const { key, props } = parseAttributes(attributes, parseChildren(children))
-    const args = createCalleeArgs(type, key, props)
-    const expression = callExpression(callee, args)
+    const expression = arrayExpression([createKey(processorType, key), type, props])
 
     // Node from @babel/core & from @babel/types incompatible
     path.replaceWith(expression as any)
 }
 
-function createCalleeImport<T extends Node>(path: NodePath<T>, factory: string) {
-    return createImport(path, JSX_LIBRARY_NAME, factory)
+// function createCalleeImport<T extends Node>(path: NodePath<T>, factory: string) {
+//     return createImport(path, JSX_LIBRARY_NAME, factory)
+// }
+
+function createKey(processorType: number, key: Expression | undefined) {
+    const uid = generateUid()
+
+    if (key) {
+        let acc: Expression = stringLiteral('<' + processorType + '~' + uid)
+
+        acc = binaryExpression('+', acc, stringLiteral('~'))
+        acc = binaryExpression('+', acc, key)
+        acc = binaryExpression('+', acc, stringLiteral('>'))
+
+        return acc
+    } else {
+        return stringLiteral('<' + processorType + '~' + uid + '>')
+    }
 }
 
-function createCalleeArgs(
-    type: Identifier | StringLiteral,
-    key: Expression | undefined,
-    props: ObjectExpression | undefined
-): Expression[] {
-    const salt = createSalt()
-    const args = [type, key ? binaryExpression('+', salt, key) : salt, props || objectExpression([])]
+// function createCalleeArgs(
+//     type: Identifier | StringLiteral,
+//     key: Expression | undefined,
+//     props: ObjectExpression | undefined
+// ): Expression[] {
+//     const salt = createSalt()
+//     const args = [type, key ? binaryExpression('+', salt, key) : salt, props || objectExpression([])]
 
-    return args as Expression[]
-}
+//     return args as Expression[]
+// }
 
-function getFactory(name: string) {
-    const { HTML, SVG, Component } = JSX_LIBRARY_FACTORIES
-    return isComponent(name) ? Component : isSVG(name) ? SVG : HTML
+function getProcessorType(name: string) {
+    return isComponent(name) ? 2 : isSVG(name) ? 1 : 0
 }
 
 function createFragmentImport<T extends Node>(path: NodePath<T>) {
@@ -130,9 +143,9 @@ function createType<T extends Node>(path: NodePath<T>, name: string) {
     return stringLiteral(name)
 }
 
-function createSalt() {
-    return stringLiteral(generateUid() + '_')
-}
+// function createSalt() {
+//     return stringLiteral(generateUid() + '_')
+// }
 
 function parseAttributes(
     attributes: (JSXAttribute | JSXSpreadAttribute)[],
@@ -170,7 +183,7 @@ function parseAttributes(
         }
     }
 
-    const props = members.length ? objectExpression(members) : undefined
+    const props = objectExpression(members)
 
     return { key, props }
 }
