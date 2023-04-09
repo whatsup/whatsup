@@ -3,13 +3,13 @@
 exports[`transform attributes Should transform boolean prop 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   focused: true
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform cssx var 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   \\"css:$var\\": true
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform different props variations 1`] = `
@@ -17,7 +17,7 @@ exports[`transform attributes Should transform different props variations 1`] = 
   prop1: \\"value1\\",
   prop2: 2 + 2,
   ...props
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform different props with ref 1`] = `
@@ -26,7 +26,7 @@ exports[`transform attributes Should transform different props with ref 1`] = `
   prop1: \\"value1\\",
   prop2: 2 + 2,
   ...props
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform different props with ref onMount onUnmount 1`] = `
@@ -37,30 +37,30 @@ exports[`transform attributes Should transform different props with ref onMount 
   prop1: \\"value1\\",
   prop2: 2 + 2,
   ...props
-}];"
+}, undefined];"
 `;
 
-exports[`transform attributes Should transform key prop 1`] = `"[\\"<0~UniqueId\\" + \\"~\\" + \\"Key\\" + \\">\\", \\"div\\", {}];"`;
+exports[`transform attributes Should transform key prop 1`] = `"[\\"<0~UniqueId\\" + \\"~\\" + \\"Key\\" + \\">\\", \\"div\\", {}, undefined];"`;
 
 exports[`transform attributes Should transform namespaced name 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   \\"css:blue\\": true
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform props spread 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", { ...props
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform props with expressions 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   prop1: 1 + 1
-}];"
+}, undefined];"
 `;
 
 exports[`transform attributes Should transform simple props 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   prop1: \\"value1\\"
-}];"
+}, undefined];"
 `;

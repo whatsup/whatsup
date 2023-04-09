@@ -3,85 +3,85 @@
 exports[`transform children Should safe whitespaces between children 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [\\"User \\", name, \\" \\", age]
-}];"
+}, undefined];"
 `;
 
 exports[`transform children Should transform children & props 1`] = `
 "[\\"<0~UniqueId>\\", \\"ul\\", {
-  children: [[\\"<0~UniqueId>\\", \\"li\\", {}], [\\"<0~UniqueId>\\", \\"li\\", {}]],
+  children: [[\\"<0~UniqueId>\\", \\"li\\", {}, undefined], [\\"<0~UniqueId>\\", \\"li\\", {}, undefined]],
   prop: \\"1\\",
   prop2: 3
-}];"
+}, undefined];"
 `;
 
 exports[`transform children Should transform children spread 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [[\\"<0~UniqueId>\\", \\"span\\", {
     children: \\"foo\\"
-  }], ...other]
-}];"
+  }, undefined], ...other]
+}, undefined];"
 `;
 
 exports[`transform children Should transform children with expressions 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [[\\"<0~UniqueId>\\", \\"span\\", {
     children: \\"foo\\"
-  }], [\`one\`, \`two\`].map(i => [\\"<0~UniqueId>\\", \\"span\\", {
+  }, undefined], [\`one\`, \`two\`].map(i => [\\"<0~UniqueId>\\", \\"span\\", {
     children: i
-  }])]
-}];"
+  }, undefined])]
+}, undefined];"
 `;
 
 exports[`transform children Should transform children with primitives 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [[\\"<0~UniqueId>\\", \\"span\\", {
     children: \\"foo\\"
-  }], \\"bar\\", [\\"<0~UniqueId>\\", \\"i\\", {
+  }, undefined], \\"bar\\", [\\"<0~UniqueId>\\", \\"i\\", {
     children: \\"baz\\"
-  }]]
-}];"
+  }, undefined]]
+}, undefined];"
 `;
 
 exports[`transform children Should transform many children 1`] = `
 "[\\"<0~UniqueId>\\", \\"ul\\", {
-  children: [[\\"<0~UniqueId>\\", \\"li\\", {}], [\\"<0~UniqueId>\\", \\"li\\", {}]]
-}];"
+  children: [[\\"<0~UniqueId>\\", \\"li\\", {}, undefined], [\\"<0~UniqueId>\\", \\"li\\", {}, undefined]]
+}, undefined];"
 `;
 
 exports[`transform children Should transform once child 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
-  children: [\\"<0~UniqueId>\\", \\"span\\", {}]
-}];"
+  children: [\\"<0~UniqueId>\\", \\"span\\", {}, undefined]
+}, undefined];"
 `;
 
-exports[`transform children Should transform without children 1`] = `"[\\"<0~UniqueId>\\", \\"div\\", {}];"`;
+exports[`transform children Should transform without children 1`] = `"[\\"<0~UniqueId>\\", \\"div\\", {}, undefined];"`;
 
 exports[`transform children Should trim newlines  1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
-  children: [[\\"<0~UniqueId>\\", \\"div\\", {}], [\\"<0~UniqueId>\\", \\"div\\", {}]]
-}];"
+  children: [[\\"<0~UniqueId>\\", \\"div\\", {}, undefined], [\\"<0~UniqueId>\\", \\"div\\", {}, undefined]]
+}, undefined];"
 `;
 
 exports[`transform children Should trim newlines 2 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [[\\"<0~UniqueId>\\", \\"div\\", {
     children: \\"child1\\"
-  }], [\\"<0~UniqueId>\\", \\"div\\", {
+  }, undefined], [\\"<0~UniqueId>\\", \\"div\\", {
     children: \\"child2\\"
-  }], \\" child3 \\", 1612, null, false, true]
-}];"
+  }, undefined], \\" child3 \\", 1612, null, false, true]
+}, undefined];"
 `;
 
-exports[`transform children Should trim whitespaces and create empty children 1`] = `"[\\"<0~UniqueId>\\", \\"div\\", {}];"`;
+exports[`transform children Should trim whitespaces and create empty children 1`] = `"[\\"<0~UniqueId>\\", \\"div\\", {}, undefined];"`;
 
 exports[`transform children Should trim whitespaces left only 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [\\"items \\", count]
-}];"
+}, undefined];"
 `;
 
 exports[`transform children Should trim whitespaces right only 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: [count, \\" items\\"]
-}];"
+}, undefined];"
 `;

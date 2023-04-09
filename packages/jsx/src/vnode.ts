@@ -26,10 +26,11 @@ export interface Props {
     [k: string]: Atomic<any>
 }
 
-export type VNode<T extends Type, N extends Node | Node[]> = [string, T, Props] & { processor?: Processor<T, N> }
+export type VNode<T extends Type, N extends Node | Node[]> = [string, T, Props, Processor<T, N> | undefined]
 export const V_KEY = 0
 export const V_TYPE = 1
 export const V_PROPS = 2
+export const V_PROC = 3
 export const isVNode = <T extends Type, N extends Node | Node[]>(target: unknown): target is VNode<T, N> => {
     return Array.isArray(target) && typeof target[0] === 'string' && target[0][0] === '<'
 }
@@ -38,10 +39,10 @@ export const mutateVNode = <T extends Type, N extends Node | Node[]>(
     next: VNode<T, N>,
     context: Context
 ) => {
-    const processor = (prev ? prev.processor! : createProcessor(next, context)) as Processor<T, N>
+    const processor = (prev ? prev[V_PROC]! : createProcessor(next, context)) as Processor<T, N>
     const dom = processor!.getDOM(next)
 
-    next.processor = processor
+    next[V_PROC] = processor
 
     attachMountingCallbacks(next, dom)
     updateRef(next, dom)

@@ -43,6 +43,8 @@ import {
 } from '@babel/types'
 import { IS_TESTING, JSX_LIBRARY_NAME, FRAGMENT_COMPONENT_NAME, IS_SVG_REGEX } from './constants'
 
+const VOID = identifier('undefined')
+
 export default function () {
     return {
         inherits: JsxSyntax,
@@ -83,7 +85,7 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     const type = createType(path, name)
     const processorType = getProcessorType(name)
     const { key, props } = parseAttributes(attributes, parseChildren(children))
-    const expression = arrayExpression([createKey(processorType, key), type, props])
+    const expression = arrayExpression([createKey(processorType, key), type, props, VOID])
 
     // Node from @babel/core & from @babel/types incompatible
     path.replaceWith(expression as any)

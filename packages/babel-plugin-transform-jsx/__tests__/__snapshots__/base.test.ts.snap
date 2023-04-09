@@ -3,24 +3,24 @@
 exports[`transform types Should transform User 1`] = `
 "[\\"<2~UniqueId>\\", User, {
   children: \\"foobar\\"
-}];"
+}, undefined];"
 `;
 
 exports[`transform types Should transform div 1`] = `
 "[\\"<0~UniqueId>\\", \\"div\\", {
   children: \\"foobar\\"
-}];"
+}, undefined];"
 `;
 
 exports[`transform types Should transform fragment 1`] = `
 "import { Fragment as _Fragment } from \\"@whatsup/jsx\\";
 [\\"<2~UniqueId>\\", _Fragment, {
   children: \\"foobar\\"
-}];"
+}, undefined];"
 `;
 
 exports[`transform types Should transform svg 1`] = `
 "[\\"<1~UniqueId>\\", \\"svg\\", {
   children: \\"foobar\\"
-}];"
+}, undefined];"
 `;
