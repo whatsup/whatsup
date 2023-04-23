@@ -18,7 +18,7 @@ export type Cache<T> = T | Error
 export type Node = {
     source: Atom
     target: Atom
-    synchronizer: boolean
+    synchronizer: number
     prevSource?: Node
     nextSource?: Node
     prevTarget?: Node
@@ -161,7 +161,7 @@ export abstract class Atom<T = any> {
     private untrackRelations(prevEvalContext: Atom | null) {
         evalContext = prevEvalContext
 
-        const synchronizer = !!(this.state & SYNCHRONIZER)
+        const synchronizer = this.state & SYNCHRONIZER
 
         for (let node = this.sourcesHead; node; node = node.nextSource) {
             if (node.prevSource) {
@@ -184,7 +184,7 @@ export abstract class Atom<T = any> {
         }
 
         const node = this.contextNode
-        const synchronizer = !!(evalContext.state & SYNCHRONIZER)
+        const synchronizer = evalContext.state & SYNCHRONIZER
 
         if (!node || node.target !== evalContext) {
             const node = {
