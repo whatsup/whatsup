@@ -85,8 +85,8 @@ function replaceJSXAstToMutatorFactoryCallExpression<T extends Node>(
     const factory = getFactory(name)
     const callee = createCalleeImport(path, factory)
     const type = createType(path, name)
-    const { key, props, ref, onMount, onUnmount } = parseAttributes(attributes, parseChildren(children))
-    const args = createCalleeArgs(type, key, props, ref, onMount, onUnmount)
+    const { key, props } = parseAttributes(attributes, parseChildren(children))
+    const args = createCalleeArgs(type, key, props)
     const expression = callExpression(callee, args)
 
     // Node from @babel/core & from @babel/types incompatible
@@ -100,13 +100,10 @@ function createCalleeImport<T extends Node>(path: NodePath<T>, factory: string) 
 function createCalleeArgs(
     type: Identifier | StringLiteral,
     key: Expression | undefined,
-    props: ObjectExpression | undefined,
-    ref: Expression | undefined,
-    onMount: Expression | undefined,
-    onUnmount: Expression | undefined
+    props: ObjectExpression | undefined
 ): Expression[] {
     const salt = createSalt()
-    const args = [type, key ? binaryExpression('+', salt, key) : salt, props, ref, onMount, onUnmount]
+    const args = [type, key ? binaryExpression('+', salt, key) : salt, props]
 
     let popping = true
 
@@ -156,9 +153,6 @@ function parseAttributes(
     children?: Expression | ArrayExpression | undefined
 ) {
     let key: Expression | undefined = undefined
-    let ref: Expression | undefined = undefined
-    let onMount: Expression | undefined = undefined
-    let onUnmount: Expression | undefined = undefined
 
     const members = [] as (SpreadElement | ObjectProperty)[]
 
@@ -181,12 +175,6 @@ function parseAttributes(
         if (value !== undefined) {
             if (name === 'key') {
                 key = value
-            } else if (name === 'ref') {
-                ref = value
-            } else if (name === 'onMount') {
-                onMount = value
-            } else if (name === 'onUnmount') {
-                onUnmount = value
             } else {
                 const prop = isJSXNamespacedName(attr.name) ? stringLiteral(name) : identifier(name)
                 const member = objectProperty(prop, value)
@@ -198,7 +186,7 @@ function parseAttributes(
 
     const props = members.length ? objectExpression(members) : undefined
 
-    return { key, props, ref, onMount, onUnmount }
+    return { key, props }
 }
 
 function parseAttrName(name: JSXIdentifier | JSXNamespacedName) {

@@ -1,6 +1,13 @@
 import { Mutator, isMutator } from './mutator'
 import { isGenerator } from './utils'
 
+export const DIRTY = 1 << 0
+export const CHECK = 1 << 1
+export const ACTUAL = 1 << 2
+export const HAS_ERROR = 1 << 3
+export const SYNCHRONIZER = 1 << 4
+export const BUILDING = 1 << 5
+
 export type Payload<T> = T | Mutator<T>
 export type PayloadIterator<T> = Iterator<Payload<T> | never, Payload<T> | unknown, unknown>
 export type GnProducer<T> = () => PayloadIterator<T>
@@ -8,50 +15,54 @@ export type FnProducer<T> = () => Payload<T>
 export type Producer<T> = GnProducer<T> | FnProducer<T>
 export type Cache<T> = T | Error
 
-export enum CacheState {
-    Actual = 'Actual',
-    Check = 'Check',
-    Dirty = 'Dirty',
+export type Node = {
+    source: Atom
+    target: Atom
+    synchronizer: number
+    prevSource?: Node
+    nextSource?: Node
+    prevTarget?: Node
+    nextTarget?: Node
 }
 
-export enum CacheType {
-    Data = 'Data',
-    Error = 'Error',
-}
-
-const RELATIONS_STACK = [] as Atom[]
+let evalContext = null as Atom | null
 
 export abstract class Atom<T = any> {
     protected abstract produce(): Payload<T>
 
-    private observer?: Atom
-    private observers?: Set<Atom>
-    private dependency?: Atom
-    private dependencies?: Set<Atom>
-    private oldDependency?: Atom
-    private oldDependencies?: Set<Atom>
-    private disposeListeners?: ((cache: Cache<T>) => void)[]
-    private cache?: Cache<T>
-    private cacheType?: CacheType
-    private cacheState = CacheState.Dirty
+    /* @internal */ state = DIRTY
+    /* @internal */ contextNode?: Node = undefined
+    /* @internal */ sourcesHead?: Node = undefined
+    /* @internal */ sourcesTail?: Node = undefined
+    /* @internal */ targetsHead?: Node = undefined
+    /* @internal */ targetsTail?: Node = undefined
+
+    private disposeListeners?: ((cache: Cache<T>) => void)[] = undefined
+    private cache?: Cache<T> = undefined
 
     get() {
-        if (this.establishRelations() || this.hasObservers()) {
-            if (this.cacheState !== CacheState.Actual) {
+        if (this.establishRelations() || this.hasTargets()) {
+            if (!this.isCacheState(ACTUAL)) {
                 this.rebuild()
             }
 
-            if (this.cacheType === CacheType.Error) {
+            if (this.state & HAS_ERROR) {
                 throw this.cache
             }
 
-            return this.cache!
+            return this.cache as T
         }
 
         return this.build()
     }
 
     build() {
+        if (this.state & BUILDING) {
+            throw new Error('Cycle detected')
+        }
+
+        this.state ^= BUILDING
+
         let value: Payload<T> | Error
         let error: boolean
 
@@ -67,6 +78,8 @@ export abstract class Atom<T = any> {
             error = true
         }
 
+        this.state ^= BUILDING
+
         if (error) {
             throw value
         }
@@ -75,178 +88,155 @@ export abstract class Atom<T = any> {
     }
 
     rebuild() {
-        check: if (this.isCacheState(CacheState.Check)) {
-            if (this.hasDependencies()) {
-                for (const dependency of this.eachDependencies()) {
-                    if (dependency.rebuild()) {
-                        break check
-                    }
-                }
+        let result = false
+        let needTryRebuildSource = this.isCacheState(CHECK)
+
+        for (let node = this.sourcesHead; node; node = node.nextSource) {
+            node.source.contextNode = node
+
+            if (needTryRebuildSource && node.source.rebuild()) {
+                needTryRebuildSource = false
             }
         }
 
-        if (this.isCacheState(CacheState.Dirty)) {
-            this.trackRelations()
+        if (this.isCacheState(DIRTY)) {
+            const context = this.trackRelations()
 
             let newCache: Cache<T>
-            let newCacheType: CacheType
+            let hasError: boolean
 
             try {
                 newCache = this.build()
-                newCacheType = CacheType.Data
+                hasError = false
             } catch (e) {
                 newCache = e as Error
-                newCacheType = CacheType.Error
+                hasError = true
             }
 
-            this.untrackRelations()
+            this.untrackRelations(context)
 
-            if (this.cache !== newCache || this.cacheType !== newCacheType) {
+            if (this.cache !== newCache || !!(this.state & HAS_ERROR) !== hasError) {
                 this.cache = newCache
-                this.cacheType = newCacheType
+                this.state = hasError ? this.state | HAS_ERROR : this.state & ~HAS_ERROR
 
-                for (const observer of this.eachObservers()) {
-                    observer.setCacheState(CacheState.Dirty)
+                for (let node = this.targetsHead; node; node = node.nextTarget) {
+                    node.target.setCacheState(DIRTY)
                 }
 
-                this.setCacheState(CacheState.Actual)
-
-                return true
+                result = true
             }
         }
 
-        this.setCacheState(CacheState.Actual)
+        this.setCacheState(ACTUAL)
 
-        return false
+        return result
     }
 
-    setCacheState(state: CacheState) {
-        this.cacheState = state
+    setCacheStateDirty() {
+        this.setCacheState(DIRTY)
     }
 
-    isCacheState(state: CacheState) {
-        return this.cacheState === state
+    setCacheState(state: number) {
+        this.state = ((this.state >> 3) << 3) | state
     }
 
-    hasObservers() {
-        return !!this.observer || !!this.observers
+    isCacheState(state: number) {
+        return !!(this.state & state)
     }
 
-    hasDependencies() {
-        return !!this.dependency || !!this.dependencies
-    }
-
-    hasOldDependencies() {
-        return !!this.oldDependency || !!this.oldDependencies
-    }
-
-    *eachObservers() {
-        if (this.observers) {
-            yield* this.observers
-        } else if (this.observer) {
-            yield this.observer
-        }
-    }
-
-    *eachDependencies() {
-        if (this.dependencies) {
-            yield* this.dependencies
-        } else if (this.dependency) {
-            yield this.dependency
-        }
-    }
-
-    *eachOldDependencies() {
-        if (this.oldDependencies) {
-            yield* this.oldDependencies
-        } else if (this.oldDependency) {
-            yield this.oldDependency
-        }
-    }
-
-    addObserver(atom: Atom) {
-        if (this.observers) {
-            this.observers.add(atom)
-        } else if (this.observer) {
-            if (this.observer !== atom) {
-                this.observers = new Set([this.observer, atom])
-                this.observer = undefined
-            }
-        } else {
-            this.observer = atom
-        }
-    }
-
-    deleteObserver(atom: Atom) {
-        if (this.observers) {
-            this.observers.delete(atom)
-
-            if (this.observers.size === 1) {
-                this.observer = this.observers.values().next().value
-                this.observers = undefined
-            }
-        } else if (this.observer === atom) {
-            this.observer = undefined
-        }
-    }
-
-    addDependency(atom: Atom) {
-        if (this.dependencies) {
-            this.dependencies.add(atom)
-        } else if (this.dependency) {
-            if (this.dependency !== atom) {
-                this.dependencies = new Set([this.dependency, atom])
-                this.dependency = undefined
-            }
-        } else {
-            this.dependency = atom
-        }
-
-        if (this.oldDependencies) {
-            this.oldDependencies.delete(atom)
-
-            if (this.oldDependencies.size === 1) {
-                this.oldDependency = this.oldDependencies.values().next().value
-                this.oldDependencies = undefined
-            }
-        } else if (this.oldDependency === atom) {
-            this.oldDependency = undefined
-        }
+    hasTargets() {
+        return !!(this.targetsHead && this.targetsTail)
     }
 
     private trackRelations() {
-        this.oldDependency = this.dependency
-        this.oldDependencies = this.dependencies
-        this.dependency = undefined
-        this.dependencies = undefined
+        this.state ^= SYNCHRONIZER
 
-        RELATIONS_STACK.push(this)
+        const prevEvalContext = evalContext
+
+        evalContext = this
+
+        return prevEvalContext
+    }
+
+    private untrackRelations(prevEvalContext: Atom | null) {
+        evalContext = prevEvalContext
+
+        const synchronizer = this.state & SYNCHRONIZER
+
+        for (let node = this.sourcesHead; node; node = node.nextSource) {
+            if (node.prevSource) {
+                node.prevSource.nextSource = undefined
+                node.prevSource = undefined
+            }
+
+            if (node.synchronizer === synchronizer) {
+                this.sourcesHead = node
+                break
+            } else {
+                node.source.dispose(node)
+            }
+        }
     }
 
     private establishRelations() {
-        if (RELATIONS_STACK.length > 0) {
-            const observer = RELATIONS_STACK[RELATIONS_STACK.length - 1]
-
-            observer.addDependency(this)
-            this.addObserver(observer)
-
-            return true
+        if (!evalContext) {
+            return false
         }
 
-        return false
-    }
+        const node = this.contextNode
+        const synchronizer = evalContext.state & SYNCHRONIZER
 
-    private untrackRelations() {
-        RELATIONS_STACK.pop()!
+        if (!node || node.target !== evalContext) {
+            const node = {
+                source: this,
+                target: evalContext,
+                synchronizer: synchronizer,
+                prevSource: undefined,
+                nextSource: undefined,
+                prevTarget: undefined,
+                nextTarget: undefined,
+            } as Node
 
-        if (this.hasOldDependencies()) {
-            for (const dependency of this.eachOldDependencies()) {
-                dependency.dispose(this)
+            if (this.targetsTail) {
+                this.targetsTail.nextTarget = node
+                node.prevTarget = this.targetsTail
             }
 
-            this.oldDependency = undefined
-            this.oldDependencies = undefined
+            this.targetsTail = node
+
+            if (!this.targetsHead) {
+                this.targetsHead = node
+            }
+
+            if (evalContext.sourcesTail) {
+                evalContext.sourcesTail.nextSource = node
+                node.prevSource = evalContext.sourcesTail
+                evalContext.sourcesTail = node
+            } else {
+                evalContext.sourcesHead = node
+                evalContext.sourcesTail = node
+            }
+        } else if (node.synchronizer !== synchronizer) {
+            if (node.nextSource) {
+                node.nextSource.prevSource = node.prevSource
+
+                if (node.prevSource) {
+                    node.prevSource.nextSource = node.nextSource
+                } else {
+                    evalContext.sourcesHead = node.nextSource
+                }
+
+                node.prevSource = evalContext.sourcesTail
+                node.nextSource = undefined
+
+                evalContext.sourcesTail!.nextSource = node
+                evalContext.sourcesTail = node
+            }
+
+            node.synchronizer = synchronizer
         }
+
+        return true
     }
 
     onDispose(listener: (cache: Cache<T>) => void) {
@@ -256,32 +246,38 @@ export abstract class Atom<T = any> {
         this.disposeListeners.push(listener)
     }
 
-    dispose(initiator?: Atom) {
-        if (initiator) {
-            this.deleteObserver(initiator)
+    dispose(node?: Node) {
+        if (node) {
+            if (node.prevTarget) {
+                node.prevTarget.nextTarget = node.nextTarget
+            } else {
+                this.targetsHead = node.nextTarget
+            }
+
+            if (node.nextTarget) {
+                node.nextTarget.prevTarget = node.prevTarget
+            } else {
+                this.targetsTail = node.prevTarget
+            }
         }
 
-        if (!this.hasObservers()) {
+        if (!this.hasTargets()) {
             if (this.disposeListeners) {
                 for (const listener of this.disposeListeners) {
                     listener(this.cache!)
                 }
-
-                this.disposeListeners = undefined
             }
 
+            for (let node = this.sourcesHead; node; node = node.nextSource) {
+                node.source.dispose(node)
+            }
+
+            this.state = DIRTY
             this.cache = undefined
-            this.cacheType = undefined
-            this.cacheState = CacheState.Dirty
-
-            if (this.hasDependencies()) {
-                for (const dependency of this.eachDependencies()) {
-                    dependency.dispose(this)
-                }
-
-                this.dependency = undefined
-                this.dependencies = undefined
-            }
+            this.contextNode = undefined
+            this.sourcesHead = undefined
+            this.sourcesTail = undefined
+            this.disposeListeners = undefined
         }
     }
 }
@@ -289,7 +285,7 @@ export abstract class Atom<T = any> {
 class GnAtom<T> extends Atom<T> {
     private readonly producer: GnProducer<T>
     private readonly thisArg: unknown
-    private iterator?: PayloadIterator<T>
+    private iterator?: PayloadIterator<T> = undefined
 
     constructor(producer: GnProducer<T>, thisArg: unknown) {
         super()
@@ -320,10 +316,10 @@ class GnAtom<T> extends Atom<T> {
         }
     }
 
-    dispose(initiator?: Atom) {
-        super.dispose(initiator)
+    dispose(node?: Node) {
+        super.dispose(node)
 
-        if (!this.hasObservers() && this.iterator) {
+        if (!this.hasTargets() && this.iterator) {
             this.iterator.return!()
             this.iterator = undefined
         }

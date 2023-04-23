@@ -25,6 +25,10 @@ export class Context {
     constructor(parent: Context | null, name: string) {
         this.parent = parent
         this.name = name
+        this.shared = undefined
+        this.listeners = undefined
+        this.deferred = undefined
+        this.deferredTrigger = undefined
     }
 
     share<T>(key: symbol, value: T): void

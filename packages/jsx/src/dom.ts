@@ -74,7 +74,7 @@ export const mutateProps = <T extends Props>(
     }
 
     for (const prop in next) {
-        if (isChildrenProp(prop)) {
+        if (isIgnorableProp(prop)) {
             continue
         }
 
@@ -221,8 +221,8 @@ const isEventCaptureListener = (prop: string) => {
     return (prop as string).endsWith('Capture')
 }
 
-const isChildrenProp = (prop: string) => {
-    return prop === 'children'
+const isIgnorableProp = (prop: string) => {
+    return prop === 'children' || prop === 'ref' || prop === 'onMount' || prop === 'onUnmount'
 }
 
 const isStyleProp = (prop: string) => {

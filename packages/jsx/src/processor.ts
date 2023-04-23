@@ -2,9 +2,9 @@ import { Context } from './context'
 import { VNode, Props } from './vnode'
 import { WhatsJSX } from './types'
 import { Reconciler } from './reconciler'
-import { Atom, CacheState, createAtom } from '@whatsup/core'
+import { Atom, createAtom } from '@whatsup/core'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
-import { mutateProps, placeNodes } from './dom'
+import { createMountObserver, createUnmountObserver, mutateProps, placeNodes } from './dom'
 
 type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 type Node = HTMLElement | SVGElement | Text
@@ -12,24 +12,51 @@ type Node = HTMLElement | SVGElement | Text
 export abstract class Processor<T extends Type, N extends Node | Node[]> {
     private readonly atom: Atom<N>
     protected readonly context: Context
-    protected vnode: VNode<T, N>
+    protected vnode!: VNode<T, N>
+    private mountObserver?: MutationObserver
+    private unmountObserver?: MutationObserver
 
-    constructor(context: Context, vnode: VNode<T, N>, producer: () => Generator<N, void, unknown>) {
+    constructor(context: Context, producer: () => Generator<N, void, unknown>) {
         this.context = context
-        this.vnode = vnode
         this.atom = createAtom(producer, this)
     }
 
-    setVNode(vnode: VNode<T, N>) {
-        if (!isEqualVNodes(this.vnode, vnode)) {
-            this.atom.setCacheState(CacheState.Dirty)
+    getDOM(vnode: VNode<T, N>) {
+        if (this.vnode && !isEqualVNodes(this.vnode, vnode)) {
+            this.atom.setCacheStateDirty()
         }
 
         this.vnode = vnode
+
+        const dom = this.atom.get()
+
+        this.attachMountingCallbacks(dom)
+        this.updateRef(dom)
+
+        return dom
     }
 
-    getDOM() {
-        return this.atom.get()
+    private updateRef(dom: N) {
+        if (this.vnode.props.ref) {
+            this.vnode.props.ref.current = dom
+        }
+    }
+
+    private attachMountingCallbacks(dom: N) {
+        const { onMount, onUnmount } = this.vnode.props
+
+        if (onMount || onUnmount) {
+            const target: Node = Array.isArray(dom) ? dom[0] : dom
+
+            if (target) {
+                if (onMount && !this.mountObserver) {
+                    this.mountObserver = createMountObserver(target, () => onMount(dom))
+                }
+                if (onUnmount && !this.unmountObserver) {
+                    this.unmountObserver = createUnmountObserver(target, () => onUnmount(dom))
+                }
+            }
+        }
     }
 }
 
@@ -37,8 +64,8 @@ export abstract class ElementProcessor<N extends Exclude<Node, Text>> extends Pr
     abstract createElement(): N
     abstract mutateProps(node: N, prev: Props | undefined, next: Props): Props | undefined
 
-    constructor(vnode: VNode<WhatsJSX.TagName, N>, context: Context) {
-        super(context, vnode, elementProducer)
+    constructor(context: Context) {
+        super(context, elementProducer)
     }
 }
 
@@ -47,10 +74,8 @@ export abstract class ComponentProcessor<T extends WhatsJSX.ComponentProducer> e
     abstract handleError(e: Error): WhatsJSX.Child
     abstract dispose(): void
 
-    constructor(vnode: VNode<T, Node | Node[]>, context: Context) {
-        const newContext = new Context(context, vnode.type.name)
-
-        super(newContext, vnode, componentProducer)
+    constructor(context: Context) {
+        super(context, componentProducer)
     }
 }
 
@@ -204,7 +229,7 @@ export class FnComponentProcessor extends ComponentProcessor<WhatsJSX.FnComponen
 }
 
 export class GnComponentProcessor extends ComponentProcessor<WhatsJSX.GnComponentProducer> {
-    private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined
+    private iterator?: Iterator<WhatsJSX.Child | never, WhatsJSX.Child | unknown, unknown> | undefined = undefined
 
     produce() {
         const { context, vnode } = this
@@ -250,14 +275,7 @@ const isEqualVNodes = <T extends VNode<any, any>>(prev: T, next: T) => {
         return true
     }
 
-    return (
-        prev.key === next.key &&
-        prev.type === next.type &&
-        prev.ref === next.ref &&
-        prev.onMount === next.onMount &&
-        prev.onUnmount === next.onUnmount &&
-        isEqualProps(prev.props, next.props)
-    )
+    return prev.key === next.key && prev.type === next.type && isEqualProps(prev.props, next.props)
 }
 
 const isEqualProps = <T extends Props>(prev: T, next: T) => {

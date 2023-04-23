@@ -30,20 +30,24 @@ exports[`transform attributes Should transform different props with ref 1`] = `
 "import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"div\\", \\"UniqueId_\\" + \\"Key\\", {
+  ref: myRef,
   prop1: \\"value1\\",
   prop2: 2 + 2,
   ...props
-}, myRef);"
+});"
 `;
 
 exports[`transform attributes Should transform different props with ref onMount onUnmount 1`] = `
 "import { html as _html } from \\"@whatsup/jsx\\";
 
 _html(\\"div\\", \\"UniqueId_\\" + \\"Key\\", {
+  ref: myRef,
+  onMount: onMount,
+  onUnmount: onUnmount,
   prop1: \\"value1\\",
   prop2: 2 + 2,
   ...props
-}, myRef, onMount, onUnmount);"
+});"
 `;
 
 exports[`transform attributes Should transform key prop 1`] = `
