@@ -6,7 +6,7 @@ import { WhatsJSX } from './types'
 
 export const render = (child: WhatsJSX.Child, container: HTMLElement | SVGElement = document.body) => {
     const reconciler = new Reconciler()
-    const context = new Context(null, 'Render')
+    const context = new Context(null, 'Root')
 
     return autorun(() => {
         try {
