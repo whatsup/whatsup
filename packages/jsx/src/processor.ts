@@ -6,9 +6,6 @@ import { Atom, createAtom } from '@whatsup/core'
 import { EMPTY_OBJ, SVG_NAMESPACE } from './constants'
 import { createMountObserver, createUnmountObserver, mutateProps, placeNodes } from './dom'
 
-const JSX_MOUNT_OBSERVER = Symbol('JSX onMount observer')
-const JSX_UNMOUNT_OBSERVER = Symbol('JSX onUnmount observer')
-
 type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 type Node = HTMLElement | SVGElement | Text
 
@@ -16,6 +13,8 @@ export abstract class Processor<T extends Type, N extends Node | Node[]> {
     private readonly atom: Atom<N>
     protected readonly context: Context
     protected vnode!: VNode<T, N>
+    private mountObserver?: MutationObserver
+    private unmountObserver?: MutationObserver
 
     constructor(context: Context, producer: () => Generator<N, void, unknown>) {
         this.context = context
@@ -50,13 +49,11 @@ export abstract class Processor<T extends Type, N extends Node | Node[]> {
             const target: Node = Array.isArray(dom) ? dom[0] : dom
 
             if (target) {
-                if (onMount && !Reflect.has(target, JSX_MOUNT_OBSERVER)) {
-                    const observer = createMountObserver(target, () => onMount(dom))
-                    Reflect.set(target, JSX_MOUNT_OBSERVER, observer)
+                if (onMount && !this.mountObserver) {
+                    this.mountObserver = createMountObserver(target, () => onMount(dom))
                 }
-                if (onUnmount && !Reflect.has(target, JSX_MOUNT_OBSERVER)) {
-                    const observer = createUnmountObserver(target, () => onUnmount(dom))
-                    Reflect.set(target, JSX_UNMOUNT_OBSERVER, observer)
+                if (onUnmount && !this.unmountObserver) {
+                    this.unmountObserver = createUnmountObserver(target, () => onUnmount(dom))
                 }
             }
         }
