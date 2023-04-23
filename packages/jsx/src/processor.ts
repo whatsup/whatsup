@@ -12,23 +12,20 @@ type Node = HTMLElement | SVGElement | Text
 export abstract class Processor<T extends Type, N extends Node | Node[]> {
     private readonly atom: Atom<N>
     protected readonly context: Context
-    protected vnode: VNode<T, N>
+    protected vnode!: VNode<T, N>
 
-    constructor(context: Context, vnode: VNode<T, N>, producer: () => Generator<N, void, unknown>) {
+    constructor(context: Context, producer: () => Generator<N, void, unknown>) {
         this.context = context
-        this.vnode = vnode
         this.atom = createAtom(producer, this)
     }
 
-    setVNode(vnode: VNode<T, N>) {
-        if (!isEqualVNodes(this.vnode, vnode)) {
+    getDOM(vnode: VNode<T, N>) {
+        if (this.vnode && !isEqualVNodes(this.vnode, vnode)) {
             this.atom.setCacheStateDirty()
         }
 
         this.vnode = vnode
-    }
 
-    getDOM() {
         return this.atom.get()
     }
 }
@@ -37,8 +34,8 @@ export abstract class ElementProcessor<N extends Exclude<Node, Text>> extends Pr
     abstract createElement(): N
     abstract mutateProps(node: N, prev: Props | undefined, next: Props): Props | undefined
 
-    constructor(vnode: VNode<WhatsJSX.TagName, N>, context: Context) {
-        super(context, vnode, elementProducer)
+    constructor(context: Context) {
+        super(context, elementProducer)
     }
 }
 
@@ -47,10 +44,8 @@ export abstract class ComponentProcessor<T extends WhatsJSX.ComponentProducer> e
     abstract handleError(e: Error): WhatsJSX.Child
     abstract dispose(): void
 
-    constructor(vnode: VNode<T, Node | Node[]>, context: Context) {
-        const newContext = new Context(context, vnode.type.name)
-
-        super(newContext, vnode, componentProducer)
+    constructor(context: Context) {
+        super(context, componentProducer)
     }
 }
 

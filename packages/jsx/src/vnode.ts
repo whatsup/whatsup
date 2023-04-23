@@ -29,11 +29,11 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     readonly key: string
     readonly type: T
     readonly props: Props
-    readonly ref?: WhatsJSX.Ref = undefined
-    readonly onMount?: (el: N) => void = undefined
-    readonly onUnmount?: (el: N) => void = undefined
+    readonly ref?: WhatsJSX.Ref
+    readonly onMount?: (el: N) => void
+    readonly onUnmount?: (el: N) => void
 
-    processor?: Processor<T, N> = undefined
+    processor?: Processor<T, N>
 
     constructor(
         type: T,
@@ -46,21 +46,16 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
         this.key = key
         this.type = type
         this.props = props || EMPTY_OBJ
-
-        if (ref) this.ref = ref
-        if (onMount) this.onMount = onMount
-        if (onUnmount) this.onUnmount = onUnmount
+        this.ref = ref
+        this.onMount = onMount
+        this.onUnmount = onUnmount
+        this.processor = undefined
     }
 
     mutate(prev: VNode<T, N> | undefined, context: Context) {
-        if (prev) {
-            this.processor = prev.processor
-            this.processor!.setVNode(this)
-        } else {
-            this.processor = this.createProcessor(context)
-        }
+        this.processor = prev ? prev.processor! : this.createProcessor(context)
 
-        const dom = this.processor!.getDOM()
+        const dom = this.processor.getDOM(this)
 
         this.attachMountingCallbacks(dom)
         this.updateRef(dom)
@@ -96,24 +91,28 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
 
 export class HTMLElementVNode extends VNode<WhatsJSX.TagName, HTMLElement> {
     protected createProcessor(context: Context): HTMLElementProcessor {
-        return new HTMLElementProcessor(this, context)
+        return new HTMLElementProcessor(context)
     }
 }
 
 export class SVGElementVNode extends VNode<WhatsJSX.TagName, SVGElement> {
     protected createProcessor(context: Context): SVGElementProcessor {
-        return new SVGElementProcessor(this, context)
+        return new SVGElementProcessor(context)
     }
 }
 
 export class FnComponentVNode extends VNode<WhatsJSX.FnComponentProducer, Node | Node[]> {
     protected createProcessor(context: Context): FnComponentProcessor {
-        return new FnComponentProcessor(this, context)
+        const newContext = new Context(context, this.type.name)
+
+        return new FnComponentProcessor(newContext)
     }
 }
 
 export class GnComponentVNode extends VNode<WhatsJSX.GnComponentProducer, Node | Node[]> {
     protected createProcessor(context: Context): GnComponentProcessor {
-        return new GnComponentProcessor(this, context)
+        const newContext = new Context(context, this.type.name)
+
+        return new GnComponentProcessor(newContext)
     }
 }
