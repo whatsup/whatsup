@@ -1,5 +1,4 @@
 import { EMPTY_OBJ } from './constants'
-import { createMountObserver, createUnmountObserver } from './dom'
 import { WhatsJSX, Atomic } from './types'
 import {
     Processor,
@@ -23,9 +22,6 @@ type Type = WhatsJSX.TagName | WhatsJSX.ComponentProducer
 
 type Node = HTMLElement | SVGElement | Text
 
-const JSX_MOUNT_OBSERVER = Symbol('JSX onMount observer')
-const JSX_UNMOUNT_OBSERVER = Symbol('JSX onUnmount observer')
-
 export abstract class VNode<T extends Type, N extends Node | Node[]> {
     protected abstract createProcessor(context: Context): Processor<T, N>
 
@@ -45,37 +41,7 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     mutate(prev: VNode<T, N> | undefined, context: Context) {
         this.processor = prev ? prev.processor! : this.createProcessor(context)
 
-        const dom = this.processor.getDOM(this)
-
-        this.attachMountingCallbacks(dom)
-        this.updateRef(dom)
-
-        return dom
-    }
-
-    private updateRef(dom: N) {
-        if (this.props.ref) {
-            this.props.ref.current = dom
-        }
-    }
-
-    private attachMountingCallbacks(dom: N) {
-        const { onMount, onUnmount } = this.props
-
-        if (onMount || onUnmount) {
-            const target: Node = Array.isArray(dom) ? dom[0] : dom
-
-            if (target) {
-                if (onMount && !Reflect.has(target, JSX_MOUNT_OBSERVER)) {
-                    const observer = createMountObserver(target, () => onMount(dom))
-                    Reflect.set(target, JSX_MOUNT_OBSERVER, observer)
-                }
-                if (onUnmount && !Reflect.has(target, JSX_MOUNT_OBSERVER)) {
-                    const observer = createUnmountObserver(target, () => onUnmount(dom))
-                    Reflect.set(target, JSX_UNMOUNT_OBSERVER, observer)
-                }
-            }
-        }
+        return this.processor.getDOM(this)
     }
 }
 
