@@ -13,6 +13,9 @@ import { Context } from './context'
 export interface Props {
     style?: WhatsJSX.CSSProperties
     children?: WhatsJSX.Child
+    ref?: WhatsJSX.Ref
+    onMount?: (el: Node | Node[]) => void
+    onUnmount?: (el: Node | Node[]) => void
     [k: string]: Atomic<any>
 }
 
@@ -29,26 +32,13 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     readonly key: string
     readonly type: T
     readonly props: Props
-    readonly ref?: WhatsJSX.Ref
-    readonly onMount?: (el: N) => void
-    readonly onUnmount?: (el: N) => void
 
     processor?: Processor<T, N>
 
-    constructor(
-        type: T,
-        key: string,
-        props?: Props,
-        ref?: WhatsJSX.Ref,
-        onMount?: (el: N) => void,
-        onUnmount?: (el: N) => void
-    ) {
+    constructor(type: T, key: string, props?: Props) {
         this.key = key
         this.type = type
         this.props = props || EMPTY_OBJ
-        this.ref = ref
-        this.onMount = onMount
-        this.onUnmount = onUnmount
         this.processor = undefined
     }
 
@@ -64,13 +54,13 @@ export abstract class VNode<T extends Type, N extends Node | Node[]> {
     }
 
     private updateRef(dom: N) {
-        if (this.ref) {
-            this.ref.current = dom
+        if (this.props.ref) {
+            this.props.ref.current = dom
         }
     }
 
     private attachMountingCallbacks(dom: N) {
-        const { onMount, onUnmount } = this
+        const { onMount, onUnmount } = this.props
 
         if (onMount || onUnmount) {
             const target: Node = Array.isArray(dom) ? dom[0] : dom
